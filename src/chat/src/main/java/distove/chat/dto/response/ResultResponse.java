@@ -1,18 +1,13 @@
 package distove.chat.dto.response;
 
 import com.fasterxml.jackson.annotation.JsonInclude;
-import com.mongodb.lang.Nullable;
 import lombok.AllArgsConstructor;
 import lombok.Builder;
-import lombok.Data;
+import lombok.Getter;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 
-import javax.validation.constraints.Null;
-
-import static org.springframework.http.HttpStatus.*;
-
-@Data
+@Getter
 @Builder
 @AllArgsConstructor
 @JsonInclude(JsonInclude.Include.NON_NULL)
@@ -32,7 +27,7 @@ public class ResultResponse<T> {
                         .data(data)
                         .build());
     }
-    public static <T> ResponseEntity<Object> fail(HttpStatus httpStatus, String errorCode, String message) {
+    public static ResponseEntity<Object> fail(HttpStatus httpStatus, String errorCode, String message) {
         return ResponseEntity
                 .status(httpStatus)
                 .body(ResultResponse.builder()
