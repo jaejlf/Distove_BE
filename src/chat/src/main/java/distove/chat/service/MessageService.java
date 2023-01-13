@@ -25,7 +25,8 @@ public class MessageService {
     private final UserClient userClient;
 
     public void publishMessage(Long userId, Long channelId, MessageRequest request) throws ExecutionException, InterruptedException {
-        UserResponse writer = userClient.getUser(userId);
+//        UserResponse writer = userClient.getUser(userId);
+        UserResponse writer = new UserResponse(userId, "더미더미", "www.xxx");
 
         Message message;
         if (request.getId() == null) {
@@ -46,10 +47,15 @@ public class MessageService {
 
     public List<MessageResponse> getMessages(Long userId, Long channelId) {
         List<Message> messages = messageRepository.findAllByChannelId(channelId);
+        UserResponse writer = new UserResponse(userId, "더미더미", "www.xxx");
         return messages
                 .stream()
-                .map(x -> MessageResponse.of(x, userClient.getUser(x.getUserId()), userId))
+                .map(x -> MessageResponse.of(x, writer, userId))
                 .collect(Collectors.toList());
+//        return messages
+//                .stream()
+//                .map(x -> MessageResponse.of(x, userClient.getUser(x.getUserId()), userId))
+//                .collect(Collectors.toList());
     }
 
 }
