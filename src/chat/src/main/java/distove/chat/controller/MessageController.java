@@ -2,8 +2,8 @@ package distove.chat.controller;
 
 import distove.chat.dto.request.MessageRequest;
 import distove.chat.dto.response.MessageResponse;
-import distove.chat.dto.response.ResultResponse;
 import distove.chat.service.MessageService;
+import distove.common.ResultResponse;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.http.HttpStatus;
