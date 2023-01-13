@@ -26,12 +26,12 @@ public class ResultResponse<T> {
                         .data(data)
                         .build());
     }
-    public static ResponseEntity<Object> fail(HttpStatus httpStatus, String errorCode, String message) {
+    public static ResponseEntity<Object> fail(HttpStatus httpStatus, String code, String message) {
         return ResponseEntity
                 .status(httpStatus)
                 .body(ResultResponse.builder()
                         .status(httpStatus.value())
-                        .code(errorCode)
+                        .code(code)
                         .message(message)
                         .build());
     }
