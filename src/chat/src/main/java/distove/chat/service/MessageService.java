@@ -2,7 +2,11 @@ package distove.chat.service;
 
 import distove.chat.dto.request.MessageRequest;
 import distove.chat.dto.response.MessageResponse;
+import distove.chat.entity.Connection;
 import distove.chat.entity.Message;
+import distove.chat.enumerate.MessageType;
+import distove.chat.exception.DistoveException;
+import distove.chat.repository.ConnectionRepository;
 import distove.chat.repository.MessageRepository;
 import distove.chat.web.UserClient;
 import distove.chat.web.UserResponse;
@@ -12,8 +16,11 @@ import org.springframework.messaging.simp.SimpMessagingTemplate;
 import org.springframework.stereotype.Service;
 
 import java.util.List;
-import java.util.concurrent.ExecutionException;
 import java.util.stream.Collectors;
+
+import static distove.chat.enumerate.MessageType.*;
+import static distove.chat.exception.ErrorCode.MESSAGE_NOT_FOUND_ERROR;
+import static distove.chat.exception.ErrorCode.MESSAGE_TYPE_ERROR;
 
 @Slf4j
 @RequiredArgsConstructor
@@ -22,23 +29,33 @@ public class MessageService {
 
     private final SimpMessagingTemplate simpMessagingTemplate;
     private final MessageRepository messageRepository;
+    private final ConnectionRepository connectionRepository;
     private final UserClient userClient;
 
-    public void publishMessage(Long userId, Long channelId, MessageRequest request) throws ExecutionException, InterruptedException {
-//        UserResponse writer = userClient.getUser(userId);
-        UserResponse writer = new UserResponse(userId, "더미더미", "www.xxx");
+    UserResponse writer = new UserResponse(0L, "더미더미", "www.xxx"); // 임시 더미 유저
 
-        Message message;
-        if (request.getId() == null) {
-            message = new Message(
-                    writer.getId(),
-                    channelId,
-                    request.getType(),
-                    request.getContent()
-            );
-        } else {
-            message = messageRepository.findById(request.getId()).get(); // Optional 예외처리 전
-            message.updateMessage(request.getType(), request.getContent());
+    public void publishMessage(Long userId, Long channelId, MessageRequest request) {
+//        UserResponse writer = userClient.getUser(userId);
+
+        Message message = null;
+        MessageType type = request.getType();
+        switch (type) {
+            case TEXT:
+                message = createMessage(channelId, writer, request.getType(), request.getContent());
+                break;
+            case FILE:
+            case IMAGE:
+            case VIDEO:
+                String uploadUrl = request.getContent(); // 스토리지에 파일 업로드하는 과정 추가 필요
+                message = createMessage(channelId, writer, request.getType(), uploadUrl);
+                break;
+            case MODIFIED:
+                message = updateMessage(request);
+                break;
+            case DELETED:
+                break;
+            default:
+                throw new DistoveException(MESSAGE_TYPE_ERROR);
         }
 
         messageRepository.save(message);
@@ -46,8 +63,8 @@ public class MessageService {
     }
 
     public List<MessageResponse> getMessages(Long userId, Long channelId) {
+        sendWelcomeMessage(userId, channelId);
         List<Message> messages = messageRepository.findAllByChannelId(channelId);
-        UserResponse writer = new UserResponse(userId, "더미더미", "www.xxx");
         return messages
                 .stream()
                 .map(x -> MessageResponse.of(x, writer, userId))
@@ -56,6 +73,37 @@ public class MessageService {
 //                .stream()
 //                .map(x -> MessageResponse.of(x, userClient.getUser(x.getUserId()), userId))
 //                .collect(Collectors.toList());
+    }
+
+    private void sendWelcomeMessage(Long userId, Long channelId) {
+        Connection connection = connectionRepository.findByChannelId(channelId);
+        List<Long> connectedMemberIds = connection.getConnectedMemberIds();
+
+//        UserResponse writer = userClient.getUser(userId);
+        if (!connectedMemberIds.contains(userId)) {
+            connectedMemberIds.add(userId);
+            connection.updateConnectedMemberIds(connectedMemberIds);
+            connectionRepository.save(connection);
+
+            Message message = createMessage(channelId, writer, WELCOME, writer.getNickname());
+            simpMessagingTemplate.convertAndSend("/sub/" + channelId, message);
+        }
+    }
+
+    private static Message createMessage(Long channelId, UserResponse writer, MessageType type, String content) {
+        return new Message(
+                channelId,
+                writer.getId(),
+                type,
+                content
+        );
+    }
+
+    private Message updateMessage(MessageRequest request) {
+        Message message = messageRepository.findById(request.getId())
+                .orElseThrow(() -> new DistoveException(MESSAGE_NOT_FOUND_ERROR));
+        message.updateMessage(request.getType(), request.getContent());
+        return message;
     }
 
 }
