@@ -32,10 +32,8 @@ public class MessageService {
     private final ConnectionRepository connectionRepository;
     private final UserClient userClient;
 
-    UserResponse writer = new UserResponse(0L, "더미더미", "www.xxx"); // 임시 더미 유저
-
     public void publishMessage(Long userId, Long channelId, MessageRequest request) {
-//        UserResponse writer = userClient.getUser(userId);
+        UserResponse writer = userClient.getUser(userId);
 
         Message message = null;
         MessageType type = request.getType();
@@ -50,9 +48,8 @@ public class MessageService {
                 message = createMessage(channelId, writer, request.getType(), uploadUrl);
                 break;
             case MODIFIED:
+            case DELETED: // TODO : delete 세부 로직 필요
                 message = updateMessage(request);
-                break;
-            case DELETED:
                 break;
             default:
                 throw new DistoveException(MESSAGE_TYPE_ERROR);
@@ -67,19 +64,15 @@ public class MessageService {
         List<Message> messages = messageRepository.findAllByChannelId(channelId);
         return messages
                 .stream()
-                .map(x -> MessageResponse.of(x, writer, userId))
+                .map(x -> MessageResponse.of(x, userClient.getUser(x.getUserId()), userId))
                 .collect(Collectors.toList());
-//        return messages
-//                .stream()
-//                .map(x -> MessageResponse.of(x, userClient.getUser(x.getUserId()), userId))
-//                .collect(Collectors.toList());
     }
 
     private void sendWelcomeMessage(Long userId, Long channelId) {
         Connection connection = connectionRepository.findByChannelId(channelId);
         List<Long> connectedMemberIds = connection.getConnectedMemberIds();
 
-//        UserResponse writer = userClient.getUser(userId);
+        UserResponse writer = userClient.getUser(userId);
         if (!connectedMemberIds.contains(userId)) {
             connectedMemberIds.add(userId);
             connection.updateConnectedMemberIds(connectedMemberIds);
