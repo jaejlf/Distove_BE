@@ -1,10 +1,15 @@
 package distove.community.entity;
 
 import lombok.Data;
+import lombok.Getter;
+import lombok.RequiredArgsConstructor;
 
 import javax.persistence.*;
-@Data
+import java.util.List;
+
+@Getter
 @Entity
+@RequiredArgsConstructor
 public class Category {
     @Id
     @GeneratedValue(strategy = GenerationType.IDENTITY)
@@ -12,7 +17,15 @@ public class Category {
 
     private String name;
 
-    @ManyToOne
+    @ManyToOne//(fetch = FetchType.LAZY)
     @JoinColumn(name ="server_id")
     private Server server;
+
+    public interface CategoryIdAndName {
+        Long getId();
+        String getName();
+
+
+
+    }
 }

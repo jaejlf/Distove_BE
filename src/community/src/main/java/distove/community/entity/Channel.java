@@ -20,9 +20,21 @@ public class Channel {
     @JoinColumn(name ="server_id")
     private Server server;
 
+
+//    @OneToOne(mappedBy = "channel")
+//    @JoinColumn(name ="channel_id")
+//    private CategoryChannel categoryChannel;
+
     public Channel(String name, Long channelTypeId, Server server){
         this.name = name;
         this.channelTypeId = channelTypeId;
         this.server = server;
+    }
+    public interface ChannelNameAndChannelTypeId{
+        Long getId();
+        String getName();
+
+        Long getChannelTypeId();
+//        CategoryChannel getCategoryChannel();
     }
 }

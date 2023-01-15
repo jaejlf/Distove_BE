@@ -16,9 +16,10 @@ public class CategoryChannel {
     @JoinColumn(name ="category_id")
     private Category category;
 
-    @ManyToOne
+    @OneToOne//(mappedBy = "channel")
     @JoinColumn(name ="channel_id")
     private Channel channel;
+
 
     public CategoryChannel(Category category, Channel channel){
         this.category = category;
