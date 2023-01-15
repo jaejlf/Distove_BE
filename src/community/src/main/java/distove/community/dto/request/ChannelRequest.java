@@ -1,4 +1,4 @@
-package distove.community.entity;
+package distove.community.dto.request;
 
 
 import lombok.Builder;
