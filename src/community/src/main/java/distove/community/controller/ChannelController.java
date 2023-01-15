@@ -1,18 +1,16 @@
 package distove.community.controller;
 
 
+import distove.common.ResultResponse;
 import distove.community.entity.Channel;
-import distove.community.entity.ChannelRequest;
+import distove.community.dto.request.ChannelRequest;
 import distove.community.service.ChannelService;
 import lombok.RequiredArgsConstructor;
-import org.springframework.beans.factory.annotation.Autowired;
-import org.springframework.web.bind.annotation.PostMapping;
-import org.springframework.web.bind.annotation.RequestBody;
-import org.springframework.web.bind.annotation.RequestHeader;
-import org.springframework.web.bind.annotation.RestController;
+import org.springframework.http.HttpStatus;
+import org.springframework.web.bind.annotation.*;
 
+import javax.xml.transform.Result;
 import java.util.List;
-import java.util.Map;
 
 @RestController
 @RequiredArgsConstructor
@@ -25,5 +23,7 @@ public class ChannelController {
         channelService.postNewChannel(channelRequest);
         return null;
     }
+
+
 
 }
