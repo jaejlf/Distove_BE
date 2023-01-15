@@ -1,0 +1,11 @@
+
+spring:
+  datasource:
+    driver-class-name: com.mysql.cj.jdbc.Driver
+    url: jdbc:mysql://10.140.113.197:4725/community_dev
+    username: distove_dev
+    password: distove_dev
+  jpa:
+    show-sql: true
+    hibernate:
+      ddl-auto: update
