@@ -1,6 +1,5 @@
 package distove.community.entity;
 
-import lombok.Data;
 import lombok.Getter;
 import lombok.RequiredArgsConstructor;
 
@@ -15,7 +14,7 @@ import javax.persistence.Id;
 public class ChannelType {
     @Id
     @GeneratedValue(strategy = GenerationType.IDENTITY)
-    private Long id;
+    private Integer id;
 
     private String name;
 }

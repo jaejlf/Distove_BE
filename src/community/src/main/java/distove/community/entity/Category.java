@@ -1,11 +1,9 @@
 package distove.community.entity;
 
-import lombok.Data;
 import lombok.Getter;
 import lombok.RequiredArgsConstructor;
 
 import javax.persistence.*;
-import java.util.List;
 
 @Getter
 @Entity
@@ -20,12 +18,19 @@ public class Category {
     @ManyToOne//(fetch = FetchType.LAZY)
     @JoinColumn(name ="server_id")
     private Server server;
-
-    public interface CategoryIdAndName {
-        Long getId();
-        String getName();
-
+//
+//    @OneToMany(mappedBy = "category")
+//    private List<Channel> channels = new ArrayList<>();
 
 
+    public Category(String name, Server server){
+        this.name = name;
+        this.server = server;
     }
+
+//    public interface CategoryWithOutServer{
+//        Long getId();
+//        String getName();
+//
+//    }
 }

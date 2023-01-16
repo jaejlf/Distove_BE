@@ -1,5 +1,6 @@
 package distove.community.entity;
 
+import lombok.Builder;
 import lombok.Getter;
 import lombok.RequiredArgsConstructor;
 
@@ -14,27 +15,21 @@ public class Channel {
 
     private String name;
 
-    private Long channelTypeId;
+    private Integer channelTypeId;
 
     @ManyToOne
-    @JoinColumn(name ="server_id")
-    private Server server;
+    @JoinColumn(name ="category_id")
+    private Category category;
 
-
-//    @OneToOne(mappedBy = "channel")
-//    @JoinColumn(name ="channel_id")
-//    private CategoryChannel categoryChannel;
-
-    public Channel(String name, Long channelTypeId, Server server){
+    @Builder
+    public Channel(String name, Integer channelTypeId, Category category){
         this.name = name;
         this.channelTypeId = channelTypeId;
-        this.server = server;
+        this.category = category;
     }
-    public interface ChannelNameAndChannelTypeId{
+    public interface Info {
         Long getId();
         String getName();
-
-        Long getChannelTypeId();
-//        CategoryChannel getCategoryChannel();
+        Integer getChannelTypeId();
     }
 }

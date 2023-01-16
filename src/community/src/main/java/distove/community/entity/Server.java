@@ -1,14 +1,16 @@
 package distove.community.entity;
 
-import lombok.*;
+import lombok.Getter;
+import lombok.RequiredArgsConstructor;
 
-import javax.persistence.*;
-import java.util.ArrayList;
-import java.util.List;
+import javax.persistence.Entity;
+import javax.persistence.GeneratedValue;
+import javax.persistence.GenerationType;
+import javax.persistence.Id;
 
 @Getter
 @Entity
-@NoArgsConstructor(access = AccessLevel.PROTECTED)
+@RequiredArgsConstructor
 public class Server {
     @Id
 //    @Column(name = "server_id")//one to many
@@ -20,17 +22,15 @@ public class Server {
 
 //    @OneToMany(mappedBy = "server")
 //    private List<Member> members = new ArrayList<>();
-//
+
 //    @OneToMany(mappedBy = "server")
+////    @JoinColumn(name ="category_id")
 //    private List<Category> categories = new ArrayList<>();
-//
+
 //    @OneToMany(mappedBy = "server")
 //    private List<Channel> channels = new ArrayList<>();
-//
-//    public Server(Long id, String name, List<Category> categories, List<Channel> channels){
-//        this.id = id;
-//        this.name = name;
-//        categories = new ArrayList<>();
-//        channels = new ArrayList<>();
-//    }
+
+    public Server(String name){
+        this.name = name;
+    }
 }
