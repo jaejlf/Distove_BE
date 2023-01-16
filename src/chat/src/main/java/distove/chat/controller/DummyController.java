@@ -2,10 +2,16 @@ package distove.chat.controller;
 
 import distove.chat.dto.request.MessageRequest;
 import distove.chat.entity.Connection;
+import distove.chat.enumerate.MessageType;
 import distove.chat.repository.ConnectionRepository;
 import distove.chat.service.MessageService;
+import distove.chat.service.StorageService;
+import distove.common.ResultResponse;
 import lombok.RequiredArgsConstructor;
+import org.springframework.http.HttpStatus;
+import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
+import org.springframework.web.multipart.MultipartFile;
 
 import java.util.ArrayList;
 import java.util.List;
@@ -18,6 +24,7 @@ import java.util.List;
 public class DummyController {
 
     private final MessageService messageService;
+    private final StorageService storageService;
     private final ConnectionRepository connectionRepository;
 
     @PostMapping("/pub/{channelId}")
@@ -33,6 +40,12 @@ public class DummyController {
         List<Long> connectedMemberIds = new ArrayList<>();
         connectedMemberIds.add(userId);
         connectionRepository.save(new Connection(channelId, connectedMemberIds));
+    }
+
+    @PostMapping("/one/{type}")
+    public ResponseEntity<Object> uploadImgOne(@RequestPart("file") MultipartFile file,
+                                               @PathVariable MessageType type) {
+        return ResultResponse.success(HttpStatus.OK, "이미지 업로드 테스트", storageService.uploadToS3(file, type));
     }
 
 }
