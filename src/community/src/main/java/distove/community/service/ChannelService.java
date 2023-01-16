@@ -1,16 +1,14 @@
 package distove.community.service;
 
 import distove.community.dto.request.ChannelRequest;
-import distove.community.entity.*;
+import distove.community.entity.Category;
+import distove.community.entity.Channel;
 import distove.community.exception.DistoveException;
-import distove.community.repository.CategoryChannelRepository;
 import distove.community.repository.CategoryRepository;
 import distove.community.repository.ChannelRepository;
 import distove.community.repository.ServerRepository;
 import lombok.RequiredArgsConstructor;
 import org.springframework.stereotype.Service;
-
-import java.util.List;
 
 import static distove.community.exception.ErrorCode.*;
 
@@ -20,30 +18,29 @@ public class ChannelService {
     private final ChannelRepository channelRepository;
     private final ServerRepository serverRepository;
     private final CategoryRepository categoryRepository;
-    private final CategoryChannelRepository categoryChannelRepository;
 
+//    public Channel updateChannelName(ChannelUpdateRequest channelUpdateRequest){
+//        Channel channel = channelRepository.findById(channelUpdateRequest.getId())
+//                .orElseThrow(() -> new DistoveException(CHANNEL_NOT_FOUND_ERROR));
+//        channel.builder(channelUpdateRequest.getId(),channelUpdateRequest.getName())
+//    }
+//deleteChannelById
+    public void deleteChannelById(Long channelId){
+        Channel channel = channelRepository.findById(channelId)
+                .orElseThrow(() -> new DistoveException(CHANNEL_NOT_FOUND_ERROR));
+        channelRepository.deleteChannelById(channelId);
+    }
+    public Channel createNewChannel(ChannelRequest channelRequest){
 
-
-
-    public void postNewChannel(ChannelRequest channelRequest){
-
-        Server server = serverRepository.findById(channelRequest.getServerId())
+        Category category = categoryRepository.findById(channelRequest.getCategoryId())
                 .orElseThrow(() -> new DistoveException(SERVER_NOT_FOUND_ERROR));
 
         Channel newChannel = new Channel(
                 channelRequest.getName(),
                 channelRequest.getChannelTypeId(),
-                serverRepository.findById(channelRequest.getServerId()).get()
+                category
         );
-        CategoryChannel newCategoryChannel = new CategoryChannel(
-                categoryRepository.findById(channelRequest.getCategoryId()).get(),
-                newChannel
-        );
-        channelRepository.save(newChannel);
-        categoryChannelRepository.save(newCategoryChannel);
-
-
-
+        return channelRepository.save(newChannel);
     }
 
 //    public List<Channel> getChannelsByServerId(Long serverId){
