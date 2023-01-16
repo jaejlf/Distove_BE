@@ -15,7 +15,9 @@ import lombok.extern.slf4j.Slf4j;
 import org.springframework.messaging.simp.SimpMessagingTemplate;
 import org.springframework.stereotype.Service;
 
+import java.util.Collections;
 import java.util.List;
+import java.util.Objects;
 import java.util.stream.Collectors;
 
 import static distove.chat.enumerate.MessageType.*;
@@ -35,40 +37,63 @@ public class MessageService {
     public void publishMessage(Long userId, Long channelId, MessageRequest request) {
         UserResponse writer = userClient.getUser(userId);
 
-        Message message = null;
+        Message message;
         MessageType type = request.getType();
         switch (type) {
+            case TYPING:
+                message = createMessage(channelId, writer, request.getType(), writer.getNickname());
+                break;
             case TEXT:
                 message = createMessage(channelId, writer, request.getType(), request.getContent());
                 break;
-            case FILE:
             case IMAGE:
+            case FILE:
             case VIDEO:
-                String uploadUrl = request.getContent(); // 스토리지에 파일 업로드하는 과정 추가 필요
+                String uploadUrl = request.getContent(); // TODO : 스토리지에 파일 업로드하는 과정 추가 필요
                 message = createMessage(channelId, writer, request.getType(), uploadUrl);
                 break;
             case MODIFIED:
-            case DELETED: // TODO : delete 세부 로직 필요
-                message = updateMessage(request);
+            case DELETED: // TODO : Reply 여부에 따른 delete 세부 로직 필요
+                message = updateMessage(request, userId);
                 break;
             default:
                 throw new DistoveException(MESSAGE_TYPE_ERROR);
         }
-
-        messageRepository.save(message);
         simpMessagingTemplate.convertAndSend("/sub/" + channelId, message);
     }
 
     public List<MessageResponse> getMessages(Long userId, Long channelId) {
-        sendWelcomeMessage(userId, channelId);
-        List<Message> messages = messageRepository.findAllByChannelId(channelId);
-        return messages
+        saveWelcomeMessage(userId, channelId);
+        List<MessageResponse> messageResponses = messageRepository.findAllByChannelId(channelId)
                 .stream()
                 .map(x -> MessageResponse.of(x, userClient.getUser(x.getUserId()), userId))
                 .collect(Collectors.toList());
+        Collections.reverse(messageResponses);
+        return messageResponses;
     }
 
-    private void sendWelcomeMessage(Long userId, Long channelId) {
+    private Message createMessage(Long channelId, UserResponse writer, MessageType type, String content) {
+        Message message = new Message(
+                channelId,
+                writer.getId(),
+                type,
+                content
+        );
+        return messageRepository.save(message);
+    }
+
+    private Message updateMessage(MessageRequest request, Long userId) {
+        Message message = messageRepository.findById(request.getId())
+                .orElseThrow(() -> new DistoveException(MESSAGE_NOT_FOUND_ERROR));
+
+        if (!Objects.equals(message.getUserId(), userId)) throw new DistoveException(MESSAGE_TYPE_ERROR);
+        if (message.getType() == IMAGE || message.getType() == FILE || message.getType() == VIDEO) throw new DistoveException(MESSAGE_TYPE_ERROR);
+
+        message.updateMessage(request.getType(), request.getContent());
+        return messageRepository.save(message);
+    }
+
+    private void saveWelcomeMessage(Long userId, Long channelId) {
         Connection connection = connectionRepository.findByChannelId(channelId);
         List<Long> connectedMemberIds = connection.getConnectedMemberIds();
 
@@ -77,26 +102,8 @@ public class MessageService {
             connectedMemberIds.add(userId);
             connection.updateConnectedMemberIds(connectedMemberIds);
             connectionRepository.save(connection);
-
-            Message message = createMessage(channelId, writer, WELCOME, writer.getNickname());
-            simpMessagingTemplate.convertAndSend("/sub/" + channelId, message);
+            createMessage(channelId, writer, WELCOME, writer.getNickname());
         }
-    }
-
-    private static Message createMessage(Long channelId, UserResponse writer, MessageType type, String content) {
-        return new Message(
-                channelId,
-                writer.getId(),
-                type,
-                content
-        );
-    }
-
-    private Message updateMessage(MessageRequest request) {
-        Message message = messageRepository.findById(request.getId())
-                .orElseThrow(() -> new DistoveException(MESSAGE_NOT_FOUND_ERROR));
-        message.updateMessage(request.getType(), request.getContent());
-        return message;
     }
 
 }
