@@ -26,6 +26,12 @@ public class MessageController {
         messageService.publishMessage(userId, channelId, request);
     }
 
+    @MessageMapping("/typing/{channelId}")
+    public void publishMessage(@RequestHeader("userId") Long userId,
+                               @PathVariable Long channelId) {
+        messageService.onTyping(userId, channelId);
+    }
+
     @GetMapping("/list/{channelId}")
     public ResponseEntity<Object> getMessages(@RequestHeader("userId") Long userId,
                                               @PathVariable String channelId) {

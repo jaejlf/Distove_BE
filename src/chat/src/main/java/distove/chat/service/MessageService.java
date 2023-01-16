@@ -2,6 +2,7 @@ package distove.chat.service;
 
 import distove.chat.dto.request.MessageRequest;
 import distove.chat.dto.response.MessageResponse;
+import distove.chat.dto.response.TypedUserResponse;
 import distove.chat.entity.Connection;
 import distove.chat.entity.Message;
 import distove.chat.enumerate.MessageType;
@@ -21,8 +22,9 @@ import java.util.Objects;
 import java.util.stream.Collectors;
 
 import static distove.chat.enumerate.MessageType.*;
-import static distove.chat.exception.ErrorCode.MESSAGE_NOT_FOUND_ERROR;
-import static distove.chat.exception.ErrorCode.MESSAGE_TYPE_ERROR;
+import static distove.chat.enumerate.MessageType.WELCOME;
+import static distove.chat.enumerate.MessageType.canUpdate;
+import static distove.chat.exception.ErrorCode.*;
 
 @Slf4j
 @RequiredArgsConstructor
@@ -40,9 +42,6 @@ public class MessageService {
         Message message;
         MessageType type = request.getType();
         switch (type) {
-            case TYPING:
-                message = createMessage(channelId, writer, request.getType(), writer.getNickname());
-                break;
             case TEXT:
                 message = createMessage(channelId, writer, request.getType(), request.getContent());
                 break;
@@ -59,6 +58,12 @@ public class MessageService {
             default:
                 throw new DistoveException(MESSAGE_TYPE_ERROR);
         }
+        simpMessagingTemplate.convertAndSend("/sub/" + channelId, message);
+    }
+
+    public void onTyping(Long userId, Long channelId) {
+        UserResponse writer = userClient.getUser(userId);
+        TypedUserResponse message = TypedUserResponse.of(TYPING, writer.getNickname());
         simpMessagingTemplate.convertAndSend("/sub/" + channelId, message);
     }
 
@@ -86,8 +91,8 @@ public class MessageService {
         Message message = messageRepository.findById(request.getId())
                 .orElseThrow(() -> new DistoveException(MESSAGE_NOT_FOUND_ERROR));
 
-        if (!Objects.equals(message.getUserId(), userId)) throw new DistoveException(MESSAGE_TYPE_ERROR);
-        if (message.getType() == IMAGE || message.getType() == FILE || message.getType() == VIDEO) throw new DistoveException(MESSAGE_TYPE_ERROR);
+        if (!Objects.equals(message.getUserId(), userId)) throw new DistoveException(NO_AUTH_ERROR);
+        if (!canUpdate(request.getType())) throw new DistoveException(NO_AUTH_ERROR);
 
         message.updateMessage(request.getType(), request.getContent());
         return messageRepository.save(message);
