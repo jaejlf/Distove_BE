@@ -1,7 +1,7 @@
 var stompClient = null;
 var wsLink = "/chat/ws";
 var subLink = "/sub/2";
-var pubLink = "/pub/chat";
+var pubLink = "/pub/chat/2";
 
 function setConnected(connected) {
     $("#connect").prop("disabled", connected);
