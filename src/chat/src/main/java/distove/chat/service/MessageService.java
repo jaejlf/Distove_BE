@@ -36,8 +36,9 @@ public class MessageService {
     private final ConnectionRepository connectionRepository;
     private final UserClient userClient;
 
-    public void publishMessage(Long userId, Long channelId, MessageRequest request) {
+    public void publishMessage(Long userId, MessageRequest request) {
         UserResponse writer = userClient.getUser(userId);
+        Long channelId = 2L;
 
         Message message;
         MessageType type = request.getType();

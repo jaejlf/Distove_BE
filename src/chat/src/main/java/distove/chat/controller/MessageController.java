@@ -19,11 +19,10 @@ public class MessageController {
 
     private final MessageService messageService;
 
-    @MessageMapping("/pub/{channelId}")
+    @MessageMapping("/chat")
     public void publishMessage(@RequestHeader("userId") Long userId,
-                               @PathVariable Long channelId,
                                @Payload MessageRequest request) {
-        messageService.publishMessage(userId, channelId, request);
+        messageService.publishMessage(userId, request);
     }
 
     @MessageMapping("/typing/{channelId}")
