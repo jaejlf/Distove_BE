@@ -24,7 +24,7 @@ public class AwsS3Config {
     @Value("${cloud.aws.region.static}")
     private String region;
 
-    @Value("${cloud.aws.s3.endpoint}")
+    @Value("${cloud.aws.ceph.endpoint}")
     private String endpoint;
 
     @Bean
