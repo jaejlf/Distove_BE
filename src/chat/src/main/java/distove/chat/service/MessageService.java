@@ -22,8 +22,6 @@ import java.util.Objects;
 import java.util.stream.Collectors;
 
 import static distove.chat.enumerate.MessageType.*;
-import static distove.chat.enumerate.MessageType.WELCOME;
-import static distove.chat.enumerate.MessageType.canUpdate;
 import static distove.chat.exception.ErrorCode.*;
 
 @Slf4j
@@ -31,18 +29,16 @@ import static distove.chat.exception.ErrorCode.*;
 @Service
 public class MessageService {
 
-    private final SimpMessagingTemplate simpMessagingTemplate;
     private final MessageRepository messageRepository;
     private final ConnectionRepository connectionRepository;
     private final UserClient userClient;
 
-    public void publishMessage(Long userId, MessageRequest request) {
+    public MessageResponse publishMessage(Long channelId, MessageRequest request) {
+        Long userId = request.getUserId();
         UserResponse writer = userClient.getUser(userId);
-        Long channelId = 2L;
 
         Message message;
-        MessageType type = request.getType();
-        switch (type) {
+        switch (request.getType()) {
             case TEXT:
                 message = createMessage(channelId, writer, request.getType(), request.getContent());
                 break;
@@ -59,13 +55,12 @@ public class MessageService {
             default:
                 throw new DistoveException(MESSAGE_TYPE_ERROR);
         }
-        simpMessagingTemplate.convertAndSend("/sub/" + channelId, message);
+        return MessageResponse.of(message, writer, userId);
     }
 
-    public void onTyping(Long userId, Long channelId) {
-        UserResponse writer = userClient.getUser(userId);
-        TypedUserResponse message = TypedUserResponse.of(TYPING, writer.getNickname());
-        simpMessagingTemplate.convertAndSend("/sub/" + channelId, message);
+    public TypedUserResponse beingTyped(Long userId) {
+        UserResponse typedUser = userClient.getUser(userId);
+        return TypedUserResponse.of(typedUser.getNickname());
     }
 
     public List<MessageResponse> getMessages(Long userId, Long channelId) {

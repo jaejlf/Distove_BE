@@ -2,12 +2,14 @@ package distove.chat.entity;
 
 import distove.chat.enumerate.MessageType;
 import lombok.Getter;
+import lombok.NoArgsConstructor;
 import nonapi.io.github.classgraph.json.Id;
 import org.springframework.data.mongodb.core.mapping.Document;
 
 import java.time.LocalDateTime;
 
 @Getter
+@NoArgsConstructor
 @Document(collection = "message")
 public class Message {
 
