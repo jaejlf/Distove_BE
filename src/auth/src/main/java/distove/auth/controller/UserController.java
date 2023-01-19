@@ -2,9 +2,9 @@ package distove.auth.controller;
 
 import distove.auth.dto.request.LoginRequest;
 import distove.auth.dto.request.SignUpRequest;
+import distove.auth.dto.response.ResultResponse;
 import distove.auth.dto.response.TokenResponse;
 import distove.auth.service.UserService;
-import distove.common.ResultResponse;
 import lombok.AllArgsConstructor;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
