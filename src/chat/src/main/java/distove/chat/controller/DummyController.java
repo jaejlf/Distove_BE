@@ -1,12 +1,12 @@
 package distove.chat.controller;
 
 import distove.chat.dto.request.MessageRequest;
+import distove.chat.dto.response.ResultResponse;
 import distove.chat.entity.Connection;
 import distove.chat.enumerate.MessageType;
 import distove.chat.repository.ConnectionRepository;
 import distove.chat.service.MessageService;
 import distove.chat.service.StorageService;
-import distove.common.ResultResponse;
 import lombok.RequiredArgsConstructor;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
