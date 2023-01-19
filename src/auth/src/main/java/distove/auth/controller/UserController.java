@@ -3,7 +3,6 @@ package distove.auth.controller;
 import distove.auth.dto.request.LoginRequest;
 import distove.auth.dto.request.SignUpRequest;
 import distove.auth.dto.response.ResultResponse;
-import distove.auth.dto.response.TokenResponse;
 import distove.auth.service.UserService;
 import lombok.AllArgsConstructor;
 import org.springframework.http.HttpStatus;
@@ -26,17 +25,27 @@ public class UserController {
     }
 
     @GetMapping("/login")
-    public TokenResponse login(@RequestBody LoginRequest request){
-        return userService.login(request);
+    public ResponseEntity<Object> login(@RequestBody LoginRequest request) {
+        return ResultResponse.success(
+                HttpStatus.CREATED,
+                "로그인 성공",
+                userService.login(request)
+        );
     }
 
     @GetMapping("/user-emails/{email}/exists")
-    public ResponseEntity<Boolean> checkEmailDuplicate(@PathVariable String email){
-        return ResponseEntity.ok(userService.checkEmailDuplicate(email));
+    public ResponseEntity<Object> checkEmailDuplicate(@PathVariable String email) {
+        return ResultResponse.success(
+                HttpStatus.OK,
+                "이메일 중복",
+                userService.checkEmailDuplicate(email));
     }
 
     @GetMapping("/user-nicknames/{nickname}/exists")
-    public ResponseEntity<Boolean> checkNicknameDuplicate(@PathVariable String nickname){
-        return ResponseEntity.ok(userService.checkNicknameDuplicate(nickname));
+    public ResponseEntity<Object> checkNicknameDuplicate(@PathVariable String nickname) {
+        return ResultResponse.success(
+                HttpStatus.OK,
+                "닉네임 중복",
+                userService.checkNicknameDuplicate(nickname));
     }
 }
