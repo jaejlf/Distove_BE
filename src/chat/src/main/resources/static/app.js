@@ -1,7 +1,27 @@
 var stompClient = null;
 var wsLink = "/chat/ws";
-var subLink = "/sub/2";
-var pubLink = "/pub/chat/2";
+
+/**
+ *
+ * publishMessage
+ */
+// var subLink = "/sub/3";
+// var pubLink = "/pub/chat/3";
+// var inputData = {
+//     userId: 1,
+//     type: 'TEXT',
+//     content: 'Hello Hello~!~!'
+// }
+
+/**
+ *
+ * beingTyped
+ */
+var subLink = "/sub/3";
+var pubLink = "/pub/typing/3";
+var inputData = {
+    userId: 1
+}
 
 function setConnected(connected) {
     $("#connect").prop("disabled", connected);
@@ -36,7 +56,7 @@ function disconnect() {
 }
 
 function sendName() {
-    stompClient.send(pubLink, {}, JSON.stringify({'content': $("#content").val()}));
+    stompClient.send(pubLink, {}, JSON.stringify(inputData));
 }
 
 function showGreeting(message) {
