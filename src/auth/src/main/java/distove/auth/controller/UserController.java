@@ -1,14 +1,14 @@
 package distove.auth.controller;
 
-import distove.auth.dto.reponse.TokenResponse;
+import distove.auth.dto.request.LoginRequest;
 import distove.auth.dto.request.SignUpRequest;
-import distove.auth.entity.User;
+import distove.auth.dto.response.TokenResponse;
 import distove.auth.service.UserService;
+import distove.common.ResultResponse;
 import lombok.AllArgsConstructor;
-import org.springframework.web.bind.annotation.GetMapping;
-import org.springframework.web.bind.annotation.PostMapping;
-import org.springframework.web.bind.annotation.RequestBody;
-import org.springframework.web.bind.annotation.RestController;
+import org.springframework.http.HttpStatus;
+import org.springframework.http.ResponseEntity;
+import org.springframework.web.bind.annotation.*;
 
 @RestController
 @AllArgsConstructor
@@ -17,12 +17,26 @@ public class UserController {
     private final UserService userService;
 
     @PostMapping("/signup")
-    public void signUp(@RequestBody SignUpRequest request) {
-        userService.signUp(request);
+    public ResponseEntity<Object> signUp(@RequestBody SignUpRequest request) {
+        return ResultResponse.success(
+                HttpStatus.CREATED,
+                "회원가입",
+                userService.signUp(request)
+        );
     }
 
     @GetMapping("/login")
-    public TokenResponse login(@RequestBody User user){
-        return userService.login(user);
+    public TokenResponse login(@RequestBody LoginRequest request){
+        return userService.login(request);
+    }
+
+    @GetMapping("/user-emails/{email}/exists")
+    public ResponseEntity<Boolean> checkEmailDuplicate(@PathVariable String email){
+        return ResponseEntity.ok(userService.checkEmailDuplicate(email));
+    }
+
+    @GetMapping("/user-nicknames/{nickname}/exists")
+    public ResponseEntity<Boolean> checkNicknameDuplicate(@PathVariable String nickname){
+        return ResponseEntity.ok(userService.checkNicknameDuplicate(nickname));
     }
 }

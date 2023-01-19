@@ -1,17 +1,22 @@
 package distove.auth.service;
 
 
-import distove.auth.dto.reponse.TokenResponse;
+import distove.auth.dto.request.LoginRequest;
 import distove.auth.dto.request.SignUpRequest;
+import distove.auth.dto.response.TokenResponse;
+import distove.auth.dto.response.UserResponse;
 import distove.auth.entity.User;
+import distove.auth.exception.DistoveException;
 import distove.auth.reoisitory.UserRepository;
 import lombok.RequiredArgsConstructor;
+import lombok.extern.slf4j.Slf4j;
 import org.springframework.security.crypto.bcrypt.BCryptPasswordEncoder;
 import org.springframework.stereotype.Component;
 import org.springframework.stereotype.Service;
 
-import java.time.LocalDateTime;
+import static distove.auth.exception.ErrorCode.EMAIL_OR_PASSWORD_ERROR;
 
+@Slf4j
 @Service
 @Component
 @RequiredArgsConstructor
@@ -20,22 +25,34 @@ public class UserService {
     private final BCryptPasswordEncoder bCryptPasswordEncoder;
     private final JwtTokenProvider jwtTokenProvider;
 
-    public void signUp(SignUpRequest request) {
-        // 예외 처리
-        User user = new User(request.getEmail(), "", false, LocalDateTime.now(), LocalDateTime.now(), bCryptPasswordEncoder.encode(request.getPassword()), "refreshToken", request.getNickname());
+    public UserResponse signUp(SignUpRequest request) {
+        User user = new User(request.getEmail(), bCryptPasswordEncoder.encode(request.getPassword()), request.getNickname());
         userRepository.save(user);
+
+        return UserResponse.of(user.getId(), user.getNickname());
     }
 
-    public TokenResponse login(User loginuser) {
-        User user = userRepository.findByEmail(loginuser.getEmail())
-                .orElseThrow(() -> new IllegalArgumentException("가입되지 않은 Email 입니다."));
+    public TokenResponse login(LoginRequest request) {
+        User user = userRepository.findByEmail(request.getEmail())
+                .orElseThrow(() -> new DistoveException(EMAIL_OR_PASSWORD_ERROR));
 
-        if (!bCryptPasswordEncoder.matches(loginuser.getPassword(), user.getPassword())) {
-            throw new IllegalArgumentException("잘못된 비밀번호입니다.");
+        if (!bCryptPasswordEncoder.matches(request.getPassword(), user.getPassword())) {
+            throw new DistoveException(EMAIL_OR_PASSWORD_ERROR);
         }
 
-        String accessToken = jwtTokenProvider.generateAccessToken(loginuser.getEmail());
-        String refreshToken = jwtTokenProvider.generateRefreshToken(loginuser.getEmail());
+        String accessToken = jwtTokenProvider.generateAccessToken(request.getEmail());
+        String refreshToken = jwtTokenProvider.generateRefreshToken(request.getEmail());
+
+        user.updateRefreshToken(refreshToken);
+        userRepository.save(user);
         return TokenResponse.of(accessToken, refreshToken);
+    }
+
+    public boolean checkEmailDuplicate(String email) {
+        return userRepository.existsByEmail(email);
+    }
+
+    public boolean checkNicknameDuplicate(String nickname) {
+        return userRepository.existsByNickname(nickname);
     }
 }
