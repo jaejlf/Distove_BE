@@ -1,20 +1,23 @@
 package distove.chat.dto.response;
 
+import distove.chat.entity.Message;
 import distove.chat.enumerate.MessageType;
 import lombok.Builder;
 import lombok.Getter;
+
+import static distove.chat.enumerate.MessageType.*;
 
 @Getter
 @Builder
 public class TypedUserResponse {
 
     private MessageType type;
-    private String nickname;
+    private String content;
 
-    public static TypedUserResponse of(MessageType type, String nickname) {
+    public static TypedUserResponse of(String nickname) {
         return TypedUserResponse.builder()
-                .type(type)
-                .nickname(nickname)
+                .type(TYPING)
+                .content(nickname)
                 .build();
     }
 

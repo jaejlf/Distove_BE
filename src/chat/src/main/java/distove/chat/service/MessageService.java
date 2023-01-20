@@ -13,7 +13,6 @@ import distove.chat.web.UserClient;
 import distove.chat.web.UserResponse;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
-import org.springframework.messaging.simp.SimpMessagingTemplate;
 import org.springframework.stereotype.Service;
 
 import java.util.Collections;
@@ -22,8 +21,6 @@ import java.util.Objects;
 import java.util.stream.Collectors;
 
 import static distove.chat.enumerate.MessageType.*;
-import static distove.chat.enumerate.MessageType.WELCOME;
-import static distove.chat.enumerate.MessageType.canUpdate;
 import static distove.chat.exception.ErrorCode.*;
 
 @Slf4j
@@ -31,14 +28,14 @@ import static distove.chat.exception.ErrorCode.*;
 @Service
 public class MessageService {
 
-    private final SimpMessagingTemplate simpMessagingTemplate;
+    private final StorageService storageService;
     private final MessageRepository messageRepository;
     private final ConnectionRepository connectionRepository;
     private final UserClient userClient;
 
-    public void publishMessage(Long userId, MessageRequest request) {
+    public MessageResponse publishMessage(Long channelId, MessageRequest request) {
+        Long userId = request.getUserId();
         UserResponse writer = userClient.getUser(userId);
-        Long channelId = 2L;
 
         Message message;
         MessageType type = request.getType();
@@ -49,7 +46,7 @@ public class MessageService {
             case IMAGE:
             case FILE:
             case VIDEO:
-                String uploadUrl = request.getContent(); // TODO : 스토리지에 파일 업로드하는 과정 추가 필요
+                String uploadUrl = storageService.uploadToS3(request.getFile(), type);
                 message = createMessage(channelId, writer, request.getType(), uploadUrl);
                 break;
             case MODIFIED:
@@ -59,13 +56,12 @@ public class MessageService {
             default:
                 throw new DistoveException(MESSAGE_TYPE_ERROR);
         }
-        simpMessagingTemplate.convertAndSend("/sub/" + channelId, message);
+        return MessageResponse.of(message, writer, userId);
     }
 
-    public void onTyping(Long userId, Long channelId) {
-        UserResponse writer = userClient.getUser(userId);
-        TypedUserResponse message = TypedUserResponse.of(TYPING, writer.getNickname());
-        simpMessagingTemplate.convertAndSend("/sub/" + channelId, message);
+    public TypedUserResponse beingTyped(Long userId) {
+        UserResponse typedUser = userClient.getUser(userId);
+        return TypedUserResponse.of(typedUser.getNickname());
     }
 
     public List<MessageResponse> getMessages(Long userId, Long channelId) {
@@ -92,9 +88,7 @@ public class MessageService {
         Message message = messageRepository.findById(request.getId())
                 .orElseThrow(() -> new DistoveException(MESSAGE_NOT_FOUND_ERROR));
 
-        if (!Objects.equals(message.getUserId(), userId)) throw new DistoveException(NO_AUTH_ERROR);
-        if (!canUpdate(request.getType())) throw new DistoveException(NO_AUTH_ERROR);
-
+        checkAuthorized(userId, message.getUserId(), request.getType());
         message.updateMessage(request.getType(), request.getContent());
         return messageRepository.save(message);
     }
@@ -110,6 +104,11 @@ public class MessageService {
             connectionRepository.save(connection);
             createMessage(channelId, writer, WELCOME, writer.getNickname());
         }
+    }
+
+    private static void checkAuthorized(Long userId, Long writerId, MessageType type) {
+        if (!Objects.equals(writerId, userId)) throw new DistoveException(NO_AUTH_ERROR);
+        if (!canUpdate(type)) throw new DistoveException(NO_AUTH_ERROR);
     }
 
 }

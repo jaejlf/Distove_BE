@@ -1,5 +1,6 @@
 package distove.chat.dto.response;
 
+import com.fasterxml.jackson.annotation.JsonInclude;
 import distove.chat.entity.Message;
 import distove.chat.enumerate.MessageType;
 import distove.chat.web.UserResponse;
@@ -8,6 +9,8 @@ import lombok.Getter;
 
 import java.time.LocalDateTime;
 import java.util.Objects;
+
+import static distove.chat.enumerate.MessageType.*;
 
 @Getter
 @Builder
