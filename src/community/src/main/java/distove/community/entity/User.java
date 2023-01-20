@@ -1,6 +1,5 @@
 package distove.community.entity;
 
-import lombok.Data;
 import lombok.Getter;
 import lombok.RequiredArgsConstructor;
 
@@ -17,5 +16,7 @@ public class User {
     private Long id;
 
     private String name;
+
+    private String imgUrl;
 
 }
