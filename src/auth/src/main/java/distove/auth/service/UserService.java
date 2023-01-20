@@ -16,8 +16,8 @@ import org.springframework.security.crypto.bcrypt.BCryptPasswordEncoder;
 import org.springframework.stereotype.Component;
 import org.springframework.stereotype.Service;
 
-import static distove.auth.exception.ErrorCode.EMAIL_OR_PASSWORD_ERROR;
-import static distove.auth.exception.ErrorCode.SAMPLE_ERROR;
+import static distove.auth.exception.ErrorCode.EMAIL_NOT_FOUND;
+import static distove.auth.exception.ErrorCode.PASSWORD_ERROR;
 
 @Slf4j
 @Service
@@ -37,10 +37,10 @@ public class UserService {
 
     public TokenResponse login(LoginRequest request) {
         User user = userRepository.findByEmail(request.getEmail())
-                .orElseThrow(() -> new DistoveException(EMAIL_OR_PASSWORD_ERROR));
+                .orElseThrow(() -> new DistoveException(EMAIL_NOT_FOUND));
 
         if (!bCryptPasswordEncoder.matches(request.getPassword(), user.getPassword())) {
-            throw new DistoveException(EMAIL_OR_PASSWORD_ERROR);
+            throw new DistoveException(PASSWORD_ERROR);
         }
 
         String accessToken = jwtTokenProvider.generateAccessToken(request.getEmail());
@@ -53,7 +53,7 @@ public class UserService {
 
     public LogoutResponse signOut(LogoutRequest request) {
         User user = userRepository.findByEmail(request.getEmail())
-                .orElseThrow(() -> new DistoveException(SAMPLE_ERROR));
+                .orElseThrow(() -> new DistoveException(EMAIL_NOT_FOUND));
 
         user.updateRefreshToken(null);
         userRepository.save(user);
