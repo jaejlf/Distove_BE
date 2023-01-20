@@ -7,11 +7,14 @@ import org.springframework.http.HttpStatus;
 @Getter
 @RequiredArgsConstructor
 public enum ErrorCode {
-    SAMPLE_ERROR(HttpStatus.NOT_FOUND, "X0001", "샘플 예외입니다."),
-
+    // 회원가입
     DUPLICATE_RESOURCE_ERROR(HttpStatus.CONFLICT, "A0001", "데이터가 이미 존재합니다."),
 
-    EMAIL_OR_PASSWORD_ERROR(HttpStatus.BAD_REQUEST, "A0002", "계정이 존재하지 않거나 아이디 또는 비밀번호가 맞지 않습니다.");
+    // 로그인
+    EMAIL_NOT_FOUND(HttpStatus.UNAUTHORIZED, "A0002", "계정이 존재하지 않습니다."),
+    PASSWORD_ERROR(HttpStatus.UNAUTHORIZED, "A0003","패스워드가 다릅니다.");
+
+
 
     private final HttpStatus httpStatus;
     private final String code;
