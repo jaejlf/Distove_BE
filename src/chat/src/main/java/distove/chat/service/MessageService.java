@@ -15,12 +15,12 @@ import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.stereotype.Service;
 
-import java.util.Collections;
 import java.util.List;
 import java.util.Objects;
 import java.util.stream.Collectors;
 
-import static distove.chat.enumerate.MessageType.*;
+import static distove.chat.enumerate.MessageType.WELCOME;
+import static distove.chat.enumerate.MessageType.canUpdate;
 import static distove.chat.exception.ErrorCode.*;
 
 @Slf4j
@@ -66,11 +66,10 @@ public class MessageService {
 
     public List<MessageResponse> getMessages(Long userId, Long channelId) {
         saveWelcomeMessage(userId, channelId);
-        List<MessageResponse> messageResponses = messageRepository.findAllByChannelId(channelId)
+        return messageRepository.findAllByChannelId(channelId)
                 .stream()
                 .map(x -> MessageResponse.of(x, userClient.getUser(x.getUserId()), userId))
                 .collect(Collectors.toList());
-        return messageResponses;
     }
 
     private Message createMessage(Long channelId, UserResponse writer, MessageType type, String content) {
