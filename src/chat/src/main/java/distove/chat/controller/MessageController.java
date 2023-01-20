@@ -1,9 +1,11 @@
 package distove.chat.controller;
 
+import distove.chat.dto.request.FileUploadRequest;
 import distove.chat.dto.request.MessageRequest;
 import distove.chat.dto.response.MessageResponse;
 import distove.chat.dto.response.ResultResponse;
 import distove.chat.dto.response.TypedUserResponse;
+import distove.chat.enumerate.MessageType;
 import distove.chat.service.MessageService;
 import lombok.RequiredArgsConstructor;
 import org.springframework.http.HttpStatus;
@@ -12,17 +14,13 @@ import org.springframework.messaging.handler.annotation.DestinationVariable;
 import org.springframework.messaging.handler.annotation.MessageMapping;
 import org.springframework.messaging.handler.annotation.Payload;
 import org.springframework.messaging.handler.annotation.SendTo;
-import org.springframework.web.bind.annotation.GetMapping;
-import org.springframework.web.bind.annotation.PathVariable;
-import org.springframework.web.bind.annotation.RequestHeader;
-import org.springframework.web.bind.annotation.RestController;
+import org.springframework.web.bind.annotation.*;
 
 import java.util.List;
 
 @RequiredArgsConstructor
 @RestController
 public class MessageController {
-
     private final MessageService messageService;
 
     @MessageMapping("/chat/{channelId}")
@@ -36,6 +34,13 @@ public class MessageController {
     public TypedUserResponse beingTyped(@Payload MessageRequest request) {
         Long userId = request.getUserId();
         return messageService.beingTyped(userId);
+    }
+
+    @PostMapping("/file/{channelId}/{type}")
+    public void publishFileType(@PathVariable Long channelId,
+                                @PathVariable MessageType type,
+                                @ModelAttribute FileUploadRequest request) {
+        messageService.publishFileType(channelId, type, request);
     }
 
     @GetMapping("/list/{channelId}")

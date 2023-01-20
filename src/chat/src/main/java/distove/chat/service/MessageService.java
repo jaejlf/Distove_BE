@@ -1,5 +1,6 @@
 package distove.chat.service;
 
+import distove.chat.dto.request.FileUploadRequest;
 import distove.chat.dto.request.MessageRequest;
 import distove.chat.dto.response.MessageResponse;
 import distove.chat.dto.response.TypedUserResponse;
@@ -13,9 +14,9 @@ import distove.chat.web.UserClient;
 import distove.chat.web.UserResponse;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
+import org.springframework.messaging.simp.SimpMessagingTemplate;
 import org.springframework.stereotype.Service;
 
-import java.util.Collections;
 import java.util.List;
 import java.util.Objects;
 import java.util.stream.Collectors;
@@ -28,6 +29,7 @@ import static distove.chat.exception.ErrorCode.*;
 @Service
 public class MessageService {
 
+    private final SimpMessagingTemplate simpMessagingTemplate;
     private final StorageService storageService;
     private final MessageRepository messageRepository;
     private final ConnectionRepository connectionRepository;
@@ -66,12 +68,17 @@ public class MessageService {
 
     public List<MessageResponse> getMessages(Long userId, Long channelId) {
         saveWelcomeMessage(userId, channelId);
-        List<MessageResponse> messageResponses = messageRepository.findAllByChannelId(channelId)
+        return messageRepository.findAllByChannelId(channelId)
                 .stream()
                 .map(x -> MessageResponse.of(x, userClient.getUser(x.getUserId()), userId))
                 .collect(Collectors.toList());
-        Collections.reverse(messageResponses);
-        return messageResponses;
+    }
+
+    public void publishFileType(Long channelId, MessageType type, FileUploadRequest request) {
+        String uploadUrl = storageService.uploadToS3(request.getFile(), IMAGE);
+        UserResponse writer = userClient.getUser(request.getUserId());
+        Message message = createMessage(channelId, writer, type, uploadUrl);
+        simpMessagingTemplate.convertAndSend("/sub/" + channelId, MessageResponse.of(message, writer, request.getUserId()));
     }
 
     private Message createMessage(Long channelId, UserResponse writer, MessageType type, String content) {
