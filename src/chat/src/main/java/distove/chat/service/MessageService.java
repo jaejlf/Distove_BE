@@ -13,7 +13,6 @@ import distove.chat.web.UserClient;
 import distove.chat.web.UserResponse;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
-import org.springframework.messaging.simp.SimpMessagingTemplate;
 import org.springframework.stereotype.Service;
 
 import java.util.Collections;
@@ -29,6 +28,7 @@ import static distove.chat.exception.ErrorCode.*;
 @Service
 public class MessageService {
 
+    private final StorageService storageService;
     private final MessageRepository messageRepository;
     private final ConnectionRepository connectionRepository;
     private final UserClient userClient;
@@ -38,14 +38,15 @@ public class MessageService {
         UserResponse writer = userClient.getUser(userId);
 
         Message message;
-        switch (request.getType()) {
+        MessageType type = request.getType();
+        switch (type) {
             case TEXT:
                 message = createMessage(channelId, writer, request.getType(), request.getContent());
                 break;
             case IMAGE:
             case FILE:
             case VIDEO:
-                String uploadUrl = request.getContent(); // TODO : 스토리지에 파일 업로드하는 과정 추가 필요
+                String uploadUrl = storageService.uploadToS3(request.getFile(), type);
                 message = createMessage(channelId, writer, request.getType(), uploadUrl);
                 break;
             case MODIFIED:
@@ -87,9 +88,7 @@ public class MessageService {
         Message message = messageRepository.findById(request.getId())
                 .orElseThrow(() -> new DistoveException(MESSAGE_NOT_FOUND_ERROR));
 
-        if (!Objects.equals(message.getUserId(), userId)) throw new DistoveException(NO_AUTH_ERROR);
-        if (!canUpdate(request.getType())) throw new DistoveException(NO_AUTH_ERROR);
-
+        checkAuthorized(userId, message.getUserId(), request.getType());
         message.updateMessage(request.getType(), request.getContent());
         return messageRepository.save(message);
     }
@@ -105,6 +104,11 @@ public class MessageService {
             connectionRepository.save(connection);
             createMessage(channelId, writer, WELCOME, writer.getNickname());
         }
+    }
+
+    private static void checkAuthorized(Long userId, Long writerId, MessageType type) {
+        if (!Objects.equals(writerId, userId)) throw new DistoveException(NO_AUTH_ERROR);
+        if (!canUpdate(type)) throw new DistoveException(NO_AUTH_ERROR);
     }
 
 }
