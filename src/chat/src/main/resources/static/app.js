@@ -15,13 +15,26 @@ var wsLink = "/chat/ws";
 
 /**
  *
- * beingTyped
+ * mod & del
  */
 var subLink = "/sub/3";
-var pubLink = "/pub/typing/3";
+var pubLink = "/pub/chat/3";
 var inputData = {
-    userId: 1
+    id: '63c91724233477018259db99',
+    userId: 1,
+    type: 'MODIFIED',
+    content: '수정된 메시지'
 }
+
+/**
+ *
+ * beingTyped
+ */
+// var subLink = "/sub/3";
+// var pubLink = "/pub/typing/3";
+// var inputData = {
+//     userId: 1
+// }
 
 function setConnected(connected) {
     $("#connect").prop("disabled", connected);
