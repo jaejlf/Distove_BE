@@ -1,4 +1,5 @@
 package distove.auth.dto.response;
+
 import com.fasterxml.jackson.annotation.JsonInclude;
 import lombok.AllArgsConstructor;
 import lombok.Builder;
@@ -26,6 +27,7 @@ public class ResultResponse<T> {
                         .data(data)
                         .build());
     }
+
     public static ResponseEntity<Object> fail(HttpStatus httpStatus, String code, String message) {
         return ResponseEntity
                 .status(httpStatus)

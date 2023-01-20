@@ -2,7 +2,9 @@ package distove.auth.service;
 
 
 import distove.auth.dto.request.LoginRequest;
+import distove.auth.dto.request.LogoutRequest;
 import distove.auth.dto.request.SignUpRequest;
+import distove.auth.dto.response.LogoutResponse;
 import distove.auth.dto.response.TokenResponse;
 import distove.auth.dto.response.UserResponse;
 import distove.auth.entity.User;
@@ -15,6 +17,7 @@ import org.springframework.stereotype.Component;
 import org.springframework.stereotype.Service;
 
 import static distove.auth.exception.ErrorCode.EMAIL_OR_PASSWORD_ERROR;
+import static distove.auth.exception.ErrorCode.SAMPLE_ERROR;
 
 @Slf4j
 @Service
@@ -46,6 +49,15 @@ public class UserService {
         user.updateRefreshToken(refreshToken);
         userRepository.save(user);
         return TokenResponse.of(accessToken, refreshToken);
+    }
+
+    public LogoutResponse signOut(LogoutRequest request) {
+        User user = userRepository.findByEmail(request.getEmail())
+                .orElseThrow(() -> new DistoveException(SAMPLE_ERROR));
+
+        user.updateRefreshToken(null);
+        userRepository.save(user);
+        return LogoutResponse.of(user.getEmail());
     }
 
     public boolean checkEmailDuplicate(String email) {
