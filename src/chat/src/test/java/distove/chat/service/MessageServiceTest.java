@@ -4,6 +4,7 @@ import distove.chat.common.CommonServiceTest;
 import distove.chat.dto.request.MessageRequest;
 import distove.chat.dto.response.MessageResponse;
 import distove.chat.dto.response.TypedUserResponse;
+import distove.chat.entity.Message;
 import distove.chat.exception.DistoveException;
 import org.junit.jupiter.api.DisplayName;
 import org.junit.jupiter.api.Nested;
@@ -33,7 +34,7 @@ class MessageServiceTest extends CommonServiceTest {
             Long channelId = 1L;
             given(userClient.getUser(any())).willReturn(dummyUser);
             MessageRequest request = new MessageRequest(
-                    dummyUser.getId(), TEXT, null, null, "this is 메시지!"
+                    dummyUser.getId(), TEXT, null, null, "{{MESSAGE CONTENT}}"
             );
 
             //when
@@ -62,7 +63,7 @@ class MessageServiceTest extends CommonServiceTest {
             Long channelId = 1L;
             given(userClient.getUser(any())).willReturn(dummyUser);
             MessageRequest request = new MessageRequest(
-                    dummyUser.getId(), WELCOME, null, null, "welcome!"
+                    dummyUser.getId(), WELCOME, null, null, "{{MESSAGE CONTENT}}"
             );
 
             //when & then
@@ -71,11 +72,27 @@ class MessageServiceTest extends CommonServiceTest {
                     .hasMessageContaining("잘못된 메시지 타입입니다.");
         }
 
+        @Test
+        void 수정_삭제_권한_없음() {
+            // given
+            Long channelId = 1L;
+            given(userClient.getUser(any())).willReturn(dummyUser);
+            Message message = messageRepository.save(new Message(channelId, 99L, TEXT, "{{MESSAGE CONTENT}}"));
+            MessageRequest request = new MessageRequest(
+                    dummyUser.getId(), DELETED, message.getId(), null, "{{MESSAGE CONTENT}}"
+            );
+
+            //when & then
+            assertThatThrownBy(() -> messageService.publishMessage(channelId, request))
+                    .isInstanceOf(DistoveException.class)
+                    .hasMessageContaining("수정/삭제 권한이 없습니다.");
+        }
+
     }
 
     @DisplayName("메시지 작성 중")
     @Test
-    void 성공() {
+    void beingTypedTest() {
         // given
         Long userId = dummyUser.getId();
         given(userClient.getUser(any())).willReturn(dummyUser);
@@ -96,7 +113,6 @@ class MessageServiceTest extends CommonServiceTest {
                 () -> assertThat(result.getType()).isEqualTo(expected.getType()),
                 () -> assertThat(result.getContent()).isEqualTo(expected.getContent())
         );
-
     }
 
 }
