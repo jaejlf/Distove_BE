@@ -70,7 +70,6 @@ public class MessageService {
                 .stream()
                 .map(x -> MessageResponse.of(x, userClient.getUser(x.getUserId()), userId))
                 .collect(Collectors.toList());
-        Collections.reverse(messageResponses);
         return messageResponses;
     }
 
