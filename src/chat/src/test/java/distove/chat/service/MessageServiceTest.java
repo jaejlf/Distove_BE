@@ -3,14 +3,14 @@ package distove.chat.service;
 import distove.chat.common.CommonServiceTest;
 import distove.chat.dto.request.MessageRequest;
 import distove.chat.dto.response.MessageResponse;
+import distove.chat.dto.response.TypedUserResponse;
 import distove.chat.exception.DistoveException;
 import org.junit.jupiter.api.DisplayName;
 import org.junit.jupiter.api.Nested;
 import org.junit.jupiter.api.Test;
 import org.springframework.beans.factory.annotation.Autowired;
 
-import static distove.chat.enumerate.MessageType.TEXT;
-import static distove.chat.enumerate.MessageType.WELCOME;
+import static distove.chat.enumerate.MessageType.*;
 import static org.assertj.core.api.AssertionsForClassTypes.assertThat;
 import static org.assertj.core.api.AssertionsForClassTypes.assertThatThrownBy;
 import static org.junit.jupiter.api.Assertions.assertAll;
@@ -70,6 +70,32 @@ class MessageServiceTest extends CommonServiceTest {
                     .isInstanceOf(DistoveException.class)
                     .hasMessageContaining("잘못된 메시지 타입입니다.");
         }
+
+    }
+
+    @DisplayName("메시지 작성 중")
+    @Test
+    void 성공() {
+        // given
+        Long userId = dummyUser.getId();
+        given(userClient.getUser(any())).willReturn(dummyUser);
+        MessageRequest request = new MessageRequest(
+                dummyUser.getId(), TEXT, null, null, "this is 메시지!"
+        );
+
+        // when
+        TypedUserResponse result = messageService.beingTyped(userId);
+
+        //then
+        TypedUserResponse expected = TypedUserResponse.builder()
+                .type(TYPING)
+                .content(dummyUser.getNickname())
+                .build();
+
+        assertAll(
+                () -> assertThat(result.getType()).isEqualTo(expected.getType()),
+                () -> assertThat(result.getContent()).isEqualTo(expected.getContent())
+        );
 
     }
 
