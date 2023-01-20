@@ -43,17 +43,18 @@ public class User {
     @Column
     private String refreshToken;
 
+    @NotBlank(message = "닉네임은 필수 입력값입니다.")
     @Column
     private String nickname;
 
 
-    public User(String email,  String password, String nickname) {
+    public User(String email, String password, String nickname) {
         this.email = email;
         this.password = password;
         this.nickname = nickname;
     }
 
-    public void updateRefreshToken(String refreshToken){
+    public void updateRefreshToken(String refreshToken) {
         this.refreshToken = refreshToken;
         this.updatedAt = LocalDateTime.now();
     }

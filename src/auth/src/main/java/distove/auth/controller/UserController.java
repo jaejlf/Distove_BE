@@ -1,14 +1,18 @@
 package distove.auth.controller;
 
 import distove.auth.dto.request.LoginRequest;
+import distove.auth.dto.request.LogoutRequest;
 import distove.auth.dto.request.SignUpRequest;
+import distove.auth.dto.response.LogoutResponse;
 import distove.auth.dto.response.ResultResponse;
 import distove.auth.service.UserService;
 import lombok.AllArgsConstructor;
+import lombok.extern.slf4j.Slf4j;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
 
+@Slf4j
 @RestController
 @AllArgsConstructor
 public class UserController {
@@ -24,7 +28,7 @@ public class UserController {
         );
     }
 
-    @GetMapping("/login")
+    @PostMapping("/login")
     public ResponseEntity<Object> login(@RequestBody LoginRequest request) {
         return ResultResponse.success(
                 HttpStatus.CREATED,
@@ -33,7 +37,17 @@ public class UserController {
         );
     }
 
-    @GetMapping("/user-emails/{email}/exists")
+    @GetMapping("/signout")
+    public ResponseEntity<Object> logout(@RequestBody LogoutRequest request) {
+        LogoutResponse logoutResponse = userService.signOut(request);
+        return ResultResponse.success(
+                HttpStatus.OK,
+                "로그아웃 성공",
+                logoutResponse
+        );
+    }
+
+    @GetMapping("/email/{email}")
     public ResponseEntity<Object> checkEmailDuplicate(@PathVariable String email) {
         return ResultResponse.success(
                 HttpStatus.OK,
@@ -41,7 +55,7 @@ public class UserController {
                 userService.checkEmailDuplicate(email));
     }
 
-    @GetMapping("/user-nicknames/{nickname}/exists")
+    @GetMapping("/nickname/{nickname}")
     public ResponseEntity<Object> checkNicknameDuplicate(@PathVariable String nickname) {
         return ResultResponse.success(
                 HttpStatus.OK,
