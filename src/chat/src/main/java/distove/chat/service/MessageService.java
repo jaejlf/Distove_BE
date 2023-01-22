@@ -21,7 +21,7 @@ import java.util.List;
 import java.util.Objects;
 import java.util.stream.Collectors;
 
-import static distove.chat.enumerate.MessageType.*;
+import static distove.chat.enumerate.MessageType.WELCOME;
 import static distove.chat.exception.ErrorCode.*;
 
 @Slf4j
@@ -37,28 +37,37 @@ public class MessageService {
 
     public MessageResponse publishMessage(Long channelId, MessageRequest request) {
         Long userId = request.getUserId();
-        UserResponse writer = userClient.getUser(userId);
 
         Message message;
         MessageType type = request.getType();
+
         switch (type) {
             case TEXT:
-                message = createMessage(channelId, writer, request.getType(), request.getContent());
-                break;
-            case IMAGE:
-            case FILE:
-            case VIDEO:
-                String uploadUrl = storageService.uploadToS3(request.getFile(), type);
-                message = createMessage(channelId, writer, request.getType(), uploadUrl);
+                message = createMessage(channelId, userId, type, request.getContent());
                 break;
             case MODIFIED:
             case DELETED: // TODO : Reply 여부에 따른 delete 세부 로직 필요
-                message = updateMessage(request, userId);
+                message = updateMessage(request.getId(), userId, type,
+                        request.getContent() != null ? request.getContent() : "삭제된 메시지입니다.");
                 break;
             default:
                 throw new DistoveException(MESSAGE_TYPE_ERROR);
         }
+
+        UserResponse writer = userClient.getUser(userId);
         return MessageResponse.of(message, writer, userId);
+    }
+
+    public void publishFile(Long channelId, MessageType type, FileUploadRequest request) {
+        Long userId = request.getUserId();
+        String fileUploadUrl = storageService.uploadToS3(request.getFile(), type);
+        Message message = createMessage(channelId, userId, type, fileUploadUrl);
+
+        UserResponse writer = userClient.getUser(request.getUserId());
+        simpMessagingTemplate.convertAndSend(
+                "/sub/" + channelId,
+                MessageResponse.of(message, writer, request.getUserId())
+        );
     }
 
     public TypedUserResponse beingTyped(Long userId) {
@@ -74,29 +83,22 @@ public class MessageService {
                 .collect(Collectors.toList());
     }
 
-    public void publishFileType(Long channelId, MessageType type, FileUploadRequest request) {
-        String uploadUrl = storageService.uploadToS3(request.getFile(), IMAGE);
-        UserResponse writer = userClient.getUser(request.getUserId());
-        Message message = createMessage(channelId, writer, type, uploadUrl);
-        simpMessagingTemplate.convertAndSend("/sub/" + channelId, MessageResponse.of(message, writer, request.getUserId()));
-    }
-
-    private Message createMessage(Long channelId, UserResponse writer, MessageType type, String content) {
+    private Message createMessage(Long channelId, Long userId, MessageType type, String content) {
         Message message = new Message(
                 channelId,
-                writer.getId(),
+                userId,
                 type,
                 content
         );
         return messageRepository.save(message);
     }
 
-    private Message updateMessage(MessageRequest request, Long userId) {
-        Message message = messageRepository.findById(request.getId())
+    private Message updateMessage(String messageId, Long userId, MessageType type, String content) {
+        Message message = messageRepository.findById(messageId)
                 .orElseThrow(() -> new DistoveException(MESSAGE_NOT_FOUND_ERROR));
 
-        checkAuthorized(userId, message.getUserId(), request.getType());
-        message.updateMessage(request.getType(), request.getContent());
+        if (!Objects.equals(message.getUserId(), userId)) throw new DistoveException(NO_AUTH_ERROR);
+        message.updateMessage(type, content);
         return messageRepository.save(message);
     }
 
@@ -104,18 +106,17 @@ public class MessageService {
         Connection connection = connectionRepository.findByChannelId(channelId);
         List<Long> connectedMemberIds = connection.getConnectedMemberIds();
 
+        if (connectedMemberIds.contains(userId)) return;
+
+        addCurrentUserToConnection(userId, connection, connectedMemberIds);
         UserResponse writer = userClient.getUser(userId);
-        if (!connectedMemberIds.contains(userId)) {
-            connectedMemberIds.add(userId);
-            connection.updateConnectedMemberIds(connectedMemberIds);
-            connectionRepository.save(connection);
-            createMessage(channelId, writer, WELCOME, writer.getNickname());
-        }
+        createMessage(channelId, userId, WELCOME, writer.getNickname());
     }
 
-    private static void checkAuthorized(Long userId, Long writerId, MessageType type) {
-        if (!Objects.equals(writerId, userId)) throw new DistoveException(NO_AUTH_ERROR);
-        if (!canUpdate(type)) throw new DistoveException(NO_AUTH_ERROR);
+    private void addCurrentUserToConnection(Long userId, Connection connection, List<Long> connectedMemberIds) {
+        connectedMemberIds.add(userId);
+        connection.updateConnectedMemberIds(connectedMemberIds);
+        connectionRepository.save(connection);
     }
 
 }

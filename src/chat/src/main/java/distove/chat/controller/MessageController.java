@@ -29,6 +29,13 @@ public class MessageController {
         return messageService.publishMessage(channelId, request);
     }
 
+    @PostMapping("/file/{channelId}")
+    public void publishFile(@PathVariable Long channelId,
+                            @RequestParam MessageType type,
+                            @ModelAttribute FileUploadRequest request) {
+        messageService.publishFile(channelId, type, request);
+    }
+
     @MessageMapping("/typing/{channelId}")
     @SendTo("/sub/{channelId}")
     public TypedUserResponse beingTyped(@Payload MessageRequest request) {
@@ -36,17 +43,10 @@ public class MessageController {
         return messageService.beingTyped(userId);
     }
 
-    @PostMapping("/file/{channelId}/{type}")
-    public void publishFileType(@PathVariable Long channelId,
-                                @PathVariable MessageType type,
-                                @ModelAttribute FileUploadRequest request) {
-        messageService.publishFileType(channelId, type, request);
-    }
-
     @GetMapping("/list/{channelId}")
     public ResponseEntity<Object> getMessages(@RequestHeader("userId") Long userId,
-                                              @PathVariable String channelId) {
-        List<MessageResponse> result = messageService.getMessages(userId, Long.parseLong(channelId));
+                                              @PathVariable Long channelId) {
+        List<MessageResponse> result = messageService.getMessages(userId, channelId);
         return ResultResponse.success(HttpStatus.OK, "메시지 리스트 조회", result);
     }
 
