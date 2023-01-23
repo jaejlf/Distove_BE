@@ -22,6 +22,7 @@ import static distove.chat.entity.Message.newMessage;
 import static distove.chat.entity.Reply.newReply;
 import static distove.chat.entity.ReplyInfo.newReplyInfo;
 import static distove.chat.exception.ErrorCode.MESSAGE_NOT_FOUND_ERROR;
+import static distove.chat.exception.ErrorCode.REPLY_PARENT_NOT_FOUND_ERROR;
 
 @Service
 public class ReplyService extends PublishService {
@@ -36,9 +37,10 @@ public class ReplyService extends PublishService {
     @Override
     public MessageResponse publishMessage(Long channelId, MessageRequest request) {
         Long userId = request.getUserId();
+        Message parent = getParentMessage(request.getParentId());
 
         Message message = createMessageByType(channelId, request, userId);
-        Reply reply = replyRepository.save(newReply(request.getParentId(), message));
+        Reply reply = replyRepository.save(newReply(parent.getId(), message));
 
         UserResponse writer = userClient.getUser(userId);
         return MessageResponse.of(reply, writer, userId);
@@ -47,10 +49,11 @@ public class ReplyService extends PublishService {
     @Override
     public MessageResponse publishFile(Long channelId, MessageType type, FileUploadRequest request) {
         Long userId = request.getUserId();
+        Message parent = getParentMessage(request.getParentId());
 
         String fileUploadUrl = storageService.uploadToS3(request.getFile(), type);
         Message message = newMessage(channelId, userId, type, fileUploadUrl);
-        Reply reply = replyRepository.save(newReply(request.getParentId(), message));
+        Reply reply = replyRepository.save(newReply(parent.getId(), message));
 
         UserResponse writer = userClient.getUser(userId);
         return MessageResponse.of(reply, writer, userId);
@@ -75,6 +78,11 @@ public class ReplyService extends PublishService {
                 .stream()
                 .map(x -> MessageResponse.of(x, userClient.getUser(x.getMessage().getUserId()), userId))
                 .collect(Collectors.toList());
+    }
+
+    private Message getParentMessage(String parentId) {
+        return messageRepository.findByIdAndReplyInfoIsNotNull(parentId)
+                .orElseThrow(() -> new DistoveException(REPLY_PARENT_NOT_FOUND_ERROR));
     }
 
 }
