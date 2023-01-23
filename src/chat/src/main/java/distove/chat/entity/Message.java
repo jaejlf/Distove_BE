@@ -21,6 +21,7 @@ public class Message {
     private String nickname;
     private String content;
     private LocalDateTime createdAt;
+    private String replyName;
 
     public static Message newMessage(Long channelId, Long userId, MessageType type, String content) {
         return Message.builder()
@@ -35,6 +36,10 @@ public class Message {
     public void updateMessage(MessageType type, String content) {
         this.type = type;
         this.content = content;
+    }
+
+    public void addReplyName(String replyName) {
+        this.replyName = replyName;
     }
 
 }
