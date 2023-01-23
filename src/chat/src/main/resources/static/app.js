@@ -4,8 +4,8 @@ var wsLink = "/chat/ws";
 /**
  * publishMessage
  */
-// var subLink = "/sub/3";
-// var pubLink = "/pub/chat/3";
+// var subLink = "/sub/1";
+// var pubLink = "/pub/chat/1";
 // var inputData = {
 //     userId: 1,
 //     type: 'TEXT',
@@ -15,14 +15,14 @@ var wsLink = "/chat/ws";
 /**
  * mod & del
  */
-var subLink = "/sub/3";
-var pubLink = "/pub/chat/3";
-var inputData = {
-    userId: 1,
-    type: 'MODIFIED',
-    messageId: '63ccefb1e788e6253b13c833',
-    content: '수정된 메시지'
-}
+// var subLink = "/sub/1";
+// var pubLink = "/pub/chat/1";
+// var inputData = {
+//     userId: 1,
+//     type: 'MODIFIED',
+//     messageId: '63ce2a96ac2d4468f06c9971',
+//     content: '수정된 메시지'
+// }
 
 /**
  * beingTyped
@@ -32,6 +32,18 @@ var inputData = {
 // var inputData = {
 //     userId: 1
 // }
+
+/**
+ * createReply
+ */
+var subLink = "/sub/1";
+var pubLink = "/pub/reply/1";
+var inputData = {
+    userId: 1,
+    type: 'TEXT',
+    content: 'repl-repl-repl',
+    parentId: "63ce2a96ac2d4468f06c9971"
+}
 
 function setConnected(connected) {
     $("#connect").prop("disabled", connected);

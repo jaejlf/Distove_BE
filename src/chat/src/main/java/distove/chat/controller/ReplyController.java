@@ -6,7 +6,6 @@ import distove.chat.dto.request.ReplyRequest;
 import distove.chat.dto.response.MessageResponse;
 import distove.chat.dto.response.ResultResponse;
 import distove.chat.enumerate.MessageType;
-import distove.chat.service.MessageService;
 import distove.chat.service.ReplyService;
 import lombok.RequiredArgsConstructor;
 import org.springframework.http.HttpStatus;
@@ -14,7 +13,7 @@ import org.springframework.http.ResponseEntity;
 import org.springframework.messaging.handler.annotation.DestinationVariable;
 import org.springframework.messaging.handler.annotation.MessageMapping;
 import org.springframework.messaging.handler.annotation.Payload;
-import org.springframework.messaging.handler.annotation.SendTo;
+import org.springframework.messaging.simp.SimpMessagingTemplate;
 import org.springframework.web.bind.annotation.*;
 
 import javax.validation.Valid;
@@ -24,8 +23,8 @@ import java.util.List;
 @RestController
 public class ReplyController {
 
+    private final SimpMessagingTemplate simpMessagingTemplate;
     private final ReplyService replyService;
-    private final MessageService messageService;
 
     // TODO : Response 형식 논의 필요 (void or else?)
     @PostMapping("/reply/{parentId}")
@@ -37,16 +36,17 @@ public class ReplyController {
 
     // TODO : Pub & Sub path 논의 필요
     @MessageMapping("/reply/{channelId}")
-    @SendTo("/sub/{channelId}")
-    public MessageResponse publishMessage(@DestinationVariable Long channelId, @Payload MessageRequest request) {
-        return messageService.publishMessage(channelId, request);
+    public void publishMessage(@DestinationVariable Long channelId, @Payload MessageRequest request) {
+        MessageResponse result = replyService.publishMessage(channelId, request);
+        simpMessagingTemplate.convertAndSend("/sub/" + channelId, result);
     }
 
     @PostMapping("/reply/file/{channelId}")
     public void publishFile(@PathVariable Long channelId,
                             @RequestParam MessageType type,
                             @ModelAttribute FileUploadRequest request) {
-        messageService.publishFile(channelId, type, request);
+        MessageResponse result = replyService.publishFile(channelId, type, request);
+        simpMessagingTemplate.convertAndSend("/sub/" + channelId, result);
     }
 
     @GetMapping("/replies/{channelId}")

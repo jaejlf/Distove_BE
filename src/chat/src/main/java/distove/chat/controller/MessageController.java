@@ -13,7 +13,6 @@ import org.springframework.http.ResponseEntity;
 import org.springframework.messaging.handler.annotation.DestinationVariable;
 import org.springframework.messaging.handler.annotation.MessageMapping;
 import org.springframework.messaging.handler.annotation.Payload;
-import org.springframework.messaging.handler.annotation.SendTo;
 import org.springframework.messaging.simp.SimpMessagingTemplate;
 import org.springframework.web.bind.annotation.*;
 
@@ -27,9 +26,9 @@ public class MessageController {
     private final MessageService messageService;
 
     @MessageMapping("/chat/{channelId}")
-    @SendTo("/sub/{channelId}")
-    public MessageResponse publishMessage(@DestinationVariable Long channelId, @Payload MessageRequest request) {
-        return messageService.publishMessage(channelId, request);
+    public void publishMessage(@DestinationVariable Long channelId, @Payload MessageRequest request) {
+        MessageResponse result = messageService.publishMessage(channelId, request);
+        simpMessagingTemplate.convertAndSend("/sub/" + channelId, result);
     }
 
     @PostMapping("/file/{channelId}")
@@ -41,16 +40,16 @@ public class MessageController {
     }
 
     @MessageMapping("/typing/{channelId}")
-    @SendTo("/sub/{channelId}")
-    public TypedUserResponse beingTyped(@Payload MessageRequest request) {
+    public void publishTypedUser(@DestinationVariable Long channelId, @Payload MessageRequest request) {
         Long userId = request.getUserId();
-        return messageService.beingTyped(userId);
+        TypedUserResponse result = messageService.publishTypedUser(userId);
+        simpMessagingTemplate.convertAndSend("/sub/" + channelId, result);
     }
 
     @GetMapping("/list/{channelId}")
-    public ResponseEntity<Object> getMessages(@RequestHeader("userId") Long userId,
-                                              @PathVariable Long channelId) {
-        List<MessageResponse> result = messageService.getMessages(userId, channelId);
+    public ResponseEntity<Object> getMessagesByChannelId(@RequestHeader("userId") Long userId,
+                                                         @PathVariable Long channelId) {
+        List<MessageResponse> result = messageService.getMessagesByChannelId(userId, channelId);
         return ResultResponse.success(HttpStatus.OK, "메시지 리스트 조회", result);
     }
 

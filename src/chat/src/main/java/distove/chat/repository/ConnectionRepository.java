@@ -3,6 +3,8 @@ package distove.chat.repository;
 import distove.chat.entity.Connection;
 import org.springframework.data.mongodb.repository.MongoRepository;
 
+import java.util.Optional;
+
 public interface ConnectionRepository extends MongoRepository<Connection, String> {
-    Connection findByChannelId(Long channelId);
+    Optional<Connection> findByChannelId(Long channelId);
 }
