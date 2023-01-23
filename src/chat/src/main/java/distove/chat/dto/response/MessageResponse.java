@@ -2,6 +2,7 @@ package distove.chat.dto.response;
 
 import com.fasterxml.jackson.annotation.JsonInclude;
 import distove.chat.entity.Message;
+import distove.chat.entity.Reply;
 import distove.chat.entity.ReplyInfo;
 import distove.chat.enumerate.MessageType;
 import distove.chat.web.UserResponse;
@@ -46,6 +47,19 @@ public class MessageResponse {
                     .replyInfo(message.getReplyInfo())
                     .build();
         }
+    }
+
+    public static MessageResponse of(Reply reply, UserResponse writer, Long userId) {
+        Message message = reply.getMessage();
+        return MessageResponse.builder()
+                .id(reply.getId())
+                .type(message.getType())
+                .content(message.getContent())
+                .createdAt(message.getCreatedAt())
+                .writer(writer)
+                .hasAuthorized(Objects.equals(writer.getId(), userId))
+                .replyInfo(message.getReplyInfo())
+                .build();
     }
 
 }

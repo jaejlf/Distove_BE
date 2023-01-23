@@ -22,8 +22,4 @@ public class Reply {
                 .build();
     }
 
-    public void updateMessage(Message message) {
-        this.message = message;
-    }
-
 }
