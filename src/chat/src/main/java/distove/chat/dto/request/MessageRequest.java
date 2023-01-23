@@ -4,7 +4,6 @@ import distove.chat.enumerate.MessageType;
 import lombok.AllArgsConstructor;
 import lombok.Getter;
 import lombok.NoArgsConstructor;
-import org.springframework.web.multipart.MultipartFile;
 
 import javax.validation.constraints.NotNull;
 
@@ -16,8 +15,8 @@ public class MessageRequest {
     @NotNull
     private Long userId;
     private MessageType type;
-    private String id;
-    private MultipartFile file;
+    private String messageId;
     private String content;
+    private String parentId;
 
 }

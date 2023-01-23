@@ -48,7 +48,7 @@ public class MessageService {
                 break;
             case MODIFIED:
             case DELETED: // TODO : Reply 여부에 따른 delete 세부 로직 필요
-                message = updateMessage(request.getId(), userId, type,
+                message = updateMessage(request.getMessageId(), userId, type,
                         request.getContent() != null ? request.getContent() : "삭제된 메시지입니다.");
                 break;
             default:
