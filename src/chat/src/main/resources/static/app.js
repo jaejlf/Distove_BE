@@ -2,7 +2,6 @@ var stompClient = null;
 var wsLink = "/chat/ws";
 
 /**
- *
  * publishMessage
  */
 // var subLink = "/sub/3";
@@ -14,20 +13,18 @@ var wsLink = "/chat/ws";
 // }
 
 /**
- *
  * mod & del
  */
 var subLink = "/sub/3";
 var pubLink = "/pub/chat/3";
 var inputData = {
-    id: '63c91724233477018259db99',
     userId: 1,
     type: 'MODIFIED',
+    messageId: '63ccefb1e788e6253b13c833',
     content: '수정된 메시지'
 }
 
 /**
- *
  * beingTyped
  */
 // var subLink = "/sub/3";
@@ -45,7 +42,6 @@ function setConnected(connected) {
     else {
         $("#conversation").hide();
     }
-    $("#greetings").html("");
 }
 
 function connect() {
@@ -55,7 +51,6 @@ function connect() {
         setConnected(true);
         console.log('Connected: ' + frame);
         stompClient.subscribe(subLink, function (greeting) {
-            showGreeting(JSON.parse(greeting.body).content);
         });
     });
 }
@@ -70,10 +65,6 @@ function disconnect() {
 
 function sendName() {
     stompClient.send(pubLink, {}, JSON.stringify(inputData));
-}
-
-function showGreeting(message) {
-    $("#greetings").append("<tr><td>" + message + "</td></tr>");
 }
 
 $(function () {
