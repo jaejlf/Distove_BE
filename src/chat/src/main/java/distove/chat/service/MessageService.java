@@ -6,22 +6,23 @@ import distove.chat.dto.response.MessageResponse;
 import distove.chat.dto.response.TypedUserResponse;
 import distove.chat.entity.Connection;
 import distove.chat.entity.Message;
+import distove.chat.entity.Reply;
 import distove.chat.enumerate.MessageType;
 import distove.chat.exception.DistoveException;
 import distove.chat.repository.ConnectionRepository;
 import distove.chat.repository.MessageRepository;
+import distove.chat.repository.ReplyRepository;
 import distove.chat.web.UserClient;
 import distove.chat.web.UserResponse;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
-import org.springframework.messaging.simp.SimpMessagingTemplate;
 import org.springframework.stereotype.Service;
 
 import java.util.List;
 import java.util.Objects;
 import java.util.stream.Collectors;
 
-import static distove.chat.entity.Message.*;
+import static distove.chat.entity.Message.newMessage;
 import static distove.chat.enumerate.MessageType.WELCOME;
 import static distove.chat.exception.ErrorCode.*;
 
@@ -30,45 +31,29 @@ import static distove.chat.exception.ErrorCode.*;
 @Service
 public class MessageService {
 
-    private final SimpMessagingTemplate simpMessagingTemplate;
     private final StorageService storageService;
     private final MessageRepository messageRepository;
+    private final ReplyRepository replyRepository;
     private final ConnectionRepository connectionRepository;
     private final UserClient userClient;
 
     public MessageResponse publishMessage(Long channelId, MessageRequest request) {
         Long userId = request.getUserId();
-
-        Message message;
-        MessageType type = request.getType();
-
-        switch (type) {
-            case TEXT:
-                message = createMessage(channelId, userId, type, request.getContent());
-                break;
-            case MODIFIED:
-            case DELETED: // TODO : Reply 여부에 따른 delete 세부 로직 필요
-                message = updateMessage(request.getMessageId(), userId, type,
-                        request.getContent() != null ? request.getContent() : "삭제된 메시지입니다.");
-                break;
-            default:
-                throw new DistoveException(MESSAGE_TYPE_ERROR);
-        }
+        Message message = createMessageByType(channelId, request, userId);
+        saveMessage(request.getParentId(), message);
 
         UserResponse writer = userClient.getUser(userId);
         return MessageResponse.of(message, writer, userId);
     }
 
-    public void publishFile(Long channelId, MessageType type, FileUploadRequest request) {
+    public MessageResponse publishFile(Long channelId, MessageType type, FileUploadRequest request) {
         Long userId = request.getUserId();
         String fileUploadUrl = storageService.uploadToS3(request.getFile(), type);
-        Message message = createMessage(channelId, userId, type, fileUploadUrl);
+        Message message = newMessage(channelId, userId, type, fileUploadUrl);
+        saveMessage(request.getParentId(), message);
 
-        UserResponse writer = userClient.getUser(request.getUserId());
-        simpMessagingTemplate.convertAndSend(
-                "/sub/" + channelId,
-                MessageResponse.of(message, writer, request.getUserId())
-        );
+        UserResponse writer = userClient.getUser(userId);
+        return MessageResponse.of(message, writer, userId);
     }
 
     public TypedUserResponse beingTyped(Long userId) {
@@ -84,9 +69,23 @@ public class MessageService {
                 .collect(Collectors.toList());
     }
 
-    private Message createMessage(Long channelId, Long userId, MessageType type, String content) {
-        Message message = newMessage(channelId, userId, type, content);
-        return messageRepository.save(message);
+    private Message createMessageByType(Long channelId, MessageRequest request, Long userId) {
+        Message message;
+        MessageType type = request.getType();
+
+        switch (type) {
+            case TEXT:
+                message = newMessage(channelId, userId, type, request.getContent());
+                break;
+            case MODIFIED:
+            case DELETED: // TODO : Reply 여부에 따른 delete 세부 로직 필요
+                message = updateMessage(request.getMessageId(), userId, type,
+                        request.getContent() != null ? request.getContent() : "삭제된 메시지입니다.");
+                break;
+            default:
+                throw new DistoveException(MESSAGE_TYPE_ERROR);
+        }
+        return message;
     }
 
     private Message updateMessage(String messageId, Long userId, MessageType type, String content) {
@@ -94,8 +93,14 @@ public class MessageService {
                 .orElseThrow(() -> new DistoveException(MESSAGE_NOT_FOUND_ERROR));
 
         if (!Objects.equals(message.getUserId(), userId)) throw new DistoveException(NO_AUTH_ERROR);
+
         message.updateMessage(type, content);
-        return messageRepository.save(message);
+        return message;
+    }
+
+    private void saveMessage(String request, Message message) {
+        if (request == null) messageRepository.save(message);
+        else replyRepository.save(Reply.newReply(request, message));
     }
 
     private void saveWelcomeMessage(Long userId, Long channelId) {
@@ -106,7 +111,7 @@ public class MessageService {
 
         addUserToConnection(userId, connection, connectedMemberIds);
         UserResponse writer = userClient.getUser(userId);
-        createMessage(channelId, userId, WELCOME, writer.getNickname());
+        messageRepository.save(newMessage(channelId, userId, WELCOME, writer.getNickname()));
     }
 
     private void addUserToConnection(Long userId, Connection connection, List<Long> connectedMemberIds) {

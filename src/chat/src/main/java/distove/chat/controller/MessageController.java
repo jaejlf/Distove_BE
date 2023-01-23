@@ -14,6 +14,7 @@ import org.springframework.messaging.handler.annotation.DestinationVariable;
 import org.springframework.messaging.handler.annotation.MessageMapping;
 import org.springframework.messaging.handler.annotation.Payload;
 import org.springframework.messaging.handler.annotation.SendTo;
+import org.springframework.messaging.simp.SimpMessagingTemplate;
 import org.springframework.web.bind.annotation.*;
 
 import java.util.List;
@@ -21,6 +22,8 @@ import java.util.List;
 @RequiredArgsConstructor
 @RestController
 public class MessageController {
+
+    private final SimpMessagingTemplate simpMessagingTemplate;
     private final MessageService messageService;
 
     @MessageMapping("/chat/{channelId}")
@@ -33,7 +36,8 @@ public class MessageController {
     public void publishFile(@PathVariable Long channelId,
                             @RequestParam MessageType type,
                             @ModelAttribute FileUploadRequest request) {
-        messageService.publishFile(channelId, type, request);
+        MessageResponse result = messageService.publishFile(channelId, type, request);
+        simpMessagingTemplate.convertAndSend("/sub/" + channelId, result);
     }
 
     @MessageMapping("/typing/{channelId}")

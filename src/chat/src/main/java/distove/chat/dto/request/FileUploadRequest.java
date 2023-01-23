@@ -20,4 +20,6 @@ public class FileUploadRequest {
     @NotNull
     private MultipartFile file;
 
+    private String parentId;
+
 }

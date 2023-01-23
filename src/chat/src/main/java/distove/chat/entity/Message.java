@@ -18,7 +18,6 @@ public class Message {
     private Long channelId;
     private Long userId;
     private MessageType type;
-    private String nickname;
     private String content;
     private LocalDateTime createdAt;
     private ReplyInfo replyInfo;
