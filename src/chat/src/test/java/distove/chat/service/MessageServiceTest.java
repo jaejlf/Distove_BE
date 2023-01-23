@@ -11,7 +11,9 @@ import org.junit.jupiter.api.Nested;
 import org.junit.jupiter.api.Test;
 import org.springframework.beans.factory.annotation.Autowired;
 
-import static distove.chat.entity.Message.*;
+import java.util.List;
+
+import static distove.chat.entity.Message.newMessage;
 import static distove.chat.enumerate.MessageType.*;
 import static org.assertj.core.api.AssertionsForClassTypes.assertThat;
 import static org.assertj.core.api.AssertionsForClassTypes.assertThatThrownBy;
@@ -93,13 +95,13 @@ class MessageServiceTest extends CommonServiceTest {
 
     @DisplayName("메시지 작성 중")
     @Test
-    void beingTypedTest() {
+    void publishTypedUserTest() {
         // given
         Long userId = dummyUser.getId();
         given(userClient.getUser(any())).willReturn(dummyUser);
 
         // when
-        TypedUserResponse result = messageService.beingTyped(userId);
+        TypedUserResponse result = messageService.publishTypedUser(userId);
 
         //then
         TypedUserResponse expected = TypedUserResponse.builder()
@@ -111,6 +113,47 @@ class MessageServiceTest extends CommonServiceTest {
                 () -> assertThat(result.getType()).isEqualTo(expected.getType()),
                 () -> assertThat(result.getContent()).isEqualTo(expected.getContent())
         );
+    }
+
+    @DisplayName("메시지 리스트 조회")
+    @Nested
+    class GetMessagesByChannelIdTest {
+
+        @Test
+        void 성공() {
+            // given
+            Long channelId = 1L;
+            given(userClient.getUser(any())).willReturn(dummyUser);
+
+            // when
+            List<MessageResponse> result = messageService.getMessagesByChannelId(dummyUser.getId(), channelId);
+
+            // then
+            MessageResponse expected = MessageResponse.builder()
+                    .type(WELCOME)
+                    .content(dummyUser.getNickname())
+                    .hasAuthorized(false)
+                    .build();
+
+            assertAll(
+                    () -> assertThat(result.get(0).getType()).isEqualTo(expected.getType()),
+                    () -> assertThat(result.get(0).getContent()).isEqualTo(expected.getContent()),
+                    () -> assertThat(result.get(0).getHasAuthorized()).isEqualTo(expected.getHasAuthorized())
+            );
+        }
+
+        @Test
+        void 존재하지_않는_채널() {
+            // given
+            Long channelId = 99L;
+            given(userClient.getUser(any())).willReturn(dummyUser);
+
+            //when & then
+            assertThatThrownBy(() -> messageService.getMessagesByChannelId(dummyUser.getId(), channelId))
+                    .isInstanceOf(DistoveException.class)
+                    .hasMessageContaining("존재하지 않는 채널입니다.");
+        }
+
     }
 
 }

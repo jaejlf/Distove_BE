@@ -10,6 +10,10 @@ import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.boot.test.context.SpringBootTest;
 import org.springframework.boot.test.mock.mockito.MockBean;
 
+import java.util.ArrayList;
+
+import static distove.chat.entity.Connection.newConnection;
+
 @SpringBootTest
 public class CommonServiceTest {
 
@@ -27,12 +31,13 @@ public class CommonServiceTest {
     @BeforeEach
     public void setUp() {
         dummyUser = new UserResponse(1L, "더미더미", "www.xxx");
-        messageRepository.deleteAll();
+        connectionRepository.save(newConnection(1L, new ArrayList<>()));
     }
 
     @AfterEach
     public void clear() {
         messageRepository.deleteAll();
+        connectionRepository.deleteAll();
     }
 
 }
