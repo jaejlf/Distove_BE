@@ -21,6 +21,7 @@ import java.util.List;
 import java.util.Objects;
 import java.util.stream.Collectors;
 
+import static distove.chat.entity.Message.*;
 import static distove.chat.enumerate.MessageType.WELCOME;
 import static distove.chat.exception.ErrorCode.*;
 
@@ -84,12 +85,7 @@ public class MessageService {
     }
 
     private Message createMessage(Long channelId, Long userId, MessageType type, String content) {
-        Message message = new Message(
-                channelId,
-                userId,
-                type,
-                content
-        );
+        Message message = newMessage(channelId, userId, type, content);
         return messageRepository.save(message);
     }
 
@@ -108,12 +104,12 @@ public class MessageService {
 
         if (connectedMemberIds.contains(userId)) return;
 
-        addCurrentUserToConnection(userId, connection, connectedMemberIds);
+        addUserToConnection(userId, connection, connectedMemberIds);
         UserResponse writer = userClient.getUser(userId);
         createMessage(channelId, userId, WELCOME, writer.getNickname());
     }
 
-    private void addCurrentUserToConnection(Long userId, Connection connection, List<Long> connectedMemberIds) {
+    private void addUserToConnection(Long userId, Connection connection, List<Long> connectedMemberIds) {
         connectedMemberIds.add(userId);
         connection.updateConnectedMemberIds(connectedMemberIds);
         connectionRepository.save(connection);

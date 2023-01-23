@@ -11,6 +11,7 @@ import org.junit.jupiter.api.Nested;
 import org.junit.jupiter.api.Test;
 import org.springframework.beans.factory.annotation.Autowired;
 
+import static distove.chat.entity.Message.*;
 import static distove.chat.enumerate.MessageType.*;
 import static org.assertj.core.api.AssertionsForClassTypes.assertThat;
 import static org.assertj.core.api.AssertionsForClassTypes.assertThatThrownBy;
@@ -77,7 +78,7 @@ class MessageServiceTest extends CommonServiceTest {
             // given
             Long channelId = 1L;
             given(userClient.getUser(any())).willReturn(dummyUser);
-            Message message = messageRepository.save(new Message(channelId, 99L, TEXT, "{{MESSAGE CONTENT}}"));
+            Message message = messageRepository.save(newMessage(channelId, 99L, TEXT, "{{MESSAGE CONTENT}}"));
             MessageRequest request = new MessageRequest(
                     dummyUser.getId(), DELETED, message.getId(), null, "{{MESSAGE CONTENT}}"
             );
@@ -96,9 +97,6 @@ class MessageServiceTest extends CommonServiceTest {
         // given
         Long userId = dummyUser.getId();
         given(userClient.getUser(any())).willReturn(dummyUser);
-        MessageRequest request = new MessageRequest(
-                dummyUser.getId(), TEXT, null, null, "this is 메시지!"
-        );
 
         // when
         TypedUserResponse result = messageService.beingTyped(userId);
