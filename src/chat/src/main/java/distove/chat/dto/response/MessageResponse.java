@@ -28,6 +28,17 @@ public class MessageResponse {
     private ReplyInfo replyInfo;
 
     public static MessageResponse of(Message message, UserResponse writer, Long userId) {
+        return MessageResponse.builder()
+                .id(message.getId())
+                .type(message.getType())
+                .content(message.getContent())
+                .createdAt(message.getCreatedAt())
+                .writer(writer)
+                .hasAuthorized(Objects.equals(writer.getId(), userId))
+                .build();
+    }
+
+    public static MessageResponse of(Message message, UserResponse writer, Long userId, ReplyInfo replyInfo) {
         if (isNotiMessage(message.getType())) {
             return MessageResponse.builder()
                     .id(message.getId())
@@ -44,7 +55,7 @@ public class MessageResponse {
                     .createdAt(message.getCreatedAt())
                     .writer(writer)
                     .hasAuthorized(Objects.equals(writer.getId(), userId))
-                    .replyInfo(message.getReplyInfo())
+                    .replyInfo(replyInfo)
                     .build();
         }
     }
@@ -58,7 +69,6 @@ public class MessageResponse {
                 .createdAt(message.getCreatedAt())
                 .writer(writer)
                 .hasAuthorized(Objects.equals(writer.getId(), userId))
-                .replyInfo(message.getReplyInfo())
                 .build();
     }
 

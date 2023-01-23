@@ -50,9 +50,9 @@ public class ReplyController {
     }
 
     @GetMapping("/replies/{channelId}")
-    public ResponseEntity<Object> getRepliesByChannelId(@RequestHeader("userId") Long userId,
-                                                        @PathVariable Long channelId) {
-        List<MessageResponse> result = replyService.getRepliesByChannelId(userId, channelId);
+    public ResponseEntity<Object> getParentByChannelId(@RequestHeader("userId") Long userId,
+                                                       @PathVariable Long channelId) {
+        List<MessageResponse> result = replyService.getParentByChannelId(userId, channelId);
         return ResultResponse.success(HttpStatus.OK, "채널의 Reply 리스트 조회", result);
     }
 

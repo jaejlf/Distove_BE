@@ -4,15 +4,20 @@ import distove.chat.dto.request.FileUploadRequest;
 import distove.chat.dto.request.MessageRequest;
 import distove.chat.dto.response.MessageResponse;
 import distove.chat.entity.Message;
+import distove.chat.entity.ReplyInfo;
 import distove.chat.enumerate.MessageType;
 import distove.chat.exception.DistoveException;
 import distove.chat.repository.MessageRepository;
 import distove.chat.web.UserClient;
+import distove.chat.web.UserResponse;
 import lombok.RequiredArgsConstructor;
 
+import java.util.ArrayList;
+import java.util.List;
 import java.util.Objects;
 
 import static distove.chat.entity.Message.newMessage;
+import static distove.chat.entity.ReplyInfo.allReplyInfo;
 import static distove.chat.exception.ErrorCode.*;
 
 @RequiredArgsConstructor
@@ -52,6 +57,26 @@ public abstract class PublishService {
 
         message.updateMessage(type, content);
         return message;
+    }
+
+    protected List<MessageResponse> convertMessageToDtoWithReplyInfo(Long userId, List<Message> messages) {
+        List<MessageResponse> messageResponses = new ArrayList<>();
+        for (Message message : messages) {
+            UserResponse writer = userClient.getUser(message.getUserId());
+
+            if (message.getReplyInfo() != null) {
+                ReplyInfo replyInfo = message.getReplyInfo();
+                UserResponse stUser = userClient.getUser(replyInfo.getStUserId());
+                messageResponses.add(MessageResponse.of(
+                        message, writer, userId,
+                        allReplyInfo(
+                                replyInfo.getReplyName(), replyInfo.getStUserId(),
+                                stUser.getNickname(), stUser.getProfileImgUrl())));
+            } else {
+                messageResponses.add(MessageResponse.of(message, writer, userId, null)); // Noti 메시지 판별을 위해 replyInfo 포함된 DTO 지정
+            }
+        }
+        return messageResponses;
     }
 
 }

@@ -5,6 +5,7 @@ import distove.chat.dto.request.MessageRequest;
 import distove.chat.dto.request.ReplyRequest;
 import distove.chat.dto.response.MessageResponse;
 import distove.chat.entity.Message;
+import distove.chat.entity.Reply;
 import distove.chat.entity.ReplyInfo;
 import distove.chat.enumerate.MessageType;
 import distove.chat.exception.DistoveException;
@@ -37,10 +38,10 @@ public class ReplyService extends PublishService {
         Long userId = request.getUserId();
 
         Message message = createMessageByType(channelId, request, userId);
-        replyRepository.save(newReply(request.getParentId(), message));
+        Reply reply = replyRepository.save(newReply(request.getParentId(), message));
 
         UserResponse writer = userClient.getUser(userId);
-        return MessageResponse.of(message, writer, userId);
+        return MessageResponse.of(reply, writer, userId);
     }
 
     @Override
@@ -49,10 +50,10 @@ public class ReplyService extends PublishService {
 
         String fileUploadUrl = storageService.uploadToS3(request.getFile(), type);
         Message message = newMessage(channelId, userId, type, fileUploadUrl);
-        replyRepository.save(newReply(request.getParentId(), message));
+        Reply reply = replyRepository.save(newReply(request.getParentId(), message));
 
         UserResponse writer = userClient.getUser(userId);
-        return MessageResponse.of(message, writer, userId);
+        return MessageResponse.of(reply, writer, userId);
     }
 
     public void createReply(Long userId, String parentId, ReplyRequest request) {
@@ -64,11 +65,9 @@ public class ReplyService extends PublishService {
         messageRepository.save(parent);
     }
 
-    public List<MessageResponse> getRepliesByChannelId(Long userId, Long channelId) {
-        return messageRepository.findAllByChannelIdAndReplyInfoIsNotNull(channelId)
-                .stream()
-                .map(x -> MessageResponse.of(x, userClient.getUser(x.getUserId()), userId))
-                .collect(Collectors.toList());
+    public List<MessageResponse> getParentByChannelId(Long userId, Long channelId) {
+        List<Message> messages = messageRepository.findAllByChannelIdAndReplyInfoIsNotNull(channelId);
+        return convertMessageToDtoWithReplyInfo(userId, messages);
     }
 
     public List<MessageResponse> getChildrenByParentId(Long userId, String parentId) {

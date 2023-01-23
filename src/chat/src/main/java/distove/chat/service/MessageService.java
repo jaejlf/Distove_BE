@@ -16,7 +16,6 @@ import lombok.extern.slf4j.Slf4j;
 import org.springframework.stereotype.Service;
 
 import java.util.List;
-import java.util.stream.Collectors;
 
 import static distove.chat.entity.Message.newMessage;
 import static distove.chat.enumerate.MessageType.WELCOME;
@@ -58,10 +57,8 @@ public class MessageService extends PublishService {
 
     public List<MessageResponse> getMessagesByChannelId(Long userId, Long channelId) {
         saveWelcomeMessage(userId, channelId);
-        return messageRepository.findAllByChannelId(channelId)
-                .stream()
-                .map(x -> MessageResponse.of(x, userClient.getUser(x.getUserId()), userId))
-                .collect(Collectors.toList());
+        List<Message> messages = messageRepository.findAllByChannelId(channelId);
+        return convertMessageToDtoWithReplyInfo(userId, messages);
     }
 
     public TypedUserResponse publishTypedUser(Long userId) {
