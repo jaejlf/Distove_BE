@@ -11,6 +11,7 @@ import lombok.RequiredArgsConstructor;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.messaging.handler.annotation.DestinationVariable;
+import org.springframework.messaging.handler.annotation.Header;
 import org.springframework.messaging.handler.annotation.MessageMapping;
 import org.springframework.messaging.handler.annotation.Payload;
 import org.springframework.messaging.simp.SimpMessagingTemplate;
@@ -36,16 +37,19 @@ public class ReplyController {
 
     // TODO : Pub & Sub path 논의 필요
     @MessageMapping("/reply/{channelId}")
-    public void publishMessage(@DestinationVariable Long channelId, @Payload MessageRequest request) {
-        MessageResponse result = replyService.publishMessage(channelId, request);
+    public void publishMessage(@Header("userId") Long userId,
+                               @DestinationVariable Long channelId,
+                               @Payload MessageRequest request) {
+        MessageResponse result = replyService.publishMessage(userId, channelId, request);
         simpMessagingTemplate.convertAndSend("/sub/" + channelId, result);
     }
 
     @PostMapping("/reply/file/{channelId}")
-    public void publishFile(@PathVariable Long channelId,
+    public void publishFile(@RequestHeader("userId") Long userId,
+                            @PathVariable Long channelId,
                             @RequestParam MessageType type,
                             @ModelAttribute FileUploadRequest request) {
-        MessageResponse result = replyService.publishFile(channelId, type, request);
+        MessageResponse result = replyService.publishFile(userId, channelId, type, request);
         simpMessagingTemplate.convertAndSend("/sub/" + channelId, result);
     }
 

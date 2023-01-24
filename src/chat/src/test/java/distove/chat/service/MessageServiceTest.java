@@ -37,11 +37,11 @@ class MessageServiceTest extends CommonServiceTest {
             Long channelId = 1L;
             given(userClient.getUser(any())).willReturn(dummyUser);
             MessageRequest request = new MessageRequest(
-                    dummyUser.getId(), TEXT, null, null, "{{MESSAGE CONTENT}}"
+                    TEXT, null, null, "{{MESSAGE CONTENT}}"
             );
 
             //when
-            MessageResponse result = messageService.publishMessage(channelId, request);
+            MessageResponse result = messageService.publishMessage(dummyUser.getId(), channelId, request);
 
             // then
             MessageResponse expected = MessageResponse.builder()
@@ -66,11 +66,11 @@ class MessageServiceTest extends CommonServiceTest {
             Long channelId = 1L;
             given(userClient.getUser(any())).willReturn(dummyUser);
             MessageRequest request = new MessageRequest(
-                    dummyUser.getId(), WELCOME, null, null, "{{MESSAGE CONTENT}}"
+                    WELCOME, null, null, "{{MESSAGE CONTENT}}"
             );
 
             //when & then
-            assertThatThrownBy(() -> messageService.publishMessage(channelId, request))
+            assertThatThrownBy(() -> messageService.publishMessage(dummyUser.getId(), channelId, request))
                     .isInstanceOf(DistoveException.class)
                     .hasMessageContaining("잘못된 메시지 타입입니다.");
         }
@@ -82,11 +82,11 @@ class MessageServiceTest extends CommonServiceTest {
             given(userClient.getUser(any())).willReturn(dummyUser);
             Message message = messageRepository.save(newMessage(channelId, 99L, TEXT, "{{MESSAGE CONTENT}}"));
             MessageRequest request = new MessageRequest(
-                    dummyUser.getId(), DELETED, message.getId(), null, "{{MESSAGE CONTENT}}"
+                    DELETED, message.getId(), null, "{{MESSAGE CONTENT}}"
             );
 
             //when & then
-            assertThatThrownBy(() -> messageService.publishMessage(channelId, request))
+            assertThatThrownBy(() -> messageService.publishMessage(dummyUser.getId(), channelId, request))
                     .isInstanceOf(DistoveException.class)
                     .hasMessageContaining("수정/삭제 권한이 없습니다.");
         }

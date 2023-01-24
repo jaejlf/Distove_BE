@@ -35,10 +35,8 @@ public class ReplyService extends PublishService {
     }
 
     @Override
-    public MessageResponse publishMessage(Long channelId, MessageRequest request) {
-        Long userId = request.getUserId();
+    public MessageResponse publishMessage(Long userId, Long channelId, MessageRequest request) {
         Message parent = getParentMessage(request.getParentId());
-
         Message message = createMessageByType(channelId, request, userId);
         Reply reply = replyRepository.save(newReply(parent.getId(), message));
 
@@ -47,10 +45,8 @@ public class ReplyService extends PublishService {
     }
 
     @Override
-    public MessageResponse publishFile(Long channelId, MessageType type, FileUploadRequest request) {
-        Long userId = request.getUserId();
+    public MessageResponse publishFile(Long userId, Long channelId, MessageType type, FileUploadRequest request) {
         Message parent = getParentMessage(request.getParentId());
-
         String fileUploadUrl = storageService.uploadToS3(request.getFile(), type);
         Message message = newMessage(channelId, userId, type, fileUploadUrl);
         Reply reply = replyRepository.save(newReply(parent.getId(), message));

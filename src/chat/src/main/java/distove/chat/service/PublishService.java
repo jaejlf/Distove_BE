@@ -27,8 +27,8 @@ public abstract class PublishService {
     protected final MessageRepository messageRepository;
     protected final UserClient userClient;
 
-    protected abstract MessageResponse publishMessage(Long channelId, MessageRequest request);
-    protected abstract MessageResponse publishFile(Long channelId, MessageType type, FileUploadRequest request);
+    protected abstract MessageResponse publishMessage(Long userId, Long channelId, MessageRequest request);
+    protected abstract MessageResponse publishFile(Long userId, Long channelId, MessageType type, FileUploadRequest request);
 
     protected Message createMessageByType(Long channelId, MessageRequest request, Long userId) {
         Message message;

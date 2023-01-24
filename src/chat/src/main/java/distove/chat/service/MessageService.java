@@ -33,9 +33,7 @@ public class MessageService extends PublishService {
     }
 
     @Override
-    public MessageResponse publishMessage(Long channelId, MessageRequest request) {
-        Long userId = request.getUserId();
-
+    public MessageResponse publishMessage(Long userId, Long channelId, MessageRequest request) {
         Message message = createMessageByType(channelId, request, userId);
         messageRepository.save(message);
 
@@ -44,9 +42,7 @@ public class MessageService extends PublishService {
     }
 
     @Override
-    public MessageResponse publishFile(Long channelId, MessageType type, FileUploadRequest request) {
-        Long userId = request.getUserId();
-
+    public MessageResponse publishFile(Long userId, Long channelId, MessageType type, FileUploadRequest request) {
         String fileUploadUrl = storageService.uploadToS3(request.getFile(), type);
         Message message = newMessage(channelId, userId, type, fileUploadUrl);
         messageRepository.save(message);

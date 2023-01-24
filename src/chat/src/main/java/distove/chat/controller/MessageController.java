@@ -11,6 +11,7 @@ import lombok.RequiredArgsConstructor;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.messaging.handler.annotation.DestinationVariable;
+import org.springframework.messaging.handler.annotation.Header;
 import org.springframework.messaging.handler.annotation.MessageMapping;
 import org.springframework.messaging.handler.annotation.Payload;
 import org.springframework.messaging.simp.SimpMessagingTemplate;
@@ -26,22 +27,24 @@ public class MessageController {
     private final MessageService messageService;
 
     @MessageMapping("/chat/{channelId}")
-    public void publishMessage(@DestinationVariable Long channelId, @Payload MessageRequest request) {
-        MessageResponse result = messageService.publishMessage(channelId, request);
+    public void publishMessage(@Header("userId") Long userId,
+                               @DestinationVariable Long channelId,
+                               @Payload MessageRequest request) {
+        MessageResponse result = messageService.publishMessage(userId, channelId, request);
         simpMessagingTemplate.convertAndSend("/sub/" + channelId, result);
     }
 
     @PostMapping("/file/{channelId}")
-    public void publishFile(@PathVariable Long channelId,
+    public void publishFile(@RequestHeader("userId") Long userId,
+                            @PathVariable Long channelId,
                             @RequestParam MessageType type,
                             @ModelAttribute FileUploadRequest request) {
-        MessageResponse result = messageService.publishFile(channelId, type, request);
+        MessageResponse result = messageService.publishFile(userId, channelId, type, request);
         simpMessagingTemplate.convertAndSend("/sub/" + channelId, result);
     }
 
     @MessageMapping("/typing/{channelId}")
-    public void publishTypedUser(@DestinationVariable Long channelId, @Payload MessageRequest request) {
-        Long userId = request.getUserId();
+    public void publishTypedUser(@Header("userId") Long userId, @DestinationVariable Long channelId) {
         TypedUserResponse result = messageService.publishTypedUser(userId);
         simpMessagingTemplate.convertAndSend("/sub/" + channelId, result);
     }
