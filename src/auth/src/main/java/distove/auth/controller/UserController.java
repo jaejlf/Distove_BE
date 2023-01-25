@@ -36,7 +36,7 @@ public class UserController {
         );
     }
 
-    @GetMapping("/signout")
+    @GetMapping("/logout")
     public ResponseEntity<Object> logout(@RequestBody LogoutRequest request) {
         return ResultResponse.success(
                 HttpStatus.OK,
