@@ -37,5 +37,4 @@ public class ResultResponse<T> {
                         .message(message)
                         .build());
     }
-
 }

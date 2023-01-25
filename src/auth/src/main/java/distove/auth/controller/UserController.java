@@ -3,7 +3,6 @@ package distove.auth.controller;
 import distove.auth.dto.request.LoginRequest;
 import distove.auth.dto.request.LogoutRequest;
 import distove.auth.dto.request.SignUpRequest;
-import distove.auth.dto.response.LogoutResponse;
 import distove.auth.dto.response.ResultResponse;
 import distove.auth.service.UserService;
 import lombok.AllArgsConstructor;
@@ -39,11 +38,10 @@ public class UserController {
 
     @GetMapping("/signout")
     public ResponseEntity<Object> logout(@RequestBody LogoutRequest request) {
-        LogoutResponse logoutResponse = userService.signOut(request);
         return ResultResponse.success(
                 HttpStatus.OK,
                 "로그아웃 성공",
-                logoutResponse
+                userService.signOut(request)
         );
     }
 

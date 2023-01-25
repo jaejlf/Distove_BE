@@ -1,4 +1,4 @@
-package distove.auth.reoisitory;
+package distove.auth.repoisitory;
 
 import distove.auth.entity.User;
 import org.springframework.data.jpa.repository.JpaRepository;

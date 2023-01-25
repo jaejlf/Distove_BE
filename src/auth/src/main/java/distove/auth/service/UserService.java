@@ -9,14 +9,14 @@ import distove.auth.dto.response.TokenResponse;
 import distove.auth.dto.response.UserResponse;
 import distove.auth.entity.User;
 import distove.auth.exception.DistoveException;
-import distove.auth.reoisitory.UserRepository;
+import distove.auth.repoisitory.UserRepository;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.security.crypto.bcrypt.BCryptPasswordEncoder;
 import org.springframework.stereotype.Component;
 import org.springframework.stereotype.Service;
 
-import static distove.auth.exception.ErrorCode.EMAIL_NOT_FOUND;
+import static distove.auth.exception.ErrorCode.ACCOUNT_NOT_FOUND;
 import static distove.auth.exception.ErrorCode.PASSWORD_ERROR;
 
 @Slf4j
@@ -37,7 +37,7 @@ public class UserService {
 
     public TokenResponse login(LoginRequest request) {
         User user = userRepository.findByEmail(request.getEmail())
-                .orElseThrow(() -> new DistoveException(EMAIL_NOT_FOUND));
+                .orElseThrow(() -> new DistoveException(ACCOUNT_NOT_FOUND));
 
         if (!bCryptPasswordEncoder.matches(request.getPassword(), user.getPassword())) {
             throw new DistoveException(PASSWORD_ERROR);
@@ -53,7 +53,7 @@ public class UserService {
 
     public LogoutResponse signOut(LogoutRequest request) {
         User user = userRepository.findByEmail(request.getEmail())
-                .orElseThrow(() -> new DistoveException(EMAIL_NOT_FOUND));
+                .orElseThrow(() -> new DistoveException(ACCOUNT_NOT_FOUND));
 
         user.updateRefreshToken(null);
         userRepository.save(user);
