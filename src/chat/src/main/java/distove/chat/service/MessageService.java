@@ -7,7 +7,6 @@ import distove.chat.dto.response.TypedUserResponse;
 import distove.chat.entity.Connection;
 import distove.chat.entity.Message;
 import distove.chat.enumerate.MessageType;
-import distove.chat.exception.DistoveException;
 import distove.chat.repository.ConnectionRepository;
 import distove.chat.repository.MessageRepository;
 import distove.chat.web.UserClient;
@@ -19,21 +18,18 @@ import java.util.List;
 
 import static distove.chat.entity.Message.newMessage;
 import static distove.chat.enumerate.MessageType.WELCOME;
-import static distove.chat.exception.ErrorCode.CHANNEL_NOT_FOUND_ERROR;
 
 @Slf4j
 @Service
 public class MessageService extends PublishService {
 
-    private final ConnectionRepository connectionRepository;
-
-    public MessageService(StorageService storageService, MessageRepository messageRepository, UserClient userClient, ConnectionRepository connectionRepository) {
-        super(storageService, messageRepository, userClient);
-        this.connectionRepository = connectionRepository;
+    public MessageService(StorageService storageService, MessageRepository messageRepository, ConnectionRepository connectionRepository, UserClient userClient) {
+        super(storageService, messageRepository, connectionRepository, userClient);
     }
 
     @Override
     public MessageResponse publishMessage(Long userId, Long channelId, MessageRequest request) {
+        checkChannelExist(channelId);
         Message message = createMessageByType(channelId, request, userId);
         messageRepository.save(message);
 
@@ -43,6 +39,7 @@ public class MessageService extends PublishService {
 
     @Override
     public MessageResponse publishFile(Long userId, Long channelId, MessageType type, FileUploadRequest request) {
+        checkChannelExist(channelId);
         String fileUploadUrl = storageService.uploadToS3(request.getFile(), type);
         Message message = newMessage(channelId, userId, type, fileUploadUrl);
         messageRepository.save(message);
@@ -63,8 +60,7 @@ public class MessageService extends PublishService {
     }
 
     private void saveWelcomeMessage(Long userId, Long channelId) {
-        Connection connection = connectionRepository.findByChannelId(channelId)
-                .orElseThrow(() -> new DistoveException(CHANNEL_NOT_FOUND_ERROR));
+        Connection connection = checkChannelExist(channelId);
         List<Long> connectedMemberIds = connection.getConnectedMemberIds();
         if (connectedMemberIds.contains(userId)) return;
 

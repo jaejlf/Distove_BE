@@ -9,6 +9,7 @@ import distove.chat.entity.Reply;
 import distove.chat.entity.ReplyInfo;
 import distove.chat.enumerate.MessageType;
 import distove.chat.exception.DistoveException;
+import distove.chat.repository.ConnectionRepository;
 import distove.chat.repository.MessageRepository;
 import distove.chat.repository.ReplyRepository;
 import distove.chat.web.UserClient;
@@ -29,13 +30,15 @@ public class ReplyService extends PublishService {
 
     private final ReplyRepository replyRepository;
 
-    public ReplyService(StorageService storageService, MessageRepository messageRepository, UserClient userClient, ReplyRepository replyRepository) {
-        super(storageService, messageRepository, userClient);
+    public ReplyService(StorageService storageService, MessageRepository messageRepository, ConnectionRepository connectionRepository, UserClient userClient, ReplyRepository replyRepository) {
+        super(storageService, messageRepository, connectionRepository, userClient);
         this.replyRepository = replyRepository;
     }
 
+
     @Override
     public MessageResponse publishMessage(Long userId, Long channelId, MessageRequest request) {
+        checkChannelExist(channelId);
         Message parent = getParentMessage(request.getParentId());
         Message message = createMessageByType(channelId, request, userId);
         Reply reply = replyRepository.save(newReply(parent.getId(), message));
@@ -46,6 +49,7 @@ public class ReplyService extends PublishService {
 
     @Override
     public MessageResponse publishFile(Long userId, Long channelId, MessageType type, FileUploadRequest request) {
+        checkChannelExist(channelId);
         Message parent = getParentMessage(request.getParentId());
         String fileUploadUrl = storageService.uploadToS3(request.getFile(), type);
         Message message = newMessage(channelId, userId, type, fileUploadUrl);

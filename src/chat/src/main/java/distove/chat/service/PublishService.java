@@ -3,10 +3,12 @@ package distove.chat.service;
 import distove.chat.dto.request.FileUploadRequest;
 import distove.chat.dto.request.MessageRequest;
 import distove.chat.dto.response.MessageResponse;
+import distove.chat.entity.Connection;
 import distove.chat.entity.Message;
 import distove.chat.entity.ReplyInfo;
 import distove.chat.enumerate.MessageType;
 import distove.chat.exception.DistoveException;
+import distove.chat.repository.ConnectionRepository;
 import distove.chat.repository.MessageRepository;
 import distove.chat.web.UserClient;
 import distove.chat.web.UserResponse;
@@ -25,6 +27,7 @@ public abstract class PublishService {
 
     protected final StorageService storageService;
     protected final MessageRepository messageRepository;
+    protected final ConnectionRepository connectionRepository;
     protected final UserClient userClient;
 
     protected abstract MessageResponse publishMessage(Long userId, Long channelId, MessageRequest request);
@@ -77,6 +80,11 @@ public abstract class PublishService {
             }
         }
         return messageResponses;
+    }
+
+    protected Connection checkChannelExist(Long channelId) {
+        return connectionRepository.findByChannelId(channelId)
+                .orElseThrow(() -> new DistoveException(CHANNEL_NOT_FOUND_ERROR));
     }
 
 }
