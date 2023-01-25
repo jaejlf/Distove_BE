@@ -47,7 +47,6 @@ public class User {
     @Column
     private String nickname;
 
-
     public User(String email, String password, String nickname) {
         this.email = email;
         this.password = password;

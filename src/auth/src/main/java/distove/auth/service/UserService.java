@@ -16,8 +16,7 @@ import org.springframework.security.crypto.bcrypt.BCryptPasswordEncoder;
 import org.springframework.stereotype.Component;
 import org.springframework.stereotype.Service;
 
-import static distove.auth.exception.ErrorCode.ACCOUNT_NOT_FOUND;
-import static distove.auth.exception.ErrorCode.PASSWORD_ERROR;
+import static distove.auth.exception.ErrorCode.*;
 
 @Slf4j
 @Service
@@ -29,6 +28,9 @@ public class UserService {
     private final JwtTokenProvider jwtTokenProvider;
 
     public UserResponse signUp(SignUpRequest request) {
+        if (userRepository.existsByEmail(request.getEmail())) {
+            throw new DistoveException(DUPLICATE_EMAIL);
+        }
         User user = new User(request.getEmail(), bCryptPasswordEncoder.encode(request.getPassword()), request.getNickname());
         userRepository.save(user);
 
