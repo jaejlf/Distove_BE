@@ -6,6 +6,7 @@ import distove.chat.dto.request.ReplyRequest;
 import distove.chat.dto.response.MessageResponse;
 import distove.chat.dto.response.PagedMessageResponse;
 import distove.chat.dto.response.ResultResponse;
+import distove.chat.dto.response.TypedUserResponse;
 import distove.chat.enumerate.MessageType;
 import distove.chat.service.ReplyService;
 import lombok.RequiredArgsConstructor;
@@ -51,6 +52,12 @@ public class ReplyController {
                             @ModelAttribute FileUploadRequest request) {
         MessageResponse result = replyService.publishFile(userId, channelId, type, request);
         simpMessagingTemplate.convertAndSend("/sub/" + request.getParentId(), result);
+    }
+
+    @MessageMapping("/reply/typing/{parentId}")
+    public void publishTypedUser(@Header("userId") Long userId, @DestinationVariable String parentId) {
+        TypedUserResponse result = replyService.publishTypedUser(userId);
+        simpMessagingTemplate.convertAndSend("/sub/" + parentId, result);
     }
 
     @GetMapping("/replies/{channelId}")

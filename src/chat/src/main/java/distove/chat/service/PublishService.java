@@ -3,6 +3,7 @@ package distove.chat.service;
 import distove.chat.dto.request.FileUploadRequest;
 import distove.chat.dto.request.MessageRequest;
 import distove.chat.dto.response.MessageResponse;
+import distove.chat.dto.response.TypedUserResponse;
 import distove.chat.entity.Connection;
 import distove.chat.entity.Message;
 import distove.chat.entity.ReplyInfo;
@@ -32,6 +33,11 @@ public abstract class PublishService {
 
     protected abstract MessageResponse publishMessage(Long userId, Long channelId, MessageRequest request);
     protected abstract MessageResponse publishFile(Long userId, Long channelId, MessageType type, FileUploadRequest request);
+
+    public TypedUserResponse publishTypedUser(Long userId) {
+        UserResponse typedUser = userClient.getUser(userId);
+        return TypedUserResponse.of(typedUser.getNickname());
+    }
 
     protected Message createMessageByType(Long channelId, MessageRequest request, Long userId) {
         Message message;

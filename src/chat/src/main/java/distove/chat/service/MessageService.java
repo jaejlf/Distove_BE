@@ -4,7 +4,6 @@ import distove.chat.dto.request.FileUploadRequest;
 import distove.chat.dto.request.MessageRequest;
 import distove.chat.dto.response.MessageResponse;
 import distove.chat.dto.response.PagedMessageResponse;
-import distove.chat.dto.response.TypedUserResponse;
 import distove.chat.entity.Connection;
 import distove.chat.entity.Message;
 import distove.chat.enumerate.MessageType;
@@ -64,11 +63,6 @@ public class MessageService extends PublishService {
         );
 
         return PagedMessageResponse.of(totalPage, messageResponses);
-    }
-
-    public TypedUserResponse publishTypedUser(Long userId) {
-        UserResponse typedUser = userClient.getUser(userId);
-        return TypedUserResponse.of(typedUser.getNickname());
     }
 
     private void saveWelcomeMessage(Long userId, Long channelId) {
