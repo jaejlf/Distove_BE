@@ -15,35 +15,27 @@
 <div id="main-content" class="container">
     <div class="row">
         <div class="col-md-6">
-            <form class="form-inline">
+            <form>
                 <div class="form-group">
-                    <label for="connect">WebSocket connection:</label>
+                    <label for="connect">WebSocket connection : </label>
+                    <input type="text" id="pub" class="form-control" placeholder="PUBLISH LINK">
+                    <input type="text" id="sub" class="form-control" placeholder="SUBSCRIBE LINK">
                     <button id="connect" class="btn btn-default" type="submit">Connect</button>
                     <button id="disconnect" class="btn btn-default" type="submit" disabled="disabled">Disconnect
                     </button>
                 </div>
             </form>
-        </div>
-        <div class="col-md-6">
-            <form class="form-inline">
+            <form>
                 <div class="form-group">
-                    <label for="content">What is your name?</label>
+                    <label for="connect">Input Data : </label>
+                    <input type="text" id="userId" class="form-control" placeholder="*USER ID">
+                    <input type="text" id="type" class="form-control" placeholder="*MESSAGE TYPE">
+                    <input type="text" id="content" class="form-control" placeholder="*CONTENT">
+                    <input type="text" id="messageId" class="form-control" placeholder="MESSAGE ID">
+                    <input type="text" id="parentId" class="form-control" placeholder="PARENT ID">
+                    <button id="send" class="btn btn-default" type="submit">Send</button>
                 </div>
-                <button id="send" class="btn btn-default" type="submit">Send</button>
             </form>
-        </div>
-    </div>
-    <div class="row">
-        <div class="col-md-12">
-            <table id="conversation" class="table table-striped">
-                <thead>
-                <tr>
-                    <th>Greetings</th>
-                </tr>
-                </thead>
-                <tbody id="greetings">
-                </tbody>
-            </table>
         </div>
     </div>
 </div>

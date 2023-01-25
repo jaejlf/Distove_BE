@@ -1,6 +1,5 @@
 package distove.chat.dto.response;
 
-import distove.chat.entity.Message;
 import distove.chat.enumerate.MessageType;
 import lombok.Builder;
 import lombok.Getter;
