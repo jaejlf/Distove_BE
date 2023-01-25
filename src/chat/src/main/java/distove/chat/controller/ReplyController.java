@@ -4,6 +4,7 @@ import distove.chat.dto.request.FileUploadRequest;
 import distove.chat.dto.request.MessageRequest;
 import distove.chat.dto.request.ReplyRequest;
 import distove.chat.dto.response.MessageResponse;
+import distove.chat.dto.response.PagedMessageResponse;
 import distove.chat.dto.response.ResultResponse;
 import distove.chat.enumerate.MessageType;
 import distove.chat.service.ReplyService;
@@ -61,8 +62,9 @@ public class ReplyController {
 
     @GetMapping("/children")
     public ResponseEntity<Object> getChildrenByParentId(@RequestHeader("userId") Long userId,
-                                                        @RequestParam String parentId) {
-        List<MessageResponse> result = replyService.getChildrenByParentId(userId, parentId);
+                                                        @RequestParam String parentId,
+                                                        @RequestParam int page) {
+        PagedMessageResponse result = replyService.getChildrenByParentId(userId, parentId, page);
         return ResultResponse.success(HttpStatus.OK, "부모 메시지의 Reply 리스트 조회", result);
     }
 

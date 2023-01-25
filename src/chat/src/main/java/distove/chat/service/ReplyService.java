@@ -4,6 +4,7 @@ import distove.chat.dto.request.FileUploadRequest;
 import distove.chat.dto.request.MessageRequest;
 import distove.chat.dto.request.ReplyRequest;
 import distove.chat.dto.response.MessageResponse;
+import distove.chat.dto.response.PagedMessageResponse;
 import distove.chat.entity.Message;
 import distove.chat.entity.Reply;
 import distove.chat.entity.ReplyInfo;
@@ -14,6 +15,9 @@ import distove.chat.repository.MessageRepository;
 import distove.chat.repository.ReplyRepository;
 import distove.chat.web.UserClient;
 import distove.chat.web.UserResponse;
+import org.springframework.data.domain.Page;
+import org.springframework.data.domain.PageRequest;
+import org.springframework.data.domain.Pageable;
 import org.springframework.stereotype.Service;
 
 import java.util.List;
@@ -73,11 +77,17 @@ public class ReplyService extends PublishService {
         return convertMessageToDtoWithReplyInfo(userId, messages);
     }
 
-    public List<MessageResponse> getChildrenByParentId(Long userId, String parentId) {
-        return replyRepository.findAllByParentId(parentId)
+    public PagedMessageResponse getChildrenByParentId(Long userId, String parentId, int page) {
+        Pageable pageable = PageRequest.of(page - 1, 5); // TODO : 테스트를 용이하게 하기 위해 임의로 5로 설정 (추후 30으로 변경 예정)
+        Page<Reply> replyPage = replyRepository.findAllByParentId(parentId, pageable);
+
+        int totalPage = replyPage.getTotalPages();
+        List<MessageResponse> messageResponses = replyPage.getContent()
                 .stream()
                 .map(x -> MessageResponse.of(x, userClient.getUser(x.getMessage().getUserId()), userId))
                 .collect(Collectors.toList());
+
+        return PagedMessageResponse.of(totalPage, messageResponses);
     }
 
     private Message getParentMessage(String parentId) {

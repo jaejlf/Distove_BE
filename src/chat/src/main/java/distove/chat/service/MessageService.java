@@ -3,6 +3,7 @@ package distove.chat.service;
 import distove.chat.dto.request.FileUploadRequest;
 import distove.chat.dto.request.MessageRequest;
 import distove.chat.dto.response.MessageResponse;
+import distove.chat.dto.response.PagedMessageResponse;
 import distove.chat.dto.response.TypedUserResponse;
 import distove.chat.entity.Connection;
 import distove.chat.entity.Message;
@@ -12,6 +13,9 @@ import distove.chat.repository.MessageRepository;
 import distove.chat.web.UserClient;
 import distove.chat.web.UserResponse;
 import lombok.extern.slf4j.Slf4j;
+import org.springframework.data.domain.Page;
+import org.springframework.data.domain.PageRequest;
+import org.springframework.data.domain.Pageable;
 import org.springframework.stereotype.Service;
 
 import java.util.List;
@@ -48,10 +52,18 @@ public class MessageService extends PublishService {
         return MessageResponse.of(message, writer, userId);
     }
 
-    public List<MessageResponse> getMessagesByChannelId(Long userId, Long channelId) {
+    public PagedMessageResponse getMessagesByChannelId(Long userId, Long channelId, int page) {
         saveWelcomeMessage(userId, channelId);
-        List<Message> messages = messageRepository.findAllByChannelId(channelId);
-        return convertMessageToDtoWithReplyInfo(userId, messages);
+
+        Pageable pageable = PageRequest.of(page - 1, 5); // TODO : 테스트를 용이하게 하기 위해 임의로 5로 설정 (추후 30으로 변경 예정)
+        Page<Message> messagePage = messageRepository.findAllByChannelId(channelId, pageable);
+
+        int totalPage = messagePage.getTotalPages();
+        List<MessageResponse> messageResponses = convertMessageToDtoWithReplyInfo(
+                userId, messagePage.getContent()
+        );
+
+        return PagedMessageResponse.of(totalPage, messageResponses);
     }
 
     public TypedUserResponse publishTypedUser(Long userId) {
