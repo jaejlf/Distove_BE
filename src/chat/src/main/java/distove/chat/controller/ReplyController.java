@@ -35,13 +35,12 @@ public class ReplyController {
         replyService.createReply(userId, parentId, request);
     }
 
-    // TODO : Pub & Sub path 논의 필요
     @MessageMapping("/reply/{channelId}")
     public void publishMessage(@Header("userId") Long userId,
                                @DestinationVariable Long channelId,
                                @Payload MessageRequest request) {
         MessageResponse result = replyService.publishMessage(userId, channelId, request);
-        simpMessagingTemplate.convertAndSend("/sub/" + channelId, result);
+        simpMessagingTemplate.convertAndSend("/sub/" + request.getParentId(), result);
     }
 
     @PostMapping("/reply/file/{channelId}")
@@ -50,7 +49,7 @@ public class ReplyController {
                             @RequestParam MessageType type,
                             @ModelAttribute FileUploadRequest request) {
         MessageResponse result = replyService.publishFile(userId, channelId, type, request);
-        simpMessagingTemplate.convertAndSend("/sub/" + channelId, result);
+        simpMessagingTemplate.convertAndSend("/sub/" + request.getParentId(), result);
     }
 
     @GetMapping("/replies/{channelId}")
