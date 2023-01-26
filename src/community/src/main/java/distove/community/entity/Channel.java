@@ -27,6 +27,11 @@ public class Channel {
         this.channelTypeId = channelTypeId;
         this.category = category;
     }
+    @Builder
+    public Channel updateChannel(String name){
+        this.name = name;
+        return this;
+    }
     public interface Info {
         Long getId();
         String getName();
