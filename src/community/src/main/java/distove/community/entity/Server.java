@@ -19,6 +19,8 @@ public class Server {
 
     private String name;
 
+    private String imgUrl;
+
 
 //    @OneToMany(mappedBy = "server")
 //    private List<Member> members = new ArrayList<>();
@@ -30,7 +32,8 @@ public class Server {
 //    @OneToMany(mappedBy = "server")
 //    private List<Channel> channels = new ArrayList<>();
 
-    public Server(String name){
+    public Server(String name,String imgUrl){
         this.name = name;
+        this.imgUrl = imgUrl;
     }
 }
