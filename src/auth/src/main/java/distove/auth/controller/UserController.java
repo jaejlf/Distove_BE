@@ -4,12 +4,14 @@ import distove.auth.dto.request.LoginRequest;
 import distove.auth.dto.request.LogoutRequest;
 import distove.auth.dto.request.SignUpRequest;
 import distove.auth.dto.response.ResultResponse;
+import distove.auth.service.StorageService;
 import distove.auth.service.UserService;
 import lombok.AllArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
+import org.springframework.web.multipart.MultipartFile;
 
 @Slf4j
 @RestController
@@ -17,6 +19,7 @@ import org.springframework.web.bind.annotation.*;
 public class UserController {
 
     private final UserService userService;
+    private final StorageService storageService;
 
     @PostMapping("/signup")
     public ResponseEntity<Object> signUp(@RequestBody SignUpRequest request) {
@@ -59,5 +62,13 @@ public class UserController {
                 HttpStatus.OK,
                 "닉네임 중복",
                 userService.checkNicknameDuplicate(nickname));
+    }
+
+    @PostMapping("/upload")
+    public ResponseEntity<Object> uploadProfileImg (@RequestPart("file") MultipartFile file){
+        return ResultResponse.success(
+                HttpStatus.OK,
+                "이미지 업로드 성공",
+                storageService.upload(file));
     }
 }
