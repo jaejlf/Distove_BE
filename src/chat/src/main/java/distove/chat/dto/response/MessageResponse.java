@@ -48,4 +48,16 @@ public class MessageResponse {
         }
     }
 
+    public static MessageResponse withReplyInfo(Message message, UserResponse writer, Long userId, ReplyInfo replyInfo) {
+        return MessageResponse.builder()
+                .id(message.getId())
+                .type(message.getType())
+                .content(message.getContent())
+                .createdAt(message.getCreatedAt())
+                .writer(writer)
+                .replyInfo(replyInfo)
+                .hasAuthorized(Objects.equals(writer.getId(), userId))
+                .build();
+    }
+
 }

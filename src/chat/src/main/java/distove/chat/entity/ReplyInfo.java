@@ -19,7 +19,7 @@ public class ReplyInfo {
                 .build();
     }
 
-    public static ReplyInfo allReplyInfo(String replyName, Long stUserId, String nickname, String profileImgUrl) {
+    public static ReplyInfo withUserDetails(String replyName, Long stUserId, String nickname, String profileImgUrl) {
         return ReplyInfo.builder()
                 .replyName(replyName)
                 .stUserId(stUserId)

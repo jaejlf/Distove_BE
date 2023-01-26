@@ -18,9 +18,9 @@ import java.io.InputStream;
 
 import static distove.chat.exception.ErrorCode.FILE_UPLOAD_ERROR;
 
+@Slf4j
 @RequiredArgsConstructor
 @Service
-@Slf4j
 public class StorageService {
 
     private final AmazonS3 amazonS3Client;

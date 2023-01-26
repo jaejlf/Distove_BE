@@ -32,22 +32,45 @@ function disconnect() {
 
 function sendName() {
     if (!$("#parentId").val()) {
-        stompClient.send($("#pub").val(), {'userId': $("#userId").val()}, JSON.stringify(
-            {
-                'type': $("#type").val(),
-                'content': $("#content").val(),
-                'messageId': $("#messageId").val()
-            }
-        ));
+        if (!$("#replyName").val()) {
+            stompClient.send($("#pub").val(), {'userId': $("#userId").val()}, JSON.stringify(
+                {
+                    'type': $("#type").val(),
+                    'content': $("#content").val(),
+                    'messageId': $("#messageId").val()
+                }
+            ));
+        } else {
+            stompClient.send($("#pub").val(), {'userId': $("#userId").val()}, JSON.stringify(
+                {
+                    'type': $("#type").val(),
+                    'content': $("#content").val(),
+                    'messageId': $("#messageId").val(),
+                    'replyName': $("#replyName").val()
+                }
+            ));
+        }
     } else {
-        stompClient.send($("#pub").val(), {'userId': $("#userId").val()}, JSON.stringify(
-            {
-                'type': $("#type").val(),
-                'content': $("#content").val(),
-                'messageId': $("#messageId").val(),
-                'parentId': $("#parentId").val()
-            }
-        ));
+        if (!$("#replyName").val()) {
+            stompClient.send($("#pub").val(), {'userId': $("#userId").val()}, JSON.stringify(
+                {
+                    'type': $("#type").val(),
+                    'content': $("#content").val(),
+                    'messageId': $("#messageId").val(),
+                    'parentId': $("#parentId").val()
+                }
+            ));
+        } else {
+            stompClient.send($("#pub").val(), {'userId': $("#userId").val()}, JSON.stringify(
+                {
+                    'type': $("#type").val(),
+                    'content': $("#content").val(),
+                    'messageId': $("#messageId").val(),
+                    'replyName': $("#replyName").val(),
+                    'parentId': $("#parentId").val()
+                }
+            ));
+        }
     }
 }
 
