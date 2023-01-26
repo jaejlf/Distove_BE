@@ -36,4 +36,8 @@ public class Server {
         this.name = name;
         this.imgUrl = imgUrl;
     }
+    public void updateServer(String name,String imgUrl){
+        this.name = name;
+        this.imgUrl = imgUrl;
+    }
 }

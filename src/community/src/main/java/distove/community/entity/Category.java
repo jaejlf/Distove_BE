@@ -15,7 +15,7 @@ public class Category {
 
     private String name;
 
-    @ManyToOne//(fetch = FetchType.LAZY)
+    @ManyToOne
     @JoinColumn(name ="server_id")
     private Server server;
 //
