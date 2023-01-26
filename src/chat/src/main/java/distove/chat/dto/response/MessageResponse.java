@@ -2,8 +2,6 @@ package distove.chat.dto.response;
 
 import com.fasterxml.jackson.annotation.JsonInclude;
 import distove.chat.entity.Message;
-import distove.chat.entity.Reply;
-import distove.chat.entity.ReplyInfo;
 import distove.chat.enumerate.MessageType;
 import distove.chat.web.UserResponse;
 import lombok.Builder;
@@ -11,8 +9,6 @@ import lombok.Getter;
 
 import java.time.LocalDateTime;
 import java.util.Objects;
-
-import static distove.chat.enumerate.MessageType.isNotiMessage;
 
 @Getter
 @Builder
@@ -25,9 +21,9 @@ public class MessageResponse {
     private LocalDateTime createdAt;
     private UserResponse writer;
     private Boolean hasAuthorized;
-    private ReplyInfo replyInfo;
+    private ReplyInfoResponse replyInfo;
 
-    public static MessageResponse of(Message message, UserResponse writer, Long userId) {
+    public static MessageResponse ofDefault(Message message, UserResponse writer, Long userId) {
         return MessageResponse.builder()
                 .id(message.getId())
                 .type(message.getType())
@@ -38,36 +34,14 @@ public class MessageResponse {
                 .build();
     }
 
-    public static MessageResponse of(Message message, UserResponse writer, Long userId, ReplyInfo replyInfo) {
-        if (isNotiMessage(message.getType())) {
-            return MessageResponse.builder()
-                    .id(message.getId())
-                    .type(message.getType())
-                    .content(message.getContent())
-                    .createdAt(message.getCreatedAt())
-                    .hasAuthorized(false)
-                    .build();
-        } else {
-            return MessageResponse.builder()
-                    .id(message.getId())
-                    .type(message.getType())
-                    .content(message.getContent())
-                    .createdAt(message.getCreatedAt())
-                    .writer(writer)
-                    .hasAuthorized(Objects.equals(writer.getId(), userId))
-                    .replyInfo(replyInfo)
-                    .build();
-        }
-    }
-
-    public static MessageResponse of(Reply reply, UserResponse writer, Long userId) {
-        Message message = reply.getMessage();
+    public static MessageResponse ofParent(Message message, UserResponse writer, Long userId, ReplyInfoResponse replyInfo) {
         return MessageResponse.builder()
-                .id(reply.getId())
+                .id(message.getId())
                 .type(message.getType())
                 .content(message.getContent())
                 .createdAt(message.getCreatedAt())
                 .writer(writer)
+                .replyInfo(replyInfo)
                 .hasAuthorized(Objects.equals(writer.getId(), userId))
                 .build();
     }

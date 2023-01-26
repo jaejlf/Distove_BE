@@ -3,6 +3,7 @@ package distove.chat.controller;
 import distove.chat.dto.request.FileUploadRequest;
 import distove.chat.dto.request.MessageRequest;
 import distove.chat.dto.response.MessageResponse;
+import distove.chat.dto.response.PagedMessageResponse;
 import distove.chat.dto.response.ResultResponse;
 import distove.chat.dto.response.TypedUserResponse;
 import distove.chat.enumerate.MessageType;
@@ -16,8 +17,6 @@ import org.springframework.messaging.handler.annotation.MessageMapping;
 import org.springframework.messaging.handler.annotation.Payload;
 import org.springframework.messaging.simp.SimpMessagingTemplate;
 import org.springframework.web.bind.annotation.*;
-
-import java.util.List;
 
 @RequiredArgsConstructor
 @RestController
@@ -51,8 +50,9 @@ public class MessageController {
 
     @GetMapping("/list/{channelId}")
     public ResponseEntity<Object> getMessagesByChannelId(@RequestHeader("userId") Long userId,
-                                                         @PathVariable Long channelId) {
-        List<MessageResponse> result = messageService.getMessagesByChannelId(userId, channelId);
+                                                         @PathVariable Long channelId,
+                                                         @RequestParam int page) {
+        PagedMessageResponse result = messageService.getMessagesByChannelId(userId, channelId, page);
         return ResultResponse.success(HttpStatus.OK, "메시지 리스트 조회", result);
     }
 

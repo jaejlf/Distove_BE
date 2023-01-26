@@ -3,6 +3,7 @@ package distove.chat.service;
 import distove.chat.common.CommonServiceTest;
 import distove.chat.dto.request.MessageRequest;
 import distove.chat.dto.response.MessageResponse;
+import distove.chat.dto.response.PagedMessageResponse;
 import distove.chat.dto.response.TypedUserResponse;
 import distove.chat.entity.Message;
 import distove.chat.exception.DistoveException;
@@ -10,8 +11,6 @@ import org.junit.jupiter.api.DisplayName;
 import org.junit.jupiter.api.Nested;
 import org.junit.jupiter.api.Test;
 import org.springframework.beans.factory.annotation.Autowired;
-
-import java.util.List;
 
 import static distove.chat.entity.Message.newMessage;
 import static distove.chat.enumerate.MessageType.*;
@@ -37,7 +36,7 @@ class MessageServiceTest extends CommonServiceTest {
             Long channelId = 1L;
             given(userClient.getUser(any())).willReturn(dummyUser);
             MessageRequest request = new MessageRequest(
-                    TEXT, null, null, "{{MESSAGE CONTENT}}"
+                    TEXT, null, null, "{{MESSAGE CONTENT}}", null
             );
 
             //when
@@ -66,7 +65,7 @@ class MessageServiceTest extends CommonServiceTest {
             Long channelId = 1L;
             given(userClient.getUser(any())).willReturn(dummyUser);
             MessageRequest request = new MessageRequest(
-                    WELCOME, null, null, "{{MESSAGE CONTENT}}"
+                    WELCOME, null, null, "{{MESSAGE CONTENT}}", null
             );
 
             //when & then
@@ -82,7 +81,7 @@ class MessageServiceTest extends CommonServiceTest {
             given(userClient.getUser(any())).willReturn(dummyUser);
             Message message = messageRepository.save(newMessage(channelId, 99L, TEXT, "{{MESSAGE CONTENT}}"));
             MessageRequest request = new MessageRequest(
-                    DELETED, message.getId(), null, "{{MESSAGE CONTENT}}"
+                    DELETED, message.getId(), null, "{{MESSAGE CONTENT}}", null
             );
 
             //when & then
@@ -122,11 +121,12 @@ class MessageServiceTest extends CommonServiceTest {
         @Test
         void 성공() {
             // given
+            int page = 5;
             Long channelId = 1L;
             given(userClient.getUser(any())).willReturn(dummyUser);
 
             // when
-            List<MessageResponse> result = messageService.getMessagesByChannelId(dummyUser.getId(), channelId);
+            PagedMessageResponse result = messageService.getMessagesByChannelId(dummyUser.getId(), channelId, page);
 
             // then
             MessageResponse expected = MessageResponse.builder()
@@ -136,20 +136,21 @@ class MessageServiceTest extends CommonServiceTest {
                     .build();
 
             assertAll(
-                    () -> assertThat(result.get(0).getType()).isEqualTo(expected.getType()),
-                    () -> assertThat(result.get(0).getContent()).isEqualTo(expected.getContent()),
-                    () -> assertThat(result.get(0).getHasAuthorized()).isEqualTo(expected.getHasAuthorized())
+                    () -> assertThat(result.getMessages().get(0).getType()).isEqualTo(expected.getType()),
+                    () -> assertThat(result.getMessages().get(0).getContent()).isEqualTo(expected.getContent()),
+                    () -> assertThat(result.getMessages().get(0).getHasAuthorized()).isEqualTo(expected.getHasAuthorized())
             );
         }
 
         @Test
         void 존재하지_않는_채널() {
             // given
+            int page = 5;
             Long channelId = 99L;
             given(userClient.getUser(any())).willReturn(dummyUser);
 
             //when & then
-            assertThatThrownBy(() -> messageService.getMessagesByChannelId(dummyUser.getId(), channelId))
+            assertThatThrownBy(() -> messageService.getMessagesByChannelId(dummyUser.getId(), channelId, page))
                     .isInstanceOf(DistoveException.class)
                     .hasMessageContaining("존재하지 않는 채널입니다.");
         }

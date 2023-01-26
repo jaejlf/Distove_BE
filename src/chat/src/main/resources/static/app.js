@@ -31,14 +31,47 @@ function disconnect() {
 }
 
 function sendName() {
-    stompClient.send($("#pub").val(), {'userId': $("#userId").val()}, JSON.stringify(
-        {
-            'type': $("#type").val(),
-            'content': $("#content").val(),
-            'messageId': $("#messageId").val(),
-            'parentId': $("#parentId").val()
+    if (!$("#parentId").val()) {
+        if (!$("#replyName").val()) {
+            stompClient.send($("#pub").val(), {'userId': $("#userId").val()}, JSON.stringify(
+                {
+                    'type': $("#type").val(),
+                    'content': $("#content").val(),
+                    'messageId': $("#messageId").val()
+                }
+            ));
+        } else {
+            stompClient.send($("#pub").val(), {'userId': $("#userId").val()}, JSON.stringify(
+                {
+                    'type': $("#type").val(),
+                    'content': $("#content").val(),
+                    'messageId': $("#messageId").val(),
+                    'replyName': $("#replyName").val()
+                }
+            ));
         }
-    ));
+    } else {
+        if (!$("#replyName").val()) {
+            stompClient.send($("#pub").val(), {'userId': $("#userId").val()}, JSON.stringify(
+                {
+                    'type': $("#type").val(),
+                    'content': $("#content").val(),
+                    'messageId': $("#messageId").val(),
+                    'parentId': $("#parentId").val()
+                }
+            ));
+        } else {
+            stompClient.send($("#pub").val(), {'userId': $("#userId").val()}, JSON.stringify(
+                {
+                    'type': $("#type").val(),
+                    'content': $("#content").val(),
+                    'messageId': $("#messageId").val(),
+                    'replyName': $("#replyName").val(),
+                    'parentId': $("#parentId").val()
+                }
+            ));
+        }
+    }
 }
 
 $(function () {
