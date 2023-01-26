@@ -8,5 +8,5 @@ public class ChannelRequest {
     private String name;
     private Long categoryId;
     private Integer channelTypeId;
-    protected ChannelRequest(){}
+
 }

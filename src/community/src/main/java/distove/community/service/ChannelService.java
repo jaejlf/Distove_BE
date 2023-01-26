@@ -2,6 +2,7 @@ package distove.community.service;
 
 import distove.community.dto.request.ChannelRequest;
 import distove.community.dto.request.ChannelUpdateRequest;
+import distove.community.dto.response.ChannelUpdateResponse;
 import distove.community.entity.Category;
 import distove.community.entity.Channel;
 import distove.community.exception.DistoveException;
@@ -21,10 +22,12 @@ public class ChannelService {
     private final ServerRepository serverRepository;
     private final CategoryRepository categoryRepository;
 
-    public Channel updateChannelName(Long channelId, ChannelUpdateRequest channelUpdateRequest){
+    public ChannelUpdateResponse updateChannelName(Long channelId, ChannelUpdateRequest channelUpdateRequest){
         Channel channel = channelRepository.findById(channelId)
                 .orElseThrow(() -> new DistoveException(CHANNEL_NOT_FOUND_ERROR));
-        return channel.updateChannel(channelUpdateRequest.getName());
+        channel.updateChannel(channelUpdateRequest.getName());
+        channelRepository.save(channel);
+        return new ChannelUpdateResponse(channel.getId(),channel.getName(), channel.getChannelTypeId());
     }
 
     public void deleteChannelById(Long channelId){

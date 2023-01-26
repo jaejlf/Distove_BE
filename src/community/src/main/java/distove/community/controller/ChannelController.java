@@ -4,6 +4,7 @@ package distove.community.controller;
 import distove.community.dto.request.ChannelRequest;
 import distove.community.dto.request.ChannelUpdateRequest;
 import distove.community.dto.response.ChannelDto;
+import distove.community.dto.response.ChannelUpdateResponse;
 import distove.community.dto.response.ResultResponse;
 import distove.community.entity.Channel;
 import distove.community.service.ChannelService;
@@ -31,9 +32,9 @@ public class ChannelController {
     public ResponseEntity<Object> updateChannelName(@RequestHeader("userId") Long userId,
                                                     @PathVariable("channelId") Long channelId,
                                                     @RequestBody ChannelUpdateRequest channelUpdateRequest){
-        Channel channel = channelService.updateChannelName(channelId,channelUpdateRequest);
+        ChannelUpdateResponse channelUpdateResponse = channelService.updateChannelName(channelId,channelUpdateRequest);
 
-        return ResultResponse.success(HttpStatus.OK,"채널 이름 수정 성공",channel);
+        return ResultResponse.success(HttpStatus.OK,"채널 이름 수정 성공",channelUpdateResponse);
     }
     @DeleteMapping("/channel/{channelId}")
     public ResponseEntity<Object> deleteChannelById(@RequestHeader("userId") Long userId,
