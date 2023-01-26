@@ -10,4 +10,5 @@ import java.util.Optional;
 public interface CategoryRepository extends JpaRepository<Category,Long> {
     Optional<Category> findById(Long id);
     List<Category> findCategoriesByServerId(Long serverId);
+    void deleteAllByServerId(Long serverId);
 }

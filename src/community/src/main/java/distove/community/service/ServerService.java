@@ -14,6 +14,7 @@ import lombok.extern.slf4j.Slf4j;
 import org.springframework.stereotype.Service;
 import org.springframework.web.multipart.MultipartFile;
 
+import javax.transaction.Transactional;
 import java.util.ArrayList;
 import java.util.List;
 
@@ -21,6 +22,8 @@ import static distove.community.exception.ErrorCode.SERVER_NOT_FOUND_ERROR;
 @Slf4j
 @Service
 @RequiredArgsConstructor
+@Transactional
+
 public class ServerService {
     private final ServerRepository serverRepository;
     private final MemberRepository memberRepository;
@@ -40,10 +43,20 @@ public class ServerService {
         channelRepository.save(new Channel("일반",1,defaultChatCategory));
         channelRepository.save(new Channel("일반",2,defaultVoiceCategory));
 
-        return serverRepository.findById(newServer.getId())
-                .orElseThrow(() -> new DistoveException(SERVER_NOT_FOUND_ERROR));
+        return newServer;
 
     }
+    public Server updateServer(Long serverId,String name,String imgUrl,MultipartFile image) {
+        Server server = serverRepository.findById(serverId)
+                .orElseThrow(() -> new DistoveException(SERVER_NOT_FOUND_ERROR));
+        if(!image.isEmpty()){
+            imgUrl= storageService.upload(image);
+        }
+        server.updateServer(name,imgUrl);
+
+        return server;
+    }
+
 
     public List<Server> getServersByUserId(Long userId){
 
@@ -54,5 +67,17 @@ public class ServerService {
         }
         return servers;
 
+    }
+
+    public void deleteServerById(Long serverId){
+        Server server = serverRepository.findById(serverId)
+                .orElseThrow(() -> new DistoveException(SERVER_NOT_FOUND_ERROR));
+        List<Category> categories = categoryRepository.findCategoriesByServerId(serverId);
+        for (Category category : categories) {
+            channelRepository.deleteAllByCategoryId(category.getId());
+        }
+        memberRepository.deleteAllByServerId(serverId);
+        categoryRepository.deleteAllByServerId(serverId);
+        serverRepository.deleteById(serverId);
     }
 }

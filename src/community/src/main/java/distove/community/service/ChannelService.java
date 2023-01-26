@@ -12,11 +12,15 @@ import distove.community.repository.ServerRepository;
 import lombok.RequiredArgsConstructor;
 import org.springframework.stereotype.Service;
 
+import javax.transaction.Transactional;
+
 import static distove.community.exception.ErrorCode.CHANNEL_NOT_FOUND_ERROR;
 import static distove.community.exception.ErrorCode.SERVER_NOT_FOUND_ERROR;
 
 @Service
 @RequiredArgsConstructor
+@Transactional
+
 public class ChannelService {
     private final ChannelRepository channelRepository;
     private final ServerRepository serverRepository;
