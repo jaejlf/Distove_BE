@@ -1,6 +1,6 @@
 package distove.auth.exception;
 
-import distove.common.ResultResponse;
+import distove.auth.dto.response.ResultResponse;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.ExceptionHandler;
