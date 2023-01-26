@@ -6,7 +6,6 @@ import distove.chat.dto.response.MessageResponse;
 import distove.chat.dto.response.TypedUserResponse;
 import distove.chat.entity.Connection;
 import distove.chat.entity.Message;
-import distove.chat.entity.ReplyInfo;
 import distove.chat.enumerate.MessageType;
 import distove.chat.exception.DistoveException;
 import distove.chat.repository.ConnectionRepository;
@@ -15,50 +14,89 @@ import distove.chat.web.UserClient;
 import distove.chat.web.UserResponse;
 import lombok.RequiredArgsConstructor;
 
-import java.util.ArrayList;
 import java.util.List;
 import java.util.Objects;
 
 import static distove.chat.entity.Message.newMessage;
-import static distove.chat.entity.ReplyInfo.allReplyInfo;
+import static distove.chat.entity.Message.newReply;
+import static distove.chat.enumerate.MessageType.isFileType;
 import static distove.chat.exception.ErrorCode.*;
 
 @RequiredArgsConstructor
-public abstract class PublishService {
+public class PublishService {
 
     protected final StorageService storageService;
     protected final MessageRepository messageRepository;
     protected final ConnectionRepository connectionRepository;
     protected final UserClient userClient;
 
-    protected abstract MessageResponse publishMessage(Long userId, Long channelId, MessageRequest request);
-    protected abstract MessageResponse publishFile(Long userId, Long channelId, MessageType type, FileUploadRequest request);
+    public MessageResponse publishMessage(Long userId, Long channelId, MessageRequest request) {
+        checkChannelExist(channelId);
+        Message message = createMessageByType(channelId, request, userId);
+        UserResponse writer = userClient.getUser(userId);
+        return MessageResponse.of(message, writer, userId);
+    }
+
+    public MessageResponse publishFile(Long userId, Long channelId, MessageType type, FileUploadRequest request) {
+        checkChannelExist(channelId);
+        String fileUploadUrl = storageService.uploadToS3(request.getFile(), type);
+        MessageRequest messageRequest = new MessageRequest(
+                type,
+                null,
+                fileUploadUrl,
+                request.getParentId()
+        );
+
+        Message message = createMessageByType(channelId, messageRequest, userId);
+        UserResponse writer = userClient.getUser(userId);
+        return MessageResponse.of(message, writer, userId);
+    }
 
     public TypedUserResponse publishTypedUser(Long userId) {
         UserResponse typedUser = userClient.getUser(userId);
         return TypedUserResponse.of(typedUser.getNickname());
     }
 
-    protected Message createMessageByType(Long channelId, MessageRequest request, Long userId) {
+    protected Connection checkChannelExist(Long channelId) {
+        return connectionRepository.findByChannelId(channelId)
+                .orElseThrow(() -> new DistoveException(CHANNEL_NOT_FOUND_ERROR));
+    }
+
+    private Message createMessageByType(Long channelId, MessageRequest request, Long userId) {
         Message message;
         MessageType type = request.getType();
 
         switch (type) {
             case TEXT:
-                message = newMessage(channelId, userId, type, request.getContent());
+            case FILE:
+            case IMAGE:
+            case VIDEO:
+                if (request.getParentId() != null) {
+                    message = messageRepository.save(
+                            newReply(channelId, userId, type, request.getContent(), request.getParentId()));
+                } else {
+                    message = messageRepository.save(
+                            newMessage(channelId, userId, type, request.getContent()));
+                }
                 break;
             case MODIFIED:
-            case DELETED: // TODO : Reply 여부에 따른 delete 세부 로직 필요
-                message = updateMessage(request.getMessageId(), userId, type,
-                        request.getContent() != null ? request.getContent() : "삭제된 메시지입니다.");
+                message = messageRepository.save(
+                        checkAuthAndGetMessage(request.getMessageId(), userId, type, request.getContent()));
+                break;
+            case DELETED:
+                message = checkAuthAndGetMessage(request.getMessageId(), userId, type, request.getContent());
+                if (isFileType(message.getType())) storageService.deleteFile(message.getContent());
+                if (message.getReplyInfo() != null) deleteReplies(message);
+                messageRepository.deleteById(message.getId());
                 break;
             default:
                 throw new DistoveException(MESSAGE_TYPE_ERROR);
         }
+
         return message;
     }
 
-    protected Message updateMessage(String messageId, Long userId, MessageType type, String content) {
+    private Message checkAuthAndGetMessage(String messageId, Long userId, MessageType type, String content) {
         Message message = messageRepository.findById(messageId)
                 .orElseThrow(() -> new DistoveException(MESSAGE_NOT_FOUND_ERROR));
 
@@ -68,29 +106,12 @@ public abstract class PublishService {
         return message;
     }
 
-    protected List<MessageResponse> convertMessageToDtoWithReplyInfo(Long userId, List<Message> messages) {
-        List<MessageResponse> messageResponses = new ArrayList<>();
-        for (Message message : messages) {
-            UserResponse writer = userClient.getUser(message.getUserId());
-
-            if (message.getReplyInfo() != null) {
-                ReplyInfo replyInfo = message.getReplyInfo();
-                UserResponse stUser = userClient.getUser(replyInfo.getStUserId());
-                messageResponses.add(MessageResponse.of(
-                        message, writer, userId,
-                        allReplyInfo(
-                                replyInfo.getReplyName(), replyInfo.getStUserId(),
-                                stUser.getNickname(), stUser.getProfileImgUrl())));
-            } else {
-                messageResponses.add(MessageResponse.of(message, writer, userId, null)); // Noti 메시지 판별을 위해 replyInfo 포함된 DTO 지정
-            }
+    private void deleteReplies(Message message) {
+        List<Message> replies = messageRepository.findAllByParentId(message.getId());
+        for (Message reply : replies) {
+            if (isFileType(reply.getType())) storageService.deleteFile(message.getContent());
         }
-        return messageResponses;
-    }
-
-    protected Connection checkChannelExist(Long channelId) {
-        return connectionRepository.findByChannelId(channelId)
-                .orElseThrow(() -> new DistoveException(CHANNEL_NOT_FOUND_ERROR));
+        messageRepository.deleteAllByParentId(message.getId());
     }
 
 }

@@ -21,6 +21,7 @@ public class Message {
     private String content;
     private LocalDateTime createdAt;
     private ReplyInfo replyInfo;
+    private String parentId;
 
     public static Message newMessage(Long channelId, Long userId, MessageType type, String content) {
         return Message.builder()
@@ -28,6 +29,17 @@ public class Message {
                 .userId(userId)
                 .type(type)
                 .content(content)
+                .createdAt(LocalDateTime.now())
+                .build();
+    }
+
+    public static Message newReply(Long channelId, Long userId, MessageType type, String content, String parentId) {
+        return Message.builder()
+                .channelId(channelId)
+                .userId(userId)
+                .type(type)
+                .content(content)
+                .parentId(parentId)
                 .createdAt(LocalDateTime.now())
                 .build();
     }

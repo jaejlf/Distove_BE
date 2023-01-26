@@ -1,12 +1,9 @@
 package distove.chat.service;
 
-import distove.chat.dto.request.FileUploadRequest;
-import distove.chat.dto.request.MessageRequest;
 import distove.chat.dto.response.MessageResponse;
 import distove.chat.dto.response.PagedMessageResponse;
 import distove.chat.entity.Connection;
 import distove.chat.entity.Message;
-import distove.chat.enumerate.MessageType;
 import distove.chat.repository.ConnectionRepository;
 import distove.chat.repository.MessageRepository;
 import distove.chat.web.UserClient;
@@ -18,6 +15,7 @@ import org.springframework.data.domain.Pageable;
 import org.springframework.stereotype.Service;
 
 import java.util.List;
+import java.util.stream.Collectors;
 
 import static distove.chat.entity.Message.newMessage;
 import static distove.chat.enumerate.MessageType.WELCOME;
@@ -30,37 +28,17 @@ public class MessageService extends PublishService {
         super(storageService, messageRepository, connectionRepository, userClient);
     }
 
-    @Override
-    public MessageResponse publishMessage(Long userId, Long channelId, MessageRequest request) {
-        checkChannelExist(channelId);
-        Message message = createMessageByType(channelId, request, userId);
-        messageRepository.save(message);
-
-        UserResponse writer = userClient.getUser(userId);
-        return MessageResponse.of(message, writer, userId);
-    }
-
-    @Override
-    public MessageResponse publishFile(Long userId, Long channelId, MessageType type, FileUploadRequest request) {
-        checkChannelExist(channelId);
-        String fileUploadUrl = storageService.uploadToS3(request.getFile(), type);
-        Message message = newMessage(channelId, userId, type, fileUploadUrl);
-        messageRepository.save(message);
-
-        UserResponse writer = userClient.getUser(userId);
-        return MessageResponse.of(message, writer, userId);
-    }
-
     public PagedMessageResponse getMessagesByChannelId(Long userId, Long channelId, int page) {
         saveWelcomeMessage(userId, channelId);
 
         Pageable pageable = PageRequest.of(page - 1, 5); // TODO : 테스트를 용이하게 하기 위해 임의로 5로 설정 (추후 30으로 변경 예정)
-        Page<Message> messagePage = messageRepository.findAllByChannelId(channelId, pageable);
+        Page<Message> messagePage = messageRepository.findAllByChannelIdAndParentIdIsNull(channelId, pageable);
 
         int totalPage = messagePage.getTotalPages();
-        List<MessageResponse> messageResponses = convertMessageToDtoWithReplyInfo(
-                userId, messagePage.getContent()
-        );
+        List<MessageResponse> messageResponses = messagePage.getContent()
+                .stream()
+                .map(x -> MessageResponse.of(x, userClient.getUser(x.getUserId()), userId))
+                .collect(Collectors.toList());
 
         return PagedMessageResponse.of(totalPage, messageResponses);
     }

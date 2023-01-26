@@ -2,7 +2,6 @@ package distove.chat.dto.response;
 
 import com.fasterxml.jackson.annotation.JsonInclude;
 import distove.chat.entity.Message;
-import distove.chat.entity.Reply;
 import distove.chat.entity.ReplyInfo;
 import distove.chat.enumerate.MessageType;
 import distove.chat.web.UserResponse;
@@ -28,17 +27,6 @@ public class MessageResponse {
     private ReplyInfo replyInfo;
 
     public static MessageResponse of(Message message, UserResponse writer, Long userId) {
-        return MessageResponse.builder()
-                .id(message.getId())
-                .type(message.getType())
-                .content(message.getContent())
-                .createdAt(message.getCreatedAt())
-                .writer(writer)
-                .hasAuthorized(Objects.equals(writer.getId(), userId))
-                .build();
-    }
-
-    public static MessageResponse of(Message message, UserResponse writer, Long userId, ReplyInfo replyInfo) {
         if (isNotiMessage(message.getType())) {
             return MessageResponse.builder()
                     .id(message.getId())
@@ -54,22 +42,10 @@ public class MessageResponse {
                     .content(message.getContent())
                     .createdAt(message.getCreatedAt())
                     .writer(writer)
+                    .replyInfo(message.getReplyInfo())
                     .hasAuthorized(Objects.equals(writer.getId(), userId))
-                    .replyInfo(replyInfo)
                     .build();
         }
-    }
-
-    public static MessageResponse of(Reply reply, UserResponse writer, Long userId) {
-        Message message = reply.getMessage();
-        return MessageResponse.builder()
-                .id(reply.getId())
-                .type(message.getType())
-                .content(message.getContent())
-                .createdAt(message.getCreatedAt())
-                .writer(writer)
-                .hasAuthorized(Objects.equals(writer.getId(), userId))
-                .build();
     }
 
 }
