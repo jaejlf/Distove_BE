@@ -86,7 +86,7 @@ public class MessageService {
                 messageResponses.add(MessageResponse.ofParent(message, writer, userId, getReplyInfo(message)));
             }
         }
-        return PagedMessageResponse.of(totalPage, messageResponses);
+        return PagedMessageResponse.ofDefault(totalPage, messageResponses);
     }
 
     public MessageResponse createReply(Long userId, MessageRequest request) {
@@ -105,6 +105,7 @@ public class MessageService {
     }
 
     public List<MessageResponse> getParentByChannelId(Long userId, Long channelId) {
+        checkChannelExist(channelId);
         return messageRepository.findAllByChannelIdAndReplyNameIsNotNull(channelId)
                 .stream()
                 .map(x -> MessageResponse.ofParent(x, userClient.getUser(x.getUserId()), userId, getReplyInfo(x)))
@@ -121,7 +122,8 @@ public class MessageService {
                 .map(x -> MessageResponse.ofDefault(x, userClient.getUser(x.getUserId()), userId))
                 .collect(Collectors.toList());
 
-        return PagedMessageResponse.of(totalPage, messageResponses);
+        ReplyInfoResponse replyInfo = getReplyInfo(getMessage(parentId));
+        return PagedMessageResponse.ofChild(totalPage, replyInfo, messageResponses);
     }
 
     private Message createMessageByType(Long channelId, MessageRequest request, Long userId) {
@@ -196,8 +198,7 @@ public class MessageService {
     }
 
     private void saveWelcomeMessage(Long userId, Long channelId) {
-        Connection connection = connectionRepository.findByChannelId(channelId)
-                .orElseThrow(() -> new DistoveException(CHANNEL_NOT_FOUND_ERROR));
+        Connection connection = checkChannelExist(channelId);
         List<Long> connectedMemberIds = connection.getConnectedMemberIds();
         if (connectedMemberIds.contains(userId)) return;
 
@@ -210,6 +211,11 @@ public class MessageService {
         connectedMemberIds.add(userId);
         connection.updateConnectedMemberIds(connectedMemberIds);
         connectionRepository.save(connection);
+    }
+
+    private Connection checkChannelExist(Long channelId) {
+        return connectionRepository.findByChannelId(channelId)
+                .orElseThrow(() -> new DistoveException(CHANNEL_NOT_FOUND_ERROR));
     }
 
 }
