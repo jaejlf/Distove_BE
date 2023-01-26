@@ -8,4 +8,8 @@ public enum MessageType {
         return type == WELCOME || type == TYPING;
     }
 
+    public static boolean isFileType(MessageType type) {
+        return type == IMAGE || type == FILE || type == VIDEO;
+    }
+
 }

@@ -1,5 +1,6 @@
 package distove.chat.service;
 
+import com.amazonaws.AmazonServiceException;
 import com.amazonaws.services.s3.AmazonS3;
 import com.amazonaws.services.s3.model.CannedAccessControlList;
 import com.amazonaws.services.s3.model.ObjectMetadata;
@@ -39,6 +40,15 @@ public class StorageService {
             throw new DistoveException(FILE_UPLOAD_ERROR);
         }
         return amazonS3Client.getUrl(bucket, fileName).toString();
+    }
+
+    public void deleteFile(String originImgUrl) {
+        if (originImgUrl == null) return;
+        try {
+            amazonS3Client.deleteObject(bucket, originImgUrl.split("/")[3]);
+        } catch (AmazonServiceException e) {
+            e.printStackTrace();
+        }
     }
 
     private static ObjectMetadata getObjectMetadata(MultipartFile multipartFile, MessageType type) {
