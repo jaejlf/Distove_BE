@@ -20,7 +20,8 @@ public class Message {
     private MessageType type;
     private String content;
     private LocalDateTime createdAt;
-    private ReplyInfo replyInfo;
+    private String replyName;
+    private Long stUserId;
     private String parentId;
 
     public static Message newMessage(Long channelId, Long userId, MessageType type, String content) {
@@ -49,8 +50,9 @@ public class Message {
         this.content = content;
     }
 
-    public void addReplyInfo(ReplyInfo replyInfo) {
-        this.replyInfo = replyInfo;
+    public void addReplyInfo(String replyName, Long stUserId) {
+        this.replyName = replyName;
+        this.stUserId = stUserId;
     }
 
 }

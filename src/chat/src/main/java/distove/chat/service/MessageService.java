@@ -7,7 +7,7 @@ import distove.chat.dto.response.PagedMessageResponse;
 import distove.chat.dto.response.TypedUserResponse;
 import distove.chat.entity.Connection;
 import distove.chat.entity.Message;
-import distove.chat.entity.ReplyInfo;
+import distove.chat.dto.response.ReplyInfoResponse;
 import distove.chat.enumerate.MessageType;
 import distove.chat.exception.DistoveException;
 import distove.chat.repository.ConnectionRepository;
@@ -22,13 +22,13 @@ import org.springframework.data.domain.PageRequest;
 import org.springframework.data.domain.Pageable;
 import org.springframework.stereotype.Service;
 
+import java.util.ArrayList;
 import java.util.List;
 import java.util.Objects;
 import java.util.stream.Collectors;
 
 import static distove.chat.entity.Message.newMessage;
 import static distove.chat.entity.Message.newReply;
-import static distove.chat.entity.ReplyInfo.newReplyInfo;
 import static distove.chat.enumerate.MessageType.WELCOME;
 import static distove.chat.enumerate.MessageType.isFileType;
 import static distove.chat.exception.ErrorCode.*;
@@ -49,7 +49,7 @@ public class MessageService {
     public MessageResponse publishMessage(Long userId, Long channelId, MessageRequest request) {
         Message message = createMessageByType(channelId, request, userId);
         UserResponse writer = userClient.getUser(userId);
-        return MessageResponse.of(message, writer, userId);
+        return MessageResponse.ofDefault(message, writer, userId);
     }
 
     public MessageResponse publishFile(Long userId, Long channelId, MessageType type, FileUploadRequest request) {
@@ -62,7 +62,7 @@ public class MessageService {
 
         Message message = createMessageByType(channelId, messageRequest, userId);
         UserResponse writer = userClient.getUser(userId);
-        return MessageResponse.of(message, writer, userId);
+        return MessageResponse.ofDefault(message, writer, userId);
     }
 
     public TypedUserResponse publishTypedUser(Long userId) {
@@ -77,33 +77,37 @@ public class MessageService {
         Page<Message> messagePage = messageRepository.findAllByChannelIdAndParentIdIsNull(channelId, pageable);
 
         int totalPage = messagePage.getTotalPages();
-        List<MessageResponse> messageResponses = messagePage.getContent()
-                .stream()
-                .map(x -> MessageResponse.of(x, userClient.getUser(x.getUserId()), userId))
-                .collect(Collectors.toList());
-
+        List<MessageResponse> messageResponses = new ArrayList<>();
+        for (Message message : messagePage.getContent()) {
+            UserResponse writer = userClient.getUser(message.getUserId());
+            if (message.getReplyName() == null) {
+                messageResponses.add(MessageResponse.ofDefault(message, writer, userId));
+            } else {
+                messageResponses.add(MessageResponse.ofParent(message, writer, userId, getReplyInfo(message)));
+            }
+        }
         return PagedMessageResponse.of(totalPage, messageResponses);
     }
 
     public MessageResponse createReply(Long userId, MessageRequest request) {
         Message parent = getMessage(request.getParentId());
-        parent.addReplyInfo(newReplyInfo(request.getReplyName(), userId));
+        parent.addReplyInfo(request.getReplyName(), userId);
         messageRepository.save(parent);
 
         UserResponse writer = userClient.getUser(userId);
-        ReplyInfo replyInfoDetail = ReplyInfo.withUserDetails(
+        ReplyInfoResponse replyInfoResponse = ReplyInfoResponse.of(
                 request.getReplyName(),
                 writer.getId(),
                 writer.getNickname(),
                 writer.getProfileImgUrl()
         );
-        return MessageResponse.withReplyInfo(parent, writer, userId, replyInfoDetail);
+        return MessageResponse.ofParent(parent, writer, userId, replyInfoResponse);
     }
 
     public List<MessageResponse> getParentByChannelId(Long userId, Long channelId) {
-        return messageRepository.findAllByChannelIdAndReplyInfoIsNotNull(channelId)
+        return messageRepository.findAllByChannelIdAndReplyNameIsNotNull(channelId)
                 .stream()
-                .map(x -> MessageResponse.of(x, userClient.getUser(x.getUserId()), userId))
+                .map(x -> MessageResponse.ofParent(x, userClient.getUser(x.getUserId()), userId, getReplyInfo(x)))
                 .collect(Collectors.toList());
     }
 
@@ -114,7 +118,7 @@ public class MessageService {
         int totalPage = replyPage.getTotalPages();
         List<MessageResponse> messageResponses = replyPage.getContent()
                 .stream()
-                .map(x -> MessageResponse.of(x, userClient.getUser(x.getUserId()), userId))
+                .map(x -> MessageResponse.ofDefault(x, userClient.getUser(x.getUserId()), userId))
                 .collect(Collectors.toList());
 
         return PagedMessageResponse.of(totalPage, messageResponses);
@@ -158,6 +162,17 @@ public class MessageService {
         return message;
     }
 
+    private ReplyInfoResponse getReplyInfo(Message message) {
+        Long stUserId = message.getStUserId();
+        UserResponse stUser = userClient.getUser(stUserId);
+        return ReplyInfoResponse.of(
+                message.getReplyName(),
+                stUser.getId(),
+                stUser.getNickname(),
+                stUser.getProfileImgUrl()
+        );
+    }
+
     private Message getMessage(String messageId) {
         return messageRepository.findById(messageId)
                 .orElseThrow(() -> new DistoveException(MESSAGE_NOT_FOUND_ERROR));
@@ -169,7 +184,7 @@ public class MessageService {
 
     private void deleteAssociatedData(Message origin) {
         if (isFileType(origin.getType())) storageService.deleteFile(origin.getContent());
-        if (origin.getReplyInfo() != null) deleteReplies(origin);
+        if (origin.getReplyName() != null) deleteReplies(origin);
     }
 
     private void deleteReplies(Message message) {
