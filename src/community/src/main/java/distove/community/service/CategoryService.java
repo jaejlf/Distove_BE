@@ -14,7 +14,7 @@ import java.util.List;
 public class CategoryService {
     private final CategoryRepository categoryRepository;
     private final ChannelRepository channelRepository;
-    public List<CategoryResponse> getCategoriesByServerId(Long serverId) {
+    public List<CategoryResponse> getCategoriesWithChannelsByServerId(Long serverId) {
         List<Category> categories = categoryRepository.findCategoriesByServerId(serverId);
         List<CategoryResponse> categoryResponses = new ArrayList<>();
         for (Category category : categories) {
