@@ -1,8 +1,5 @@
 package distove.community.service;
 
-import distove.community.dto.request.ServerRequest;
-import distove.community.dto.response.ServerDto;
-import distove.community.dto.response.ServerResponse;
 import distove.community.entity.Category;
 import distove.community.entity.Channel;
 import distove.community.entity.Member;
@@ -15,6 +12,7 @@ import distove.community.repository.ServerRepository;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.stereotype.Service;
+import org.springframework.web.multipart.MultipartFile;
 
 import java.util.ArrayList;
 import java.util.List;
@@ -28,10 +26,14 @@ public class ServerService {
     private final MemberRepository memberRepository;
     private final CategoryRepository categoryRepository;
     private final ChannelRepository channelRepository;
+    private final StorageService storageService;
 
-    public Server createNewServer(ServerRequest serverRequest){
-        log.debug("안녕",serverRequest);
-        Server newServer = serverRepository.save(new Server(serverRequest.getName()));
+    public Server createNewServer(String name, MultipartFile image) {
+        String imgUrl=null;
+        if(!image.isEmpty()){
+            imgUrl= storageService.upload(image);
+        }
+        Server newServer = serverRepository.save(new Server(name,imgUrl));
         categoryRepository.save(new Category(null,newServer));
         Category defaultChatCategory = categoryRepository.save(new Category("채팅 채널",newServer));
         Category defaultVoiceCategory = categoryRepository.save(new Category("음성 채널",newServer));
@@ -42,20 +44,13 @@ public class ServerService {
                 .orElseThrow(() -> new DistoveException(SERVER_NOT_FOUND_ERROR));
 
     }
-    public ServerResponse getServerById(Long id){
-        Server server = serverRepository.findById(id).orElseThrow(() -> new DistoveException(SERVER_NOT_FOUND_ERROR));
-        return new ServerResponse(server.getId(),server.getName(),categoryRepository.findCategoriesByServerId(server.getId()));
 
-    }
-    public List<ServerDto> getServersByUserId(Long userId){
+    public List<Server> getServersByUserId(Long userId){
 
         List<Member> members = memberRepository.findMembersByUserId(userId);
-        List<ServerDto> servers = new ArrayList<>();
+        List<Server> servers = new ArrayList<>();
         for(Member m : members){
-//            List<CategoryRepository.findCategoriesByServerId(m.getServer().getId());
-//            List<Channel.ChannelNameAndChannelTypeIdtegory.CategoryIdAndName> categories = c> channelsWithCategory = channelRepository.findAllByServerId(m.getServer().getId());
-////            List<Channel> channels = channelRepository.findAllByServerId(m.getServer().getId());
-//            servers.add(new ServerDto(m.getServer().getId(),m.getServer().getName(),categories,channelsWithCategory));
+            servers.add(m.getServer());
         }
         return servers;
 
