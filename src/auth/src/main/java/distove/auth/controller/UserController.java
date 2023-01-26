@@ -69,6 +69,7 @@ public class UserController {
         return ResultResponse.success(
                 HttpStatus.OK,
                 "이미지 업로드 성공",
-                storageService.upload(file));
+                storageService.uploadToS3(file));
     }
+
 }

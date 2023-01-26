@@ -1,5 +1,6 @@
 package distove.auth.service;
 
+import com.amazonaws.services.s3.AmazonS3;
 import com.amazonaws.services.s3.AmazonS3Client;
 import com.amazonaws.services.s3.model.CannedAccessControlList;
 import com.amazonaws.services.s3.model.ObjectMetadata;
@@ -22,31 +23,24 @@ import static distove.auth.exception.ErrorCode.FILE_UPLOAD_ERROR;
 @RequiredArgsConstructor
 public class StorageService {
 
-    private final AmazonS3Client amazonS3client;
+    private final AmazonS3 amazonS3Client;
 
     @Value("${cloud.aws.s3.bucket}")
     private String bucket;
 
-    public String upload(MultipartFile multipartFile) {
-        log.info("hello{}", multipartFile.getOriginalFilename());
+    public String uploadToS3(MultipartFile multipartFile) {
         String fileName = multipartFile.getOriginalFilename();
         ObjectMetadata objectMetadata = new ObjectMetadata();
         objectMetadata.setContentType(multipartFile.getContentType());
-
         try {
             InputStream inputStream = multipartFile.getInputStream();
             objectMetadata.setContentLength(inputStream.available());
-            amazonS3client.putObject(new PutObjectRequest(bucket, fileName, inputStream, objectMetadata)
+            amazonS3Client.putObject(new PutObjectRequest(bucket, fileName, inputStream, objectMetadata)
                     .withCannedAcl(CannedAccessControlList.PublicRead));
         } catch (IOException e) {
             throw new DistoveException(FILE_UPLOAD_ERROR);
         }
-        return amazonS3client.getUrl(bucket, fileName).toString();
+        return amazonS3Client.getUrl(bucket, fileName).toString();
     }
 
-    private void validateFileExists(MultipartFile file) {
-        if (file.isEmpty()) {
-            throw new DistoveException(ACCOUNT_NOT_FOUND);
-        }
-    }
 }
