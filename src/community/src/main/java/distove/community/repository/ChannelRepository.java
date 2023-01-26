@@ -9,7 +9,6 @@ import java.util.Optional;
 @Repository
 
 public interface ChannelRepository extends JpaRepository<Channel,Long> {
-    Channel deleteChannelById(Long id);
 
     Channel save(Channel channel);
     Optional<Channel> findById(Long id);

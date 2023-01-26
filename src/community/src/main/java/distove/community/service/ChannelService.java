@@ -1,6 +1,7 @@
 package distove.community.service;
 
 import distove.community.dto.request.ChannelRequest;
+import distove.community.dto.request.ChannelUpdateRequest;
 import distove.community.entity.Category;
 import distove.community.entity.Channel;
 import distove.community.exception.DistoveException;
@@ -10,7 +11,8 @@ import distove.community.repository.ServerRepository;
 import lombok.RequiredArgsConstructor;
 import org.springframework.stereotype.Service;
 
-import static distove.community.exception.ErrorCode.*;
+import static distove.community.exception.ErrorCode.CHANNEL_NOT_FOUND_ERROR;
+import static distove.community.exception.ErrorCode.SERVER_NOT_FOUND_ERROR;
 
 @Service
 @RequiredArgsConstructor
@@ -19,16 +21,16 @@ public class ChannelService {
     private final ServerRepository serverRepository;
     private final CategoryRepository categoryRepository;
 
-//    public Channel updateChannelName(ChannelUpdateRequest channelUpdateRequest){
-//        Channel channel = channelRepository.findById(channelUpdateRequest.getId())
-//                .orElseThrow(() -> new DistoveException(CHANNEL_NOT_FOUND_ERROR));
-//        channel.builder(channelUpdateRequest.getId(),channelUpdateRequest.getName())
-//    }
-//deleteChannelById
+    public Channel updateChannelName(Long channelId, ChannelUpdateRequest channelUpdateRequest){
+        Channel channel = channelRepository.findById(channelId)
+                .orElseThrow(() -> new DistoveException(CHANNEL_NOT_FOUND_ERROR));
+        return channel.updateChannel(channelUpdateRequest.getName());
+    }
+
     public void deleteChannelById(Long channelId){
         Channel channel = channelRepository.findById(channelId)
                 .orElseThrow(() -> new DistoveException(CHANNEL_NOT_FOUND_ERROR));
-        channelRepository.deleteChannelById(channelId);
+        channelRepository.deleteById(channelId);
     }
     public Channel createNewChannel(ChannelRequest channelRequest){
 
