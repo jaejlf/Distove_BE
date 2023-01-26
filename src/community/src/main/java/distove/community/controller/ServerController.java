@@ -41,5 +41,19 @@ public class ServerController {
         return ResultResponse.success(HttpStatus.OK,"서버 생성 성공",server);
     }
 
-
+    @PatchMapping("/server/{serverId}")
+    public ResponseEntity<Object> updateServer(@RequestHeader("userId") Long userId,
+                                               @PathVariable("serverId") Long serverId,
+                                               @RequestPart(required = false,value = "imgUrl") String imgUrl,
+                                               @RequestPart("name") String name,
+                                               @RequestPart("image") MultipartFile image){
+        Server server = serverService.updateServer(serverId,name,imgUrl,image);
+        return ResultResponse.success(HttpStatus.OK,"서버 수정 성공",server);
+    }
+    @DeleteMapping("/server/{serverId}")
+    public ResponseEntity<Object> deleteServerById(@RequestHeader("userId") Long userId,
+                                               @PathVariable("serverId") Long serverId){
+        serverService.deleteServerById(serverId);
+        return ResultResponse.success(HttpStatus.OK,"서버 삭제 성공",null);
+    }
 }
