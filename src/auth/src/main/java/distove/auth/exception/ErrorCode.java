@@ -17,7 +17,6 @@ public enum ErrorCode {
     //JWT
     JWT_ERROR(HttpStatus.UNAUTHORIZED, "A0004", "JWT 에러");
 
-
     private final HttpStatus httpStatus;
     private final String code;
     private final String message;

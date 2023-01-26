@@ -24,7 +24,6 @@ public class SecurityConfig {
                 .and()
                 .logout()
                 .disable();
-
         return http.build();
     }
 
@@ -32,4 +31,5 @@ public class SecurityConfig {
     public BCryptPasswordEncoder bCryptPasswordEncoder() {
         return new BCryptPasswordEncoder();
     }
+
 }

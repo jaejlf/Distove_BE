@@ -41,7 +41,7 @@ public class UserController {
         return ResultResponse.success(
                 HttpStatus.OK,
                 "로그아웃 성공",
-                userService.signOut(request)
+                userService.logout(request)
         );
     }
 

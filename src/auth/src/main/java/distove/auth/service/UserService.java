@@ -53,7 +53,7 @@ public class UserService {
         return TokenResponse.of(accessToken, refreshToken);
     }
 
-    public LogoutResponse signOut(LogoutRequest request) {
+    public LogoutResponse logout(LogoutRequest request) {
         User user = userRepository.findByEmail(request.getEmail())
                 .orElseThrow(() -> new DistoveException(ACCOUNT_NOT_FOUND));
 

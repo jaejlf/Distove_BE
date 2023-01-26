@@ -4,6 +4,7 @@ import io.jsonwebtoken.Claims;
 import io.jsonwebtoken.JwtException;
 import io.jsonwebtoken.Jwts;
 import io.jsonwebtoken.SignatureAlgorithm;
+import io.jsonwebtoken.*;
 import io.jsonwebtoken.io.Decoders;
 import io.jsonwebtoken.security.Keys;
 import lombok.extern.slf4j.Slf4j;
@@ -57,10 +58,15 @@ public class JwtTokenProvider {
                     .build()
                     .parseClaimsJws(jwt);
             return true;
-        } catch (JwtException e) {
-            log.info("JWT 에러");
-            return false;
+        } catch (io.jsonwebtoken.security.SecurityException | MalformedJwtException e) {
+            log.info("잘못된 JWT 서명");
+        } catch (ExpiredJwtException e) {
+            log.info("만료된 JWT 토큰");
+        } catch (UnsupportedJwtException e) {
+            log.info("지원되지 않는 JWT 토큰");
+        } catch (IllegalArgumentException e) {
+            log.info("JWT 토큰이 잘못되었습니다.");
         }
-
+        return false;
     }
 }
