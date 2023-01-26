@@ -42,8 +42,7 @@ public class JwtTokenProvider {
                 .compact();
     }
 
-    public String generateRefreshToken(String email) {
-        Claims claims = Jwts.claims().setSubject(email);
+    public String generateRefreshToken() {
         Date now = new Date();
         return Jwts.builder()
                 .setExpiration(new Date(now.getTime() + Duration.ofDays(30).toMillis()))
@@ -59,8 +58,9 @@ public class JwtTokenProvider {
                     .parseClaimsJws(jwt);
             return true;
         } catch (JwtException e) {
-            e.printStackTrace();
+            log.info("JWT 에러");
+            return false;
         }
-        return false;
+
     }
 }

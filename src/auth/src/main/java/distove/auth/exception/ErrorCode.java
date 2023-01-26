@@ -12,7 +12,11 @@ public enum ErrorCode {
 
     // 로그인
     ACCOUNT_NOT_FOUND(HttpStatus.UNAUTHORIZED, "A0002", "계정이 존재하지 않습니다."),
-    PASSWORD_ERROR(HttpStatus.UNAUTHORIZED, "A0003","패스워드가 다릅니다.");
+    PASSWORD_ERROR(HttpStatus.UNAUTHORIZED, "A0003", "패스워드가 다릅니다."),
+
+    //JWT
+    JWT_ERROR(HttpStatus.UNAUTHORIZED, "A0004", "JWT 에러");
+
 
     private final HttpStatus httpStatus;
     private final String code;
