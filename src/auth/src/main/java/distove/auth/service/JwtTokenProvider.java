@@ -1,7 +1,6 @@
 package distove.auth.service;
 
 import distove.auth.exception.DistoveException;
-import distove.auth.exception.ErrorCode;
 import io.jsonwebtoken.*;
 import io.jsonwebtoken.io.Decoders;
 import io.jsonwebtoken.security.Keys;
@@ -14,6 +13,9 @@ import java.time.Duration;
 import java.util.Date;
 import java.util.HashMap;
 import java.util.Map;
+
+import static distove.auth.exception.ErrorCode.JWT_EXPIRED;
+import static distove.auth.exception.ErrorCode.JWT_INVALID;
 
 @Slf4j
 @Component
@@ -38,7 +40,7 @@ public class JwtTokenProvider {
                 .setHeader(headers)
                 .setClaims(claims)
                 .setIssuedAt(now)
-                .setExpiration(new Date(now.getTime() + Duration.ofMinutes(30).toMillis()))
+                .setExpiration(new Date(now.getTime() + Duration.ofMinutes(43200).toMillis()))
                 .signWith(key, SignatureAlgorithm.HS256)
                 .compact();
     }
@@ -58,12 +60,14 @@ public class JwtTokenProvider {
                     .build()
                     .parseClaimsJws(token);
             return true;
-        } catch (JwtException e) {
-            throw new DistoveException(ErrorCode.JWT_ERROR);
+        } catch (UnsupportedJwtException e) {
+            throw new DistoveException(JWT_INVALID);
+        } catch (ExpiredJwtException e) {
+            throw new DistoveException(JWT_EXPIRED);
         }
     }
 
-    public String getEmail(String token) {
+    public String getEmail(String token) throws DistoveException {
 
         try {
             return Jwts
@@ -72,8 +76,10 @@ public class JwtTokenProvider {
                     .build()
                     .parseClaimsJws(token)
                     .getBody().getSubject();
+        } catch (UnsupportedJwtException e) {
+            throw new DistoveException(JWT_INVALID);
         } catch (ExpiredJwtException e) {
-            throw new DistoveException(ErrorCode.JWT_ERROR);
+            throw new DistoveException(JWT_EXPIRED);
         }
     }
 }
