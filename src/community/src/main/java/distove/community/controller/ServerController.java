@@ -37,7 +37,7 @@ public class ServerController {
     public ResponseEntity<Object> createNewServer(@RequestHeader("userId") Long userId,
                                                   @RequestPart("name") String name,
                                                   @RequestPart("image") MultipartFile image){
-        Server server =  serverService.createNewServer(name,image);
+        Server server =  serverService.createNewServer(userId, name,image);
         return ResultResponse.success(HttpStatus.OK,"서버 생성 성공",server);
     }
 

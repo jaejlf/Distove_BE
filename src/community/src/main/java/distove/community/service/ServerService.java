@@ -31,7 +31,7 @@ public class ServerService {
     private final ChannelRepository channelRepository;
     private final StorageService storageService;
 
-    public Server createNewServer(String name, MultipartFile image) {
+    public Server createNewServer(Long userId, String name, MultipartFile image) {
         String imgUrl=null;
         if(!image.isEmpty()){
             imgUrl= storageService.upload(image);
@@ -42,6 +42,8 @@ public class ServerService {
         Category defaultVoiceCategory = categoryRepository.save(new Category("음성 채널",newServer));
         channelRepository.save(new Channel("일반",1,defaultChatCategory));
         channelRepository.save(new Channel("일반",2,defaultVoiceCategory));
+
+//        chatClient.createConnection(userId, newChannel.getId());
 
         return newServer;
 
@@ -79,5 +81,6 @@ public class ServerService {
         memberRepository.deleteAllByServerId(serverId);
         categoryRepository.deleteAllByServerId(serverId);
         serverRepository.deleteById(serverId);
+        // chatClient.clearAll(channelId);
     }
 }

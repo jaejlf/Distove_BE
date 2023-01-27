@@ -12,6 +12,10 @@ repositories {
 	mavenCentral()
 }
 
+ext {
+	set('springCloudVersion', "2021.0.5")
+}
+
 dependencies {
 	implementation files('jar/common.main.jar')
 	runtimeOnly 'mysql:mysql-connector-java'
@@ -23,7 +27,14 @@ dependencies {
 	testImplementation 'org.springframework.boot:spring-boot-starter-test'
 	implementation 'org.springframework.cloud:spring-cloud-starter-aws:2.2.6.RELEASE'
 
+	// feign
+	implementation 'org.springframework.cloud:spring-cloud-starter-openfeign'
+}
 
+dependencyManagement {
+	imports {
+		mavenBom "org.springframework.cloud:spring-cloud-dependencies:${springCloudVersion}"
+	}
 }
 
 tasks.named('test') {

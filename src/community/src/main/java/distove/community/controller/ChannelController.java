@@ -22,7 +22,7 @@ public class ChannelController {
     @PostMapping("/channel")
     public ResponseEntity<Object> createNewChannel(@RequestHeader("userId") Long userId,
                                                    @RequestBody ChannelRequest channelRequest){
-        Channel newChannel = channelService.createNewChannel(channelRequest);
+        Channel newChannel = channelService.createNewChannel(userId, channelRequest);
 
         return ResultResponse.success(HttpStatus.OK,"채널 생성 성공",
                 new ChannelDto(newChannel.getId(),newChannel.getName(),newChannel.getChannelTypeId()));
