@@ -9,6 +9,7 @@ import distove.community.exception.DistoveException;
 import distove.community.repository.CategoryRepository;
 import distove.community.repository.ChannelRepository;
 import distove.community.repository.ServerRepository;
+import distove.community.web.ChatClient;
 import lombok.RequiredArgsConstructor;
 import org.springframework.stereotype.Service;
 
@@ -23,8 +24,8 @@ import static distove.community.exception.ErrorCode.SERVER_NOT_FOUND_ERROR;
 
 public class ChannelService {
     private final ChannelRepository channelRepository;
-    private final ServerRepository serverRepository;
     private final CategoryRepository categoryRepository;
+    private final ChatClient chatClient;
 
     public ChannelUpdateResponse updateChannelName(Long channelId, ChannelUpdateRequest channelUpdateRequest){
         Channel channel = channelRepository.findById(channelId)
@@ -38,18 +39,21 @@ public class ChannelService {
         Channel channel = channelRepository.findById(channelId)
                 .orElseThrow(() -> new DistoveException(CHANNEL_NOT_FOUND_ERROR));
         channelRepository.deleteById(channelId);
+        chatClient.clearAll(channelId);
     }
-    public Channel createNewChannel(ChannelRequest channelRequest){
+    public Channel createNewChannel(Long userId, ChannelRequest channelRequest){
 
         Category category = categoryRepository.findById(channelRequest.getCategoryId())
                 .orElseThrow(() -> new DistoveException(SERVER_NOT_FOUND_ERROR));
 
-        Channel newChannel = new Channel(
+        Channel newChannel = channelRepository.save(new Channel(
                 channelRequest.getName(),
                 channelRequest.getChannelTypeId(),
                 category
-        );
-        return channelRepository.save(newChannel);
+        ));
+
+        if(newChannel.getChannelTypeId() == 1) chatClient.createConnection(userId, newChannel.getId());
+        return newChannel;
     }
 
 //    public List<Channel> getChannelsByServerId(Long serverId){
