@@ -14,7 +14,7 @@ public class WebController {
     private final GetUserFromToken getUserFromToken;
 
     @GetMapping("/user")
-    public UserResponse getUser(@RequestHeader("AT") String token) {
+    public UserResponse getUser(@RequestHeader("userId") String token) {
         return getUserFromToken.getUser(token);
     }
 }
