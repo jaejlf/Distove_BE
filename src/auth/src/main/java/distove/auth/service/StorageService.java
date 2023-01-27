@@ -1,7 +1,6 @@
 package distove.auth.service;
 
 import com.amazonaws.services.s3.AmazonS3;
-import com.amazonaws.services.s3.AmazonS3Client;
 import com.amazonaws.services.s3.model.CannedAccessControlList;
 import com.amazonaws.services.s3.model.ObjectMetadata;
 import com.amazonaws.services.s3.model.PutObjectRequest;
@@ -15,7 +14,6 @@ import org.springframework.web.multipart.MultipartFile;
 import java.io.IOException;
 import java.io.InputStream;
 
-import static distove.auth.exception.ErrorCode.ACCOUNT_NOT_FOUND;
 import static distove.auth.exception.ErrorCode.FILE_UPLOAD_ERROR;
 
 @Slf4j

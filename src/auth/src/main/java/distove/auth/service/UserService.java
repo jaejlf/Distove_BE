@@ -2,7 +2,6 @@ package distove.auth.service;
 
 
 import distove.auth.dto.request.LoginRequest;
-import distove.auth.dto.request.LogoutRequest;
 import distove.auth.dto.request.SignUpRequest;
 import distove.auth.dto.response.LogoutResponse;
 import distove.auth.dto.response.TokenResponse;
@@ -26,15 +25,17 @@ public class UserService {
     private final UserRepository userRepository;
     private final BCryptPasswordEncoder bCryptPasswordEncoder;
     private final JwtTokenProvider jwtTokenProvider;
+    private final StorageService storageService;
 
     public UserResponse signUp(SignUpRequest request) {
         if (userRepository.existsByEmail(request.getEmail())) {
             throw new DistoveException(DUPLICATE_EMAIL);
         }
-        User user = new User(request.getEmail(), bCryptPasswordEncoder.encode(request.getPassword()), request.getNickname());
+
+        User user = new User(request.getEmail(), bCryptPasswordEncoder.encode(request.getPassword()), request.getNickname(), request.getProfileImgUrl());
         userRepository.save(user);
 
-        return UserResponse.of(user.getId(), user.getNickname());
+        return UserResponse.of(user.getId(), user.getNickname(), user.getProfileImgUrl());
     }
 
     public TokenResponse login(LoginRequest request) {
@@ -53,8 +54,8 @@ public class UserService {
         return TokenResponse.of(accessToken, refreshToken);
     }
 
-    public LogoutResponse logout(LogoutRequest request) {
-        User user = userRepository.findByEmail(request.getEmail())
+    public LogoutResponse logout(String token) {
+        User user = userRepository.findByAccessToken(token)
                 .orElseThrow(() -> new DistoveException(ACCOUNT_NOT_FOUND));
 
         user.updateRefreshToken(null);
