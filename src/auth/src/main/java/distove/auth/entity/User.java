@@ -47,10 +47,11 @@ public class User {
     @Column
     private String nickname;
 
-    public User(String email, String password, String nickname) {
+    public User(String email, String password, String nickname, String profileImgUrl) {
         this.email = email;
         this.password = password;
         this.nickname = nickname;
+        this.profileImgUrl = profileImgUrl;
     }
 
     public void updateRefreshToken(String refreshToken) {

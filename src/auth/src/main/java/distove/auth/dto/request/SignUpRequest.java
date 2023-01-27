@@ -9,4 +9,6 @@ public class SignUpRequest {
     private String password;
 
     private String nickname;
+
+    private String profileImgUrl;
 }

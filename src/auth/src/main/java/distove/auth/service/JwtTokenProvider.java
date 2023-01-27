@@ -1,9 +1,7 @@
 package distove.auth.service;
 
-import io.jsonwebtoken.Claims;
-import io.jsonwebtoken.JwtException;
-import io.jsonwebtoken.Jwts;
-import io.jsonwebtoken.SignatureAlgorithm;
+import distove.auth.exception.DistoveException;
+import distove.auth.exception.ErrorCode;
 import io.jsonwebtoken.*;
 import io.jsonwebtoken.io.Decoders;
 import io.jsonwebtoken.security.Keys;
@@ -16,6 +14,7 @@ import java.time.Duration;
 import java.util.Date;
 import java.util.HashMap;
 import java.util.Map;
+
 @Slf4j
 @Component
 public class JwtTokenProvider {
@@ -33,6 +32,7 @@ public class JwtTokenProvider {
         headers.put("alg", "HS256");
 
         Claims claims = Jwts.claims().setSubject(email);
+
         Date now = new Date();
         return Jwts.builder()
                 .setHeader(headers)
@@ -58,15 +58,22 @@ public class JwtTokenProvider {
                     .build()
                     .parseClaimsJws(jwt);
             return true;
-        } catch (io.jsonwebtoken.security.SecurityException | MalformedJwtException e) {
-            log.info("잘못된 JWT 서명");
-        } catch (ExpiredJwtException e) {
-            log.info("만료된 JWT 토큰");
-        } catch (UnsupportedJwtException e) {
-            log.info("지원되지 않는 JWT 토큰");
-        } catch (IllegalArgumentException e) {
-            log.info("JWT 토큰이 잘못되었습니다.");
+        } catch (JwtException e) {
+            throw new DistoveException(ErrorCode.JWT_ERROR);
         }
-        return false;
+    }
+
+    public String getEmail(String token) {
+
+        try {
+            return Jwts
+                    .parserBuilder()
+                    .setSigningKey(key)
+                    .build()
+                    .parseClaimsJws(token)
+                    .getBody().getSubject();
+        } catch (ExpiredJwtException e) {
+            return "토큰이 만료되었습니다.";
+        }
     }
 }
