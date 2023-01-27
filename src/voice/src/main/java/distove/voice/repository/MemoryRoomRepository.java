@@ -14,14 +14,12 @@ public class MemoryRoomRepository implements RoomRepository {
 
     @Override
     public Optional<Room> findRoomByChannelId(Long channelId) {
-        return rooms.stream()
-                .filter(room -> room.getChannelId().equals(channelId)).findAny();
+        return rooms.stream().filter(room -> room.getChannelId().equals(channelId)).findAny();
     }
 
     @Override
     public Optional<Room> findRoomById(String id) {
-        return rooms.stream()
-                .filter(room -> room.getId().equals(id)).findAny();
+        return rooms.stream().filter(room -> room.getId().equals(id)).findAny();
     }
 
     @Override

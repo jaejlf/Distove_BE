@@ -59,7 +59,8 @@ public class SignalingService {
 
         if (!participants.isEmpty()) {
             for (final Participant otherParticipant : participants) {
-                otherParticipant.getWebSocketSession().sendMessage(toJson(new NewParticipantArrivedResponse(participant)));
+                otherParticipant.getWebSocketSession()
+                        .sendMessage(toJson(new NewParticipantArrivedResponse(participant)));
             }
             participant.getWebSocketSession().sendMessage(toJson(new ExistingParticipantsResponse(participants)));
         }
@@ -67,8 +68,7 @@ public class SignalingService {
     }
 
     public Room getRoomByChannelId(Long channelId) {
-        Room room = roomRepository.findRoomByChannelId(channelId)
-                .orElse(createNewRoomByChannelId(channelId));
+        Room room = roomRepository.findRoomByChannelId(channelId).orElse(createNewRoomByChannelId(channelId));
         return room;
     }
 
@@ -94,13 +94,15 @@ public class SignalingService {
             return participant.getMediaEndpoint();
         }
         WebRtcEndpoint incomingMediaEndpoint = participant.getIncomingParticipants().stream()
-                .filter(incomingParticipant -> incomingParticipant.getUserId().equals(sender.getUserId())).findFirst().get().getMediaEndpoint();
+                .filter(incomingParticipant -> incomingParticipant.getUserId().equals(sender.getUserId())).findFirst()
+                .get().getMediaEndpoint();
         if (incomingMediaEndpoint == null) {
             incomingMediaEndpoint = new WebRtcEndpoint.Builder(participant.getRoom().getPipeline()).build();
             incomingMediaEndpoint.addIceCandidateFoundListener(event -> {
                 try {
                     synchronized (participant.getWebSocketSession()) {
-                        participant.getWebSocketSession().sendMessage(toJson(new IceCandidateResponse(sender.getUserId(), event.getCandidate())));
+                        participant.getWebSocketSession()
+                                .sendMessage(toJson(new IceCandidateResponse(sender.getUserId(), event.getCandidate())));
                     }
                 } catch (IOException e) {
                     log.debug(e.getMessage());
@@ -123,12 +125,10 @@ public class SignalingService {
         List<Participant> participants = participantRepository.findParticipantsByRoom(room);
         if (!participants.isEmpty()) {
             for (Participant otherParticipant : participants) {
-                otherParticipant.getIncomingParticipants()
-                        .removeIf(incomingParticipant -> {
-                                    incomingParticipant.getMediaEndpoint().release();
-                                    return incomingParticipant.getUserId().equals(participant.getUserId());
-                                }
-                        );
+                otherParticipant.getIncomingParticipants().removeIf(incomingParticipant -> {
+                    incomingParticipant.getMediaEndpoint().release();
+                    return incomingParticipant.getUserId().equals(participant.getUserId());
+                });
             }
         } else {
             closeRoom(room);
@@ -149,8 +149,8 @@ public class SignalingService {
             participant.getMediaEndpoint().addIceCandidate(iceCandidateInfo);
         } else {
             participant.getIncomingParticipants().stream()
-                    .filter(incomingParticipant -> incomingParticipant.getUserId().equals(senderUserId)).findFirst().get()
-                    .getMediaEndpoint().addIceCandidate(iceCandidateInfo);
+                    .filter(incomingParticipant -> incomingParticipant.getUserId().equals(senderUserId)).findFirst()
+                    .get().getMediaEndpoint().addIceCandidate(iceCandidateInfo);
         }
     }
 

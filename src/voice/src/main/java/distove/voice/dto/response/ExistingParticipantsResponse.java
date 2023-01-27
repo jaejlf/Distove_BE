@@ -15,6 +15,7 @@ public class ExistingParticipantsResponse {
 
     @Builder
     public ExistingParticipantsResponse(List<Participant> participants) {
-        this.participantsUserIds = participants.stream().map(participant -> participant.getUserId()).collect(Collectors.toList());
+        this.participantsUserIds = participants.stream().map(participant -> participant.getUserId())
+                .collect(Collectors.toList());
     }
 }

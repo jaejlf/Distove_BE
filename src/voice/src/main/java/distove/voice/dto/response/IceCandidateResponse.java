@@ -9,12 +9,12 @@ import org.kurento.client.IceCandidate;
 public class IceCandidateResponse {
     private final String type = "iceCandidate";
     private final Long userId;
-    private final IceCandidate iceCandidate;
+    private final IceCandidate candidateInfo;
 
     @Builder
 
-    public IceCandidateResponse(Long userId, IceCandidate iceCandidate) {
+    public IceCandidateResponse(Long userId, IceCandidate candidateInfo) {
         this.userId = userId;
-        this.iceCandidate = iceCandidate;
+        this.candidateInfo = candidateInfo;
     }
 }
