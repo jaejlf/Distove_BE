@@ -58,14 +58,6 @@ public class UserController {
                 userService.checkEmailDuplicate(email));
     }
 
-    @GetMapping("/nickname/{nickname}")
-    public ResponseEntity<Object> checkNicknameDuplicate(@PathVariable String nickname) {
-        return ResultResponse.success(
-                HttpStatus.OK,
-                "닉네임 중복",
-                userService.checkNicknameDuplicate(nickname));
-    }
-
     @PostMapping("/upload")
     public ResponseEntity<Object> uploadProfileImg(@RequestPart("file") MultipartFile file) {
         return ResultResponse.success(
