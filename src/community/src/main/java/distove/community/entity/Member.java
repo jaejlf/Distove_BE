@@ -16,9 +16,7 @@ public class Member {
     @JoinColumn(name ="server_id")
     public Server server;
 
-    @ManyToOne(fetch = FetchType.LAZY)
-    @JoinColumn(name ="user_id")
-    private User user;
+    private Long userId;
 
 //    public interface UserServer{
 //        Long getServer().getId();
