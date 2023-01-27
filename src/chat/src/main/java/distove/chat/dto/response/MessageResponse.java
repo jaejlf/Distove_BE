@@ -1,5 +1,6 @@
 package distove.chat.dto.response;
 
+import com.fasterxml.jackson.annotation.JsonInclude;
 import distove.chat.entity.Message;
 import distove.chat.enumerate.MessageType;
 import distove.chat.web.UserResponse;
@@ -11,6 +12,7 @@ import java.util.Objects;
 
 @Getter
 @Builder
+@JsonInclude(JsonInclude.Include.NON_NULL)
 public class MessageResponse {
 
     private String id;
@@ -19,14 +21,27 @@ public class MessageResponse {
     private LocalDateTime createdAt;
     private UserResponse writer;
     private Boolean hasAuthorized;
+    private ReplyInfoResponse replyInfo;
 
-    public static MessageResponse of(Message message, UserResponse writer, Long userId) {
+    public static MessageResponse ofDefault(Message message, UserResponse writer, Long userId) {
         return MessageResponse.builder()
                 .id(message.getId())
                 .type(message.getType())
                 .content(message.getContent())
                 .createdAt(message.getCreatedAt())
                 .writer(writer)
+                .hasAuthorized(Objects.equals(writer.getId(), userId))
+                .build();
+    }
+
+    public static MessageResponse ofParent(Message message, UserResponse writer, Long userId, ReplyInfoResponse replyInfo) {
+        return MessageResponse.builder()
+                .id(message.getId())
+                .type(message.getType())
+                .content(message.getContent())
+                .createdAt(message.getCreatedAt())
+                .writer(writer)
+                .replyInfo(replyInfo)
                 .hasAuthorized(Objects.equals(writer.getId(), userId))
                 .build();
     }

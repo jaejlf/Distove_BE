@@ -1,0 +1,44 @@
+<!DOCTYPE html>
+<html>
+<head>
+    <title>Hello WebSocket</title>
+    <link href="/chat/webjars/bootstrap/css/bootstrap.min.css" rel="stylesheet">
+    <script src="/chat/webjars/jquery/jquery.min.js"></script>
+    <script src="/chat/webjars/sockjs-client/sockjs.min.js"></script>
+    <script src="/chat/webjars/stomp-websocket/stomp.min.js"></script>
+    <script src="/chat/app.js"></script>
+</head>
+<body>
+<noscript><h2 style="color: #ff0000">Seems your browser doesn't support Javascript! Websocket relies on Javascript being
+    enabled. Please enable
+    Javascript and reload this page!</h2></noscript>
+<div id="main-content" class="container">
+    <div class="row">
+        <div class="col-md-6">
+            <form>
+                <div class="form-group">
+                    <label for="connect">WebSocket connection : </label>
+                    <input type="text" id="pub" class="form-control" placeholder="PUBLISH LINK">
+                    <input type="text" id="sub" class="form-control" placeholder="SUBSCRIBE LINK">
+                    <button id="connect" class="btn btn-default" type="submit">Connect</button>
+                    <button id="disconnect" class="btn btn-default" type="submit" disabled="disabled">Disconnect
+                    </button>
+                </div>
+            </form>
+            <form>
+                <div class="form-group">
+                    <label for="connect">Input Data : </label>
+                    <input type="text" id="userId" class="form-control" placeholder="*USER ID">
+                    <input type="text" id="type" class="form-control" placeholder="*MESSAGE TYPE">
+                    <input type="text" id="content" class="form-control" placeholder="*CONTENT">
+                    <input type="text" id="messageId" class="form-control" placeholder="MESSAGE ID">
+                    <input type="text" id="parentId" class="form-control" placeholder="PARENT ID">
+                    <input type="text" id="replyName" class="form-control" placeholder="REPLY NAME">
+                    <button id="send" class="btn btn-default" type="submit">Send</button>
+                </div>
+            </form>
+        </div>
+    </div>
+</div>
+</body>
+</html>
