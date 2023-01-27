@@ -6,11 +6,11 @@ import lombok.Getter;
 @Builder
 @Getter
 public class LogoutResponse {
-    private String email;
+    private String token;
 
-    public static LogoutResponse of(String email) {
+    public static LogoutResponse of(String token) {
         return LogoutResponse.builder()
-                .email(email)
+                .token(token)
                 .build();
     }
 }

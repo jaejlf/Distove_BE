@@ -51,12 +51,12 @@ public class JwtTokenProvider {
                 .compact();
     }
 
-    public boolean validateToken(String jwt) {
+    public boolean validateToken(String token) {
         try {
             Jwts.parserBuilder()
                     .setSigningKey(key)
                     .build()
-                    .parseClaimsJws(jwt);
+                    .parseClaimsJws(token);
             return true;
         } catch (JwtException e) {
             throw new DistoveException(ErrorCode.JWT_ERROR);
@@ -73,7 +73,7 @@ public class JwtTokenProvider {
                     .parseClaimsJws(token)
                     .getBody().getSubject();
         } catch (ExpiredJwtException e) {
-            return "토큰이 만료되었습니다.";
+            throw new DistoveException(ErrorCode.JWT_ERROR);
         }
     }
 }

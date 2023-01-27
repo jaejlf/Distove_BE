@@ -28,7 +28,7 @@ public class User {
     private String profileImgUrl;
 
     @Column
-    private boolean isDeleted = false;
+    private boolean isDeleted;
 
     @Column
     private LocalDateTime updatedAt = LocalDateTime.now();
