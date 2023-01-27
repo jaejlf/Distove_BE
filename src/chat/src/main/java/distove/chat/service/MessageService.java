@@ -126,6 +126,10 @@ public class MessageService {
         return PagedMessageResponse.ofChild(totalPage, replyInfo, messageResponses);
     }
 
+    public void clearAll(Long channelId) {
+        messageRepository.deleteAllByChannelId(channelId);
+    }
+
     private Message createMessageByType(Long channelId, MessageRequest request, Long userId) {
         Message origin, message;
         MessageType type = request.getType();

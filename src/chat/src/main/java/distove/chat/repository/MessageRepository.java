@@ -13,4 +13,5 @@ public interface MessageRepository extends MongoRepository<Message, String> {
     List<Message> findAllByParentId(String parentId);
     List<Message> findAllByChannelIdAndReplyNameIsNotNull(Long channelId);
     void deleteAllByParentId(String parentId);
+    void deleteAllByChannelId(Long channelId);
 }
