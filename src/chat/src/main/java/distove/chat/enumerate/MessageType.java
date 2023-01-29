@@ -1,7 +1,6 @@
 package distove.chat.enumerate;
 
 import distove.chat.exception.DistoveException;
-import distove.chat.exception.ErrorCode;
 import lombok.AllArgsConstructor;
 import lombok.Getter;
 
@@ -9,6 +8,7 @@ import java.util.Arrays;
 import java.util.List;
 
 import static distove.chat.enumerate.MessageType.MessageStatus.*;
+import static distove.chat.exception.ErrorCode.MESSAGE_TYPE_ERROR;
 
 @Getter
 @AllArgsConstructor
@@ -28,7 +28,7 @@ public enum MessageType {
     }
 
     public static void checkStatusCanChanged(MessageType type, MessageStatus status) {
-        if (!type.getStatus().contains(status)) throw new DistoveException(ErrorCode.MESSAGE_TYPE_ERROR);
+        if (!type.getStatus().contains(status)) throw new DistoveException(MESSAGE_TYPE_ERROR);
     }
 
     public static boolean isFileType(MessageType type) {
