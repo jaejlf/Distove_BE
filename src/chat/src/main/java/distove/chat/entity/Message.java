@@ -8,6 +8,8 @@ import org.springframework.data.mongodb.core.mapping.Document;
 
 import java.time.LocalDateTime;
 
+import static distove.chat.enumerate.MessageType.*;
+
 @Getter
 @Builder
 @Document(collection = "message")
@@ -18,35 +20,38 @@ public class Message {
     private Long channelId;
     private Long userId;
     private MessageType type;
+    private MessageStatus status;
     private String content;
     private LocalDateTime createdAt;
     private String replyName;
     private Long stUserId;
     private String parentId;
 
-    public static Message newMessage(Long channelId, Long userId, MessageType type, String content) {
+    public static Message newMessage(Long channelId, Long userId, MessageType type, MessageStatus status, String content) {
         return Message.builder()
                 .channelId(channelId)
                 .userId(userId)
                 .type(type)
+                .status(status)
                 .content(content)
                 .createdAt(LocalDateTime.now())
                 .build();
     }
 
-    public static Message newReply(Long channelId, Long userId, MessageType type, String content, String parentId) {
+    public static Message newReply(Long channelId, Long userId, MessageType type, MessageStatus status, String content, String parentId) {
         return Message.builder()
                 .channelId(channelId)
                 .userId(userId)
                 .type(type)
+                .status(status)
                 .content(content)
                 .parentId(parentId)
                 .createdAt(LocalDateTime.now())
                 .build();
     }
 
-    public void updateMessage(MessageType type, String content) {
-        this.type = type;
+    public void updateMessage(MessageStatus status, String content) {
+        this.status = status;
         this.content = content;
     }
 
