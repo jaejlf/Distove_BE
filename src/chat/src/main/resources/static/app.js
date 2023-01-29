@@ -36,6 +36,7 @@ function sendName() {
             stompClient.send($("#pub").val(), {'userId': $("#userId").val()}, JSON.stringify(
                 {
                     'type': $("#type").val(),
+                    'status': $("#status").val(),
                     'content': $("#content").val(),
                     'messageId': $("#messageId").val()
                 }
@@ -44,6 +45,7 @@ function sendName() {
             stompClient.send($("#pub").val(), {'userId': $("#userId").val()}, JSON.stringify(
                 {
                     'type': $("#type").val(),
+                    'status': $("#status").val(),
                     'content': $("#content").val(),
                     'messageId': $("#messageId").val(),
                     'replyName': $("#replyName").val()
@@ -55,6 +57,7 @@ function sendName() {
             stompClient.send($("#pub").val(), {'userId': $("#userId").val()}, JSON.stringify(
                 {
                     'type': $("#type").val(),
+                    'status': $("#status").val(),
                     'content': $("#content").val(),
                     'messageId': $("#messageId").val(),
                     'parentId': $("#parentId").val()
@@ -64,6 +67,7 @@ function sendName() {
             stompClient.send($("#pub").val(), {'userId': $("#userId").val()}, JSON.stringify(
                 {
                     'type': $("#type").val(),
+                    'status': $("#status").val(),
                     'content': $("#content").val(),
                     'messageId': $("#messageId").val(),
                     'replyName': $("#replyName").val(),
