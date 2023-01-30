@@ -9,6 +9,7 @@ import distove.community.repository.CategoryRepository;
 import distove.community.repository.ChannelRepository;
 import distove.community.repository.MemberRepository;
 import distove.community.repository.ServerRepository;
+import distove.community.web.ChatClient;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.stereotype.Service;
@@ -18,6 +19,9 @@ import javax.transaction.Transactional;
 import java.util.ArrayList;
 import java.util.List;
 
+import static distove.community.entity.Category.newCategory;
+import static distove.community.entity.Member.newMember;
+import static distove.community.entity.Server.newServer;
 import static distove.community.exception.ErrorCode.SERVER_NOT_FOUND_ERROR;
 @Slf4j
 @Service
@@ -25,25 +29,27 @@ import static distove.community.exception.ErrorCode.SERVER_NOT_FOUND_ERROR;
 @Transactional
 
 public class ServerService {
+
+    private final ChatClient chatClient;
     private final ServerRepository serverRepository;
     private final MemberRepository memberRepository;
     private final CategoryRepository categoryRepository;
     private final ChannelRepository channelRepository;
     private final StorageService storageService;
+    private final ChannelService channelService;
 
     public Server createNewServer(Long userId, String name, MultipartFile image) {
         String imgUrl=null;
         if(!image.isEmpty()){
             imgUrl= storageService.upload(image);
         }
-        Server newServer = serverRepository.save(new Server(name,imgUrl));
-        categoryRepository.save(new Category(null,newServer));
-        Category defaultChatCategory = categoryRepository.save(new Category("채팅 채널",newServer));
-        Category defaultVoiceCategory = categoryRepository.save(new Category("음성 채널",newServer));
-        channelRepository.save(new Channel("일반",1,defaultChatCategory));
-        channelRepository.save(new Channel("일반",2,defaultVoiceCategory));
-
-//        chatClient.createConnection(userId, newChannel.getId());
+        Server newServer = serverRepository.save(newServer(name,imgUrl));
+        categoryRepository.save(newCategory(null,newServer));
+        Category defaultChatCategory = categoryRepository.save(newCategory("채팅 채널",newServer));
+        Category defaultVoiceCategory = categoryRepository.save(newCategory("음성 채널",newServer));
+        channelService.createNewChannel(userId, "일반" ,defaultChatCategory.getId(), 1);
+        channelService.createNewChannel(userId, "일반" ,defaultVoiceCategory.getId(), 2);
+        memberRepository.save(newMember(newServer,userId));
 
         return newServer;
 
@@ -76,11 +82,12 @@ public class ServerService {
                 .orElseThrow(() -> new DistoveException(SERVER_NOT_FOUND_ERROR));
         List<Category> categories = categoryRepository.findCategoriesByServerId(serverId);
         for (Category category : categories) {
-            channelRepository.deleteAllByCategoryId(category.getId());
+            for (Channel channel : channelRepository.deleteAllByCategoryId(category.getId())) {
+                chatClient.clearAll(channel.getId());
+            }
         }
         memberRepository.deleteAllByServerId(serverId);
         categoryRepository.deleteAllByServerId(serverId);
         serverRepository.deleteById(serverId);
-        // chatClient.clearAll(channelId);
     }
 }
