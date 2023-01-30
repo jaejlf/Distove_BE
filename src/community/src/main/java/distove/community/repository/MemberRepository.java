@@ -8,9 +8,9 @@ import java.util.List;
 import java.util.Optional;
 
 @Repository
-public interface MemberRepository  extends JpaRepository<Member,Long> {
-//    @EntityGraph(value="Member.server")
+public interface MemberRepository extends JpaRepository<Member, Long> {
     List<Member> findMembersByUserId(Long userId);
+
     void deleteAllByServerId(Long serverId);
     List<Member> findMembersByServerId(Long serverId);
 }

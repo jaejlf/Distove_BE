@@ -14,11 +14,11 @@ public class Member {
     @GeneratedValue(strategy = GenerationType.IDENTITY)
     private Long id;
 
-    private Long userId;
-
     @ManyToOne
     @JoinColumn(name = "server_id")
     public Server server;
+
+    private Long userId;
 
     @ManyToOne
     @JoinColumn(name = "role_id")

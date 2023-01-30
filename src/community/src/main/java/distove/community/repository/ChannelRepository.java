@@ -6,14 +6,19 @@ import org.springframework.stereotype.Repository;
 
 import java.util.List;
 import java.util.Optional;
+
 @Repository
 
-public interface ChannelRepository extends JpaRepository<Channel,Long> {
+public interface ChannelRepository extends JpaRepository<Channel, Long> {
 
     Channel save(Channel channel);
+
     Optional<Channel> findById(Long id);
+
     void deleteById(Long id);
+
     List<Channel.Info> findChannelsByCategoryId(Long id);
+
     List<Channel> deleteAllByCategoryId(Long categoryId);
 
 }

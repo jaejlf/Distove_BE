@@ -20,21 +20,10 @@ public class Category {
     private String name;
 
     @ManyToOne
-    @JoinColumn(name ="server_id")
+    @JoinColumn(name = "server_id")
     private Server server;
-//
-//    @OneToMany(mappedBy = "category")
-//    private List<Channel> channels = new ArrayList<>();
 
-//    @Builder
-//    public Category(String name, Server server){
-//        this.name = name;
-//        this.server = server;
-//    }
     public static Category newCategory(String name, Server server) {
-        return Category.builder()
-                .name(name)
-                .server(server)
-                .build();
+        return Category.builder().name(name).server(server).build();
     }
 }
