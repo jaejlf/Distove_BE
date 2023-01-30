@@ -1,4 +1,5 @@
 package distove.community.exception;
+
 import lombok.Getter;
 import org.springframework.http.HttpStatus;
 

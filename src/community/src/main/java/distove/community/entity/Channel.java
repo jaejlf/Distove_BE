@@ -20,7 +20,7 @@ public class Channel {
     private Integer channelTypeId;
 
     @ManyToOne
-    @JoinColumn(name ="category_id")
+    @JoinColumn(name = "category_id")
     private Category category;
 
     public static Channel newChannel(String name, Integer channelTypeId, Category category) {
@@ -31,13 +31,15 @@ public class Channel {
                 .build();
     }
 
-    public void updateChannel(String name){
+    public void updateChannel(String name) {
         this.name = name;
     }
 
     public interface Info {
         Long getId();
+
         String getName();
+
         Integer getChannelTypeId();
     }
 }
