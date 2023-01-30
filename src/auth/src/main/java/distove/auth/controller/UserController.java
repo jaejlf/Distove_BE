@@ -1,5 +1,6 @@
 package distove.auth.controller;
 
+import distove.auth.dto.request.EmailDuplicateRequest;
 import distove.auth.dto.request.LoginRequest;
 import distove.auth.dto.request.SignUpRequest;
 import distove.auth.dto.response.ResultResponse;
@@ -11,7 +12,6 @@ import lombok.extern.slf4j.Slf4j;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
-import org.springframework.web.multipart.MultipartFile;
 
 @Slf4j
 @RestController
@@ -24,7 +24,8 @@ public class UserController {
 
 
     @PostMapping("/signup")
-    public ResponseEntity<Object> signUp(@RequestBody SignUpRequest request) {
+    public ResponseEntity<Object> signUp(@ModelAttribute SignUpRequest request)
+    {
         return ResultResponse.success(
                 HttpStatus.CREATED,
                 "회원가입",
@@ -42,7 +43,7 @@ public class UserController {
     }
 
     @PostMapping("/logout")
-    public ResponseEntity<Object> logout(@RequestHeader("AT") String token) {
+    public ResponseEntity<Object> logout(@RequestHeader("AccessToken") String token) {
         return ResultResponse.success(
                 HttpStatus.OK,
                 "로그아웃 성공",
@@ -50,19 +51,13 @@ public class UserController {
         );
     }
 
-    @GetMapping("/email/{email}")
-    public ResponseEntity<Object> checkEmailDuplicate(@PathVariable String email) {
+    @PostMapping("/email")
+    public ResponseEntity<Object> checkEmailDuplicate(@RequestBody EmailDuplicateRequest request) {
         return ResultResponse.success(
                 HttpStatus.OK,
-                "이메일 중복",
-                userService.checkEmailDuplicate(email));
+                "이메일 사용 여부",
+                userService.checkEmailDuplicate(request)
+        );
     }
 
-    @PostMapping("/upload")
-    public ResponseEntity<Object> uploadProfileImg(@RequestPart("file") MultipartFile file) {
-        return ResultResponse.success(
-                HttpStatus.OK,
-                "이미지 업로드 성공",
-                storageService.uploadToS3(file));
-    }
 }
