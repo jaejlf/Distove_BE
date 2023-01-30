@@ -27,7 +27,7 @@ public class StorageService {
     private String bucket;
 
     public String upload(MultipartFile multipartFile) {
-        log.info("hello{}",multipartFile.getOriginalFilename());
+        log.info("hello{}", multipartFile.getOriginalFilename());
         String fileName = multipartFile.getOriginalFilename();
         ObjectMetadata objectMetadata = new ObjectMetadata();
         objectMetadata.setContentType(multipartFile.getContentType());

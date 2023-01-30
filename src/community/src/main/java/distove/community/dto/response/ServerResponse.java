@@ -1,7 +1,6 @@
 package distove.community.dto.response;
 
 import distove.community.entity.Category;
-import lombok.Builder;
 import lombok.Getter;
 
 import java.util.List;
@@ -13,7 +12,7 @@ public class ServerResponse {
     private List<Category> categorise;
 
 
-    public ServerResponse(Long id, String name, List<Category> categorise){
+    public ServerResponse(Long id, String name, List<Category> categorise) {
         this.id = id;
         this.name = name;
         this.categorise = categorise;

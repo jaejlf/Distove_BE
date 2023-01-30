@@ -8,7 +8,7 @@ public class ChannelUpdateResponse {
     String name;
     Integer channelTypeId;
 
-    public ChannelUpdateResponse(Long id, String name, Integer channelTypeId){
+    public ChannelUpdateResponse(Long id, String name, Integer channelTypeId) {
         this.id = id;
         this.name = name;
         this.channelTypeId = channelTypeId;

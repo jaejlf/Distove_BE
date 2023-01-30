@@ -12,7 +12,7 @@ public class CategoryResponse {
     private List<Channel.Info> channels;
 
 
-    public CategoryResponse(Long id, String name, List<Channel.Info> channels){
+    public CategoryResponse(Long id, String name, List<Channel.Info> channels) {
         this.id = id;
         this.name = name;
         this.channels = channels;

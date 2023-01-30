@@ -10,12 +10,14 @@ import org.springframework.stereotype.Service;
 import javax.transaction.Transactional;
 import java.util.ArrayList;
 import java.util.List;
+
 @Service
 @Transactional
 @RequiredArgsConstructor
 public class CategoryService {
     private final CategoryRepository categoryRepository;
     private final ChannelRepository channelRepository;
+
     public List<CategoryResponse> getCategoriesWithChannelsByServerId(Long serverId) {
         List<Category> categories = categoryRepository.findCategoriesByServerId(serverId);
         List<CategoryResponse> categoryResponses = new ArrayList<>();
@@ -25,7 +27,10 @@ public class CategoryService {
                     category.getName(),
                     channelRepository.findChannelsByCategoryId(category.getId()))
             );
-        };
+        }
+        ;
         return categoryResponses;
-    };
+    }
+
+    ;
 }

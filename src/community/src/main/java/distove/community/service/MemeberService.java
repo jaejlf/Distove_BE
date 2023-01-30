@@ -14,7 +14,7 @@ import java.util.List;
 public class MemeberService {
     private final MemberRepository memberRepository;
 
-    public List<Member> getMembersByServerId(Long serverId){
+    public List<Member> getMembersByServerId(Long serverId) {
         List<Member> members = memberRepository.findMembersByServerId(serverId);
         return members;
     }

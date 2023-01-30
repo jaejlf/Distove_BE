@@ -3,6 +3,7 @@ package distove.community.entity;
 import lombok.*;
 
 import javax.persistence.*;
+
 @Getter
 @Entity
 @Builder
@@ -14,7 +15,7 @@ public class Member {
     private Long id;
 
     @ManyToOne
-    @JoinColumn(name ="server_id")
+    @JoinColumn(name = "server_id")
     public Server server;
 
     private Long userId;
