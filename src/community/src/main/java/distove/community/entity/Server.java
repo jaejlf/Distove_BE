@@ -1,14 +1,14 @@
 package distove.community.entity;
 
+import com.fasterxml.jackson.annotation.JsonIgnore;
 import lombok.AllArgsConstructor;
 import lombok.Builder;
 import lombok.Getter;
 import lombok.NoArgsConstructor;
 
-import javax.persistence.Entity;
-import javax.persistence.GeneratedValue;
-import javax.persistence.GenerationType;
-import javax.persistence.Id;
+import javax.persistence.*;
+import java.util.ArrayList;
+import java.util.List;
 
 @Getter
 @Entity
@@ -25,6 +25,9 @@ public class Server {
 
     private String imgUrl;
 
+    @JsonIgnore
+    @OneToMany(mappedBy = "server")
+    private List<MemberRole> roles = new ArrayList<>();
 
 //    @OneToMany(mappedBy = "server")
 //    private List<Member> members = new ArrayList<>();
@@ -36,17 +39,18 @@ public class Server {
 //    @OneToMany(mappedBy = "server")
 //    private List<Channel> channels = new ArrayList<>();
 
-//    public Server(String name,String imgUrl){
+    //    public Server(String name,String imgUrl){
 //        this.name = name;
 //        this.imgUrl = imgUrl;
 //    }
-    public static Server newServer(String name,String imgUrl) {
+    public static Server newServer(String name, String imgUrl) {
         return Server.builder()
                 .name(name)
                 .imgUrl(imgUrl)
                 .build();
     }
-    public void updateServer(String name,String imgUrl){
+
+    public void updateServer(String name, String imgUrl) {
         this.name = name;
         this.imgUrl = imgUrl;
     }
