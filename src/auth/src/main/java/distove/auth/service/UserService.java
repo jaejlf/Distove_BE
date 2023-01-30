@@ -12,6 +12,7 @@ import distove.auth.exception.DistoveException;
 import distove.auth.repoisitory.UserRepository;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
+import org.springframework.beans.factory.annotation.Value;
 import org.springframework.security.crypto.bcrypt.BCryptPasswordEncoder;
 import org.springframework.stereotype.Component;
 import org.springframework.stereotype.Service;
@@ -28,13 +29,23 @@ public class UserService {
     private final JwtTokenProvider jwtTokenProvider;
     private final StorageService storageService;
 
+    @Value("${default.image.address}")
+    private String defaultImageUrl;
+
     public UserResponse signUp(SignUpRequest request) {
+        String profileImgUrl;
 
         if (userRepository.existsByEmail(request.getEmail())) {
             throw new DistoveException(DUPLICATE_EMAIL);
         }
 
-        String profileImgUrl = storageService.uploadToS3(request.getProfileImg());
+        if (request.getProfileImg().isEmpty()) {
+            profileImgUrl = defaultImageUrl;
+        }
+        else {
+            profileImgUrl = storageService.uploadToS3(request.getProfileImg());
+        }
+
 
         User user = new User(request.getEmail(), bCryptPasswordEncoder.encode(request.getPassword()), request.getNickname(), profileImgUrl);
         userRepository.save(user);
@@ -67,7 +78,14 @@ public class UserService {
         return LogoutResponse.of(user.getEmail());
     }
 
+    public UserResponse getUser(Long userId) {
+        User user = userRepository.findById(userId)
+                .orElseThrow(() -> new DistoveException(ACCOUNT_NOT_FOUND));
+        return UserResponse.of(user.getId(), user.getNickname(), user.getProfileImgUrl());
+    }
+
     public boolean checkEmailDuplicate(EmailDuplicateRequest request) {
         return userRepository.existsByEmail(request.getEmail());
     }
+
 }

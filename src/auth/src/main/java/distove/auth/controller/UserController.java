@@ -4,8 +4,6 @@ import distove.auth.dto.request.EmailDuplicateRequest;
 import distove.auth.dto.request.LoginRequest;
 import distove.auth.dto.request.SignUpRequest;
 import distove.auth.dto.response.ResultResponse;
-import distove.auth.repoisitory.UserRepository;
-import distove.auth.service.StorageService;
 import distove.auth.service.UserService;
 import lombok.AllArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
@@ -17,15 +15,10 @@ import org.springframework.web.bind.annotation.*;
 @RestController
 @AllArgsConstructor
 public class UserController {
-    private final UserRepository userRepository;
-
     private final UserService userService;
-    private final StorageService storageService;
-
 
     @PostMapping("/signup")
-    public ResponseEntity<Object> signUp(@ModelAttribute SignUpRequest request)
-    {
+    public ResponseEntity<Object> signUp(@ModelAttribute SignUpRequest request) {
         return ResultResponse.success(
                 HttpStatus.CREATED,
                 "회원가입",
