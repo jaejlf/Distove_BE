@@ -1,6 +1,7 @@
 package distove.auth.service;
 
 
+import distove.auth.dto.request.EmailDuplicateRequest;
 import distove.auth.dto.request.LoginRequest;
 import distove.auth.dto.request.SignUpRequest;
 import distove.auth.dto.response.LogoutResponse;
@@ -28,11 +29,14 @@ public class UserService {
     private final StorageService storageService;
 
     public UserResponse signUp(SignUpRequest request) {
+
         if (userRepository.existsByEmail(request.getEmail())) {
             throw new DistoveException(DUPLICATE_EMAIL);
         }
 
-        User user = new User(request.getEmail(), bCryptPasswordEncoder.encode(request.getPassword()), request.getNickname(), request.getProfileImgUrl());
+        String profileImgUrl = storageService.uploadToS3(request.getProfileImg());
+
+        User user = new User(request.getEmail(), bCryptPasswordEncoder.encode(request.getPassword()), request.getNickname(), profileImgUrl);
         userRepository.save(user);
 
         return UserResponse.of(user.getId(), user.getNickname(), user.getProfileImgUrl());
@@ -63,7 +67,7 @@ public class UserService {
         return LogoutResponse.of(user.getEmail());
     }
 
-    public boolean checkEmailDuplicate(String email) {
-        return userRepository.existsByEmail(email);
+    public boolean checkEmailDuplicate(EmailDuplicateRequest request) {
+        return userRepository.existsByEmail(request.getEmail());
     }
 }
