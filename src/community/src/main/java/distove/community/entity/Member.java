@@ -4,9 +4,10 @@ import lombok.*;
 
 import javax.persistence.*;
 @Getter
-//@NamedEntityGraph(name="Member.server",attributeNodes = @NamedAttributeNode("server"))
 @Entity
-@NoArgsConstructor(access = AccessLevel.PROTECTED)
+@Builder
+@NoArgsConstructor
+@AllArgsConstructor
 public class Member {
     @Id
     @GeneratedValue(strategy = GenerationType.IDENTITY)
@@ -18,8 +19,11 @@ public class Member {
 
     private Long userId;
 
-//    public interface UserServer{
-//        Long getServer().getId();
-//    }
+    public static Member newMember(Server server, Long userId) {
+        return Member.builder()
+                .server(server)
+                .userId(userId)
+                .build();
+    }
 
 }
