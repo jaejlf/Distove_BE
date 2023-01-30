@@ -52,7 +52,12 @@ public class JwtTokenProvider {
                 .signWith(key, SignatureAlgorithm.HS256)
                 .compact();
     }
-
+    /**
+     토큰 검증
+     - 헤더의 토큰을 받아 토큰을 sign한 key와 expire되었는지 검증하는 메서드
+     피드백 받고 싶은 부분
+     - 토큰 검증 과정에서 try-catch 구문을 많이 사용하게 되는데 예외 처리하는 최선의 방법일지 궁금합니다.
+     */
     public boolean validToken(String token) {
         try {
             Jwts.parserBuilder()
@@ -68,7 +73,6 @@ public class JwtTokenProvider {
     }
 
     public String getEmail(String token) throws DistoveException {
-
         try {
             return Jwts
                     .parserBuilder()
