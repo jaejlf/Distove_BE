@@ -1,6 +1,7 @@
 package distove.chat.service;
 
 import distove.chat.entity.Connection;
+import distove.chat.enumerate.MessageType.MessageStatus;
 import distove.chat.repository.ConnectionRepository;
 import distove.chat.repository.MessageRepository;
 import distove.chat.web.UserClient;
@@ -12,7 +13,7 @@ import org.springframework.stereotype.Service;
 import java.util.ArrayList;
 import java.util.List;
 
-import static distove.chat.entity.Connection.*;
+import static distove.chat.entity.Connection.newConnection;
 import static distove.chat.entity.Message.newMessage;
 import static distove.chat.enumerate.MessageType.WELCOME;
 
@@ -33,7 +34,7 @@ public class ConnectionService {
         connectionRepository.save(connection);
 
         UserResponse writer = userClient.getUser(userId);
-        messageRepository.save(newMessage(channelId, userId, WELCOME, writer.getNickname()));
+        messageRepository.save(newMessage(channelId, userId, WELCOME, MessageStatus.CREATED, writer.getNickname()));
     }
 
     public void clearAll(Long channelId) {
