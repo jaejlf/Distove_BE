@@ -11,7 +11,7 @@ import java.util.List;
 @Service
 @RequiredArgsConstructor
 @Transactional
-public class MemeberService {
+public class MemberService {
     private final MemberRepository memberRepository;
 
     public List<Member> getMembersByServerId(Long serverId) {

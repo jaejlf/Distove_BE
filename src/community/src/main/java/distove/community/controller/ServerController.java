@@ -4,8 +4,7 @@ import distove.community.dto.response.CategoryResponse;
 import distove.community.dto.response.ResultResponse;
 import distove.community.entity.Member;
 import distove.community.entity.Server;
-import distove.community.service.CategoryService;
-import distove.community.service.MemeberService;
+import distove.community.service.MemberService;
 import distove.community.service.ServerService;
 import distove.community.web.UserClient;
 import distove.community.web.UserResponse;
@@ -23,8 +22,7 @@ import java.util.List;
 public class ServerController {
 
     private final ServerService serverService;
-    private final MemeberService memeberService;
-    private final CategoryService categoryService;
+    private final MemberService memberService;
     private final UserClient userClient;
 
     @GetMapping("/server")
@@ -34,33 +32,42 @@ public class ServerController {
     }
 
     @GetMapping("/server/{serverId}")
-    public ResponseEntity<Object> getServersByUserId(@RequestHeader("userId") Long userId, @PathVariable("serverId") Long serverId) {
-        List<CategoryResponse> categories = categoryService.getCategoriesWithChannelsByServerId(serverId);
+    public ResponseEntity<Object> getServersByUserId(@RequestHeader("userId") Long userId,
+                                                     @PathVariable("serverId") Long serverId) {
+        List<CategoryResponse> categories = serverService.getCategoriesWithChannelsByServerId(serverId);
         return ResultResponse.success(HttpStatus.OK, "그룹의 채널 및 카테고리 조회", categories);
     }
 
     @PostMapping("/server")
-    public ResponseEntity<Object> createNewServer(@RequestHeader("userId") Long userId, @RequestPart("name") String name, @RequestPart(required = false, value = "image") MultipartFile image) {
+    public ResponseEntity<Object> createNewServer(@RequestHeader("userId") Long userId,
+                                                  @RequestPart("name") String name,
+                                                  @RequestPart(required = false, value = "image") MultipartFile image) {
         Server server = serverService.createNewServer(userId, name, image);
         return ResultResponse.success(HttpStatus.OK, "서버 생성 성공", server);
     }
 
     @PatchMapping("/server/{serverId}")
-    public ResponseEntity<Object> updateServer(@RequestHeader("userId") Long userId, @PathVariable("serverId") Long serverId, @RequestPart(required = false, value = "imgUrl") String imgUrl, @RequestPart("name") String name, @RequestPart("image") MultipartFile image) {
+    public ResponseEntity<Object> updateServer(@RequestHeader("userId") Long userId,
+                                               @PathVariable("serverId") Long serverId,
+                                               @RequestPart(required = false, value = "imgUrl") String imgUrl,
+                                               @RequestPart("name") String name,
+                                               @RequestPart(required = false, value = "image") MultipartFile image) {
         Server server = serverService.updateServer(serverId, name, imgUrl, image);
         return ResultResponse.success(HttpStatus.OK, "서버 수정 성공", server);
     }
 
     @DeleteMapping("/server/{serverId}")
-    public ResponseEntity<Object> deleteServerById(@RequestHeader("userId") Long userId, @PathVariable("serverId") Long serverId) {
+    public ResponseEntity<Object> deleteServerById(@RequestHeader("userId") Long userId,
+                                                   @PathVariable("serverId") Long serverId) {
         serverService.deleteServerById(serverId);
         return ResultResponse.success(HttpStatus.OK, "서버 삭제 성공", null);
     }
 
     @GetMapping("/server/{serverId}/member/")
-    public ResponseEntity<Object> getMembersByServerId(@RequestHeader("userId") Long userId, @PathVariable("serverId") Long serverId) {
+    public ResponseEntity<Object> getMembersByServerId(@RequestHeader("userId") Long userId,
+                                                       @PathVariable("serverId") Long serverId) {
         List<UserResponse> users = new ArrayList<>();
-        List<Member> members = memeberService.getMembersByServerId(serverId);
+        List<Member> members = memberService.getMembersByServerId(serverId);
         for (Member member : members) {
             users.add(userClient.getUser(member.getUserId()));
         }
