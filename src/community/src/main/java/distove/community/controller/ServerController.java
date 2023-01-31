@@ -63,7 +63,7 @@ public class ServerController {
         return ResultResponse.success(HttpStatus.OK, "서버 삭제 성공", null);
     }
 
-    @GetMapping("/server/{serverId}/member/")
+    @GetMapping("/server/{serverId}/member/list")
     public ResponseEntity<Object> getMembersByServerId(@RequestHeader("userId") Long userId,
                                                        @PathVariable("serverId") Long serverId) {
         List<UserResponse> users = new ArrayList<>();
@@ -73,4 +73,13 @@ public class ServerController {
         }
         return ResultResponse.success(HttpStatus.OK, "서버 내 멤버 리스트 조회", users);
     }
+
+    // TODO : 초대 코드 로직 반영 X
+    @PostMapping("/server/join/{serverId}")
+    public ResponseEntity<Object> joinServer(@RequestHeader("userId") Long userId,
+                                             @PathVariable("serverId") Long serverId) {
+        memberService.joinServer(userId, serverId);
+        return ResultResponse.success(HttpStatus.OK, "서버 초대 수락", null);
+    }
+
 }

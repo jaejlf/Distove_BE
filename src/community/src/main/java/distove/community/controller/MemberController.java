@@ -12,7 +12,7 @@ import java.util.List;
 
 @RequiredArgsConstructor
 @RestController
-public class RoleController {
+public class MemberController {
 
     /**
      * TODO

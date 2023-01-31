@@ -3,6 +3,7 @@ package distove.community.service;
 import distove.community.dto.response.RoleResponse;
 import distove.community.entity.Member;
 import distove.community.entity.MemberRole;
+import distove.community.entity.Server;
 import distove.community.exception.DistoveException;
 import distove.community.repository.MemberRepository;
 import distove.community.repository.MemberRoleRepository;
@@ -16,6 +17,7 @@ import java.util.ArrayList;
 import java.util.List;
 import java.util.Objects;
 
+import static distove.community.entity.Member.newMember;
 import static distove.community.enumerate.DefaultRoleName.MEMBER;
 import static distove.community.enumerate.DefaultRoleName.OWNER;
 import static distove.community.exception.ErrorCode.*;
@@ -63,9 +65,22 @@ public class MemberService {
         return roleResponses;
     }
 
-    private void checkServerExist(Long serverId) {
-        serverRepository.findById(serverId)
+    public void joinServer(Long userId, Long serverId) {
+        Server server = checkServerExist(serverId);
+        checkMemberExist(userId, server);
+        MemberRole memberRole = memberRoleRepository.findByRoleNameAndServerId(MEMBER.getName(), server.getId())
+                .orElseThrow(() -> new DistoveException(ROLE_NOT_FOUND_ERROR));
+        memberRepository.save(newMember(server, userId, memberRole));
+    }
+
+    private Server checkServerExist(Long serverId) {
+        return serverRepository.findById(serverId)
                 .orElseThrow(() -> new DistoveException(SERVER_NOT_FOUND_ERROR));
+    }
+
+    private void checkMemberExist(Long userId, Server server) {
+        if (memberRepository.findByUserIdAndServerId(userId, server.getId()).isPresent())
+            throw new DistoveException(MEMBER_ALREADY_EXIST_ERROR);
     }
 
     private void checkAuthorization(Long userId, Long serverId) {
