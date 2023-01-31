@@ -7,8 +7,8 @@ public class RoleResponse {
 
     @Getter
     @Builder
-    public static class Info {
-        private Long userId;
+    public static class MemberInfo {
+        private Long id;
         private String nickname;
         private String roleName;
     }

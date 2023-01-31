@@ -36,14 +36,14 @@ public class MemberService {
         return memberRepository.findMembersByServerId(serverId);
     }
 
-    public List<RoleResponse.Info> getMemberWithRolesByServerId(Long userId, Long serverId) {
+    public List<RoleResponse.MemberInfo> getMemberWithRolesByServerId(Long userId, Long serverId) {
         checkServerExist(serverId);
         List<Member> members = getMembersByServerId(serverId);
-        List<RoleResponse.Info> roleResponses = new ArrayList<>();
+        List<RoleResponse.MemberInfo> roleResponses = new ArrayList<>();
         for (Member member : members) {
             MemberRole role = member.getRole();
-            roleResponses.add(RoleResponse.Info.builder()
-                    .userId(member.getUserId())
+            roleResponses.add(RoleResponse.MemberInfo.builder()
+                    .id(member.getUserId())
                     .nickname(userClient.getUser(member.getUserId()).getNickname())
                     .roleName(role.getRoleName()).build());
         }
@@ -52,14 +52,19 @@ public class MemberService {
 
     public List<RoleResponse.Detail> getServerRoleDetail(Long userId, Long serverId) {
         checkServerExist(serverId);
-        checkAuthorization(userId, serverId);
+        Member member = memberRepository.findByUserIdAndServerId(userId, serverId)
+                .orElseThrow(() -> new DistoveException(MEMBER_NOT_FOUND_ERROR));
+
         List<MemberRole> roles = memberRoleRepository.findAllByServerId(serverId);
         List<RoleResponse.Detail> roleResponses = new ArrayList<>();
+
+        boolean isActive = false;
         for (MemberRole role : roles) {
+            isActive = updateActiveIfHasAuthorization(member, isActive, role);
             roleResponses.add(RoleResponse.Detail.builder()
                     .roleId(role.getId())
                     .roleName(role.getRoleName())
-                    .isActive(!Objects.equals(role.getRoleName(), OWNER.getName()))
+                    .isActive(isActive)
                     .build());
         }
         return roleResponses;
@@ -83,11 +88,11 @@ public class MemberService {
             throw new DistoveException(MEMBER_ALREADY_EXIST_ERROR);
     }
 
-    private void checkAuthorization(Long userId, Long serverId) {
-        Member member = memberRepository.findByUserIdAndServerId(userId, serverId)
-                .orElseThrow(() -> new DistoveException(MEMBER_NOT_FOUND_ERROR));
-
-        if (Objects.equals(member.getRole().getRoleName(), MEMBER.getName())) throw new DistoveException(NO_AUTH_ERROR);
+    private static boolean updateActiveIfHasAuthorization(Member member, boolean isActive, MemberRole role) {
+        if (!Objects.equals(member.getRole().getRoleName(), MEMBER.getName())) {
+            isActive = !Objects.equals(role.getRoleName(), OWNER.getName());
+        }
+        return isActive;
     }
 
 }

@@ -26,7 +26,7 @@ public class MemberController {
     @GetMapping("/member/roles/{serverId}")
     public ResponseEntity<Object> getRolesByServerId(@RequestHeader("userId") Long userId,
                                                      @PathVariable Long serverId) {
-        List<RoleResponse.Info> result = memberService.getMemberWithRolesByServerId(userId, serverId);
+        List<RoleResponse.MemberInfo> result = memberService.getMemberWithRolesByServerId(userId, serverId);
         return ResultResponse.success(
                 HttpStatus.OK,
                 "서버에 설정된 멤버-역할 리스트",
