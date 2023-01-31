@@ -21,8 +21,8 @@ public class WebController {
         return userService.getUser(userId);
     }
 
-    @GetMapping("/users")
-    public List<UserResponse> getUsers(@RequestBody List<Long> usersId) {
-        return userService.getUsers(usersId);
+    @GetMapping("/user/list")
+    public List<UserResponse> getUsers(@RequestBody List<Long> userIds) {
+        return userService.getUsers(userIds);
     }
 }
