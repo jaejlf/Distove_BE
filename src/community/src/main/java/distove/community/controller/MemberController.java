@@ -33,7 +33,7 @@ public class MemberController {
                 result);
     }
 
-    @GetMapping("/roles/{serverId}")
+    @GetMapping("/server/roles/{serverId}")
     public ResponseEntity<Object> getMemberRoleDetail(@RequestHeader("userId") Long userId,
                                                       @PathVariable Long serverId) {
         List<RoleResponse.Detail> result = memberService.getServerRoleDetail(userId, serverId);
@@ -41,6 +41,15 @@ public class MemberController {
                 HttpStatus.OK,
                 "서버에 설정된 역할 리스트",
                 result);
+    }
+
+    @PatchMapping("/member/role/{serverId}")
+    public ResponseEntity<Object> updateMemberRole(@RequestHeader("userId") Long userId,
+                                                   @PathVariable Long serverId,
+                                                   @RequestParam Long roleId) {
+        memberService.updateMemberRole(userId, serverId, roleId);
+        return ResultResponse.success(
+                HttpStatus.OK, "특정 멤버의 역할 변경", null);
     }
 
 }

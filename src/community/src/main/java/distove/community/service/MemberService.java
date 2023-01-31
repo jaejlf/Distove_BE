@@ -58,13 +58,11 @@ public class MemberService {
         List<MemberRole> roles = memberRoleRepository.findAllByServerId(serverId);
         List<RoleResponse.Detail> roleResponses = new ArrayList<>();
 
-        boolean isActive = false;
         for (MemberRole role : roles) {
-            isActive = updateActiveIfHasAuthorization(member, isActive, role);
             roleResponses.add(RoleResponse.Detail.builder()
                     .roleId(role.getId())
                     .roleName(role.getRoleName())
-                    .isActive(isActive)
+                    .isActive(!Objects.equals(role.getRoleName(), OWNER.getName()))
                     .build());
         }
         return roleResponses;
@@ -78,21 +76,26 @@ public class MemberService {
         memberRepository.save(newMember(server, userId, memberRole));
     }
 
+    public void updateMemberRole(Long userId, Long serverId, Long roleId) {
+        Server server = checkServerExist(serverId);
+        Member member = checkMemberExist(userId, server);
+        MemberRole memberRole = memberRoleRepository.findById(roleId)
+                .orElseThrow(() -> new DistoveException(ROLE_NOT_FOUND_ERROR));
+
+        if (Objects.equals(memberRole.getRoleName(), OWNER.getName())) throw new DistoveException(NO_AUTH_ERROR);
+
+        member.updateRole(memberRole);
+        memberRepository.save(member);
+    }
+
     private Server checkServerExist(Long serverId) {
         return serverRepository.findById(serverId)
                 .orElseThrow(() -> new DistoveException(SERVER_NOT_FOUND_ERROR));
     }
 
-    private void checkMemberExist(Long userId, Server server) {
-        if (memberRepository.findByUserIdAndServerId(userId, server.getId()).isPresent())
-            throw new DistoveException(MEMBER_ALREADY_EXIST_ERROR);
-    }
-
-    private static boolean updateActiveIfHasAuthorization(Member member, boolean isActive, MemberRole role) {
-        if (!Objects.equals(member.getRole().getRoleName(), MEMBER.getName())) {
-            isActive = !Objects.equals(role.getRoleName(), OWNER.getName());
-        }
-        return isActive;
+    private Member checkMemberExist(Long userId, Server server) {
+        return memberRepository.findByUserIdAndServerId(userId, server.getId())
+                .orElseThrow(() -> new DistoveException(MEMBER_ALREADY_EXIST_ERROR));
     }
 
 }
