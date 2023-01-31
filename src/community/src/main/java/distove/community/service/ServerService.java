@@ -68,8 +68,8 @@ public class ServerService {
 
         Category defaultChatCategory = categoryRepository.save(newCategory(defaultChatCategoryName, newServer));
         Category defaultVoiceCategory = categoryRepository.save(newCategory(defaultVoiceCategoryName, newServer));
-        channelService.createNewChannel(userId, defaultChannelName, defaultChatCategory.getId(), ChannelType.CHAT.getCode());
-        channelService.createNewChannel(userId, defaultChannelName, defaultVoiceCategory.getId(), ChannelType.VOICE.getCode());
+        channelService.createNewChannel(userId, newServer.getId(), defaultChannelName, defaultChatCategory.getId(), ChannelType.CHAT.getCode());
+        channelService.createNewChannel(userId, newServer.getId(), defaultChannelName, defaultVoiceCategory.getId(), ChannelType.VOICE.getCode());
 
         setOwnerAndRole(userId, newServer);
         return newServer;
@@ -85,8 +85,7 @@ public class ServerService {
 
         return server;
     }
-
-
+    
     public List<Server> getServersByUserId(Long userId) {
 
         List<Member> members = memberRepository.findMembersByUserId(userId);

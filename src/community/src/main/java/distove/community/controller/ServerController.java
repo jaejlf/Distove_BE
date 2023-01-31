@@ -1,29 +1,26 @@
 package distove.community.controller;
 
+import distove.community.config.AuthorizedRole;
 import distove.community.dto.response.CategoryResponse;
 import distove.community.dto.response.ResultResponse;
-import distove.community.entity.Member;
 import distove.community.entity.Server;
-import distove.community.service.MemberService;
 import distove.community.service.ServerService;
-import distove.community.web.UserClient;
-import distove.community.web.UserResponse;
 import lombok.RequiredArgsConstructor;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
 import org.springframework.web.multipart.MultipartFile;
 
-import java.util.ArrayList;
 import java.util.List;
+
+import static distove.community.config.AuthorizedRole.Auth.CAN_DELETE_SERVER;
+import static distove.community.config.AuthorizedRole.Auth.CAN_MANAGE_SERVER;
 
 @RestController
 @RequiredArgsConstructor
 public class ServerController {
 
     private final ServerService serverService;
-    private final MemberService memberService;
-    private final UserClient userClient;
 
     @GetMapping("/server")
     public ResponseEntity<Object> getServersByUserId(@RequestHeader("userId") Long userId) {
@@ -32,8 +29,7 @@ public class ServerController {
     }
 
     @GetMapping("/server/{serverId}")
-    public ResponseEntity<Object> getServersByUserId(@RequestHeader("userId") Long userId,
-                                                     @PathVariable("serverId") Long serverId) {
+    public ResponseEntity<Object> getCategoriesWithChannelsByServerId(@PathVariable("serverId") Long serverId) {
         List<CategoryResponse> categories = serverService.getCategoriesWithChannelsByServerId(serverId);
         return ResultResponse.success(HttpStatus.OK, "그룹의 채널 및 카테고리 조회", categories);
     }
@@ -46,10 +42,9 @@ public class ServerController {
         return ResultResponse.success(HttpStatus.OK, "서버 생성 성공", server);
     }
 
-    // TODO : CAN_MANAGE_SERVER
+    @AuthorizedRole(name = CAN_MANAGE_SERVER)
     @PatchMapping("/server/{serverId}")
-    public ResponseEntity<Object> updateServer(@RequestHeader("userId") Long userId,
-                                               @PathVariable("serverId") Long serverId,
+    public ResponseEntity<Object> updateServer(@PathVariable("serverId") Long serverId,
                                                @RequestPart(required = false, value = "imgUrl") String imgUrl,
                                                @RequestPart("name") String name,
                                                @RequestPart(required = false, value = "image") MultipartFile image) {
@@ -57,31 +52,11 @@ public class ServerController {
         return ResultResponse.success(HttpStatus.OK, "서버 수정 성공", server);
     }
 
-    // TODO : CAN_DELETE_SERVER
+    @AuthorizedRole(name = CAN_DELETE_SERVER)
     @DeleteMapping("/server/{serverId}")
-    public ResponseEntity<Object> deleteServerById(@RequestHeader("userId") Long userId,
-                                                   @PathVariable("serverId") Long serverId) {
+    public ResponseEntity<Object> deleteServerById(@PathVariable("serverId") Long serverId) {
         serverService.deleteServerById(serverId);
         return ResultResponse.success(HttpStatus.OK, "서버 삭제 성공", null);
-    }
-
-    @GetMapping("/server/{serverId}/member/list")
-    public ResponseEntity<Object> getMembersByServerId(@RequestHeader("userId") Long userId,
-                                                       @PathVariable("serverId") Long serverId) {
-        List<UserResponse> users = new ArrayList<>();
-        List<Member> members = memberService.getMembersByServerId(serverId);
-        for (Member member : members) {
-            users.add(userClient.getUser(member.getUserId()));
-        }
-        return ResultResponse.success(HttpStatus.OK, "서버 내 멤버 리스트 조회", users);
-    }
-
-    // TODO : 초대 코드 로직 반영 X
-    @PostMapping("/server/join/{serverId}")
-    public ResponseEntity<Object> joinServer(@RequestHeader("userId") Long userId,
-                                             @PathVariable("serverId") Long serverId) {
-        memberService.joinServer(userId, serverId);
-        return ResultResponse.success(HttpStatus.OK, "서버 초대 수락", null);
     }
 
 }
