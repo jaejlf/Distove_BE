@@ -1,14 +1,14 @@
 package distove.community.entity;
 
-import com.fasterxml.jackson.annotation.JsonIgnore;
 import lombok.AllArgsConstructor;
 import lombok.Builder;
 import lombok.Getter;
 import lombok.NoArgsConstructor;
 
-import javax.persistence.*;
-import java.util.ArrayList;
-import java.util.List;
+import javax.persistence.Entity;
+import javax.persistence.GeneratedValue;
+import javax.persistence.GenerationType;
+import javax.persistence.Id;
 
 @Getter
 @Entity
@@ -23,10 +23,6 @@ public class Server {
     private String name;
 
     private String imgUrl;
-
-    @JsonIgnore
-    @OneToMany(mappedBy = "server")
-    private List<MemberRole> roles = new ArrayList<>();
 
     public static Server newServer(String name, String imgUrl) {
         return Server.builder()

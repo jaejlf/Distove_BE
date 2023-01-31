@@ -14,7 +14,9 @@ public enum ErrorCode {
     CATEGORY_NOT_FOUND_ERROR(HttpStatus.NOT_FOUND, "C0003", "존재하지 않는 카테고리입니다."),
     IMAGE_UPLOAD_FAILED(HttpStatus.EXPECTATION_FAILED, "C0004", "이미지 업로드 실패"),
     EMPTY_FILE(HttpStatus.NO_CONTENT, "C0005", "파일이 비어있습니다."),
-    ROLE_NOT_FOUND_ERROR(HttpStatus.NOT_FOUND, "C0006","존재하지 않는 역할입니다.");
+    ROLE_NOT_FOUND_ERROR(HttpStatus.NOT_FOUND, "C0006","존재하지 않는 역할입니다."),
+    MEMBER_NOT_FOUND_ERROR(HttpStatus.NOT_FOUND, "C0007","존재하지 않는 멤버입니다."),
+    NO_AUTH_ERROR(HttpStatus.BAD_REQUEST, "C0008","수정 권한이 없는 멤버입니다.");;
 
     private final HttpStatus httpStatus;
     private final String code;

@@ -34,7 +34,7 @@ public class ServerService {
     private final ChatClient chatClient;
     private final ServerRepository serverRepository;
     private final MemberRepository memberRepository;
-    private final MemberRoleRepsitory memberRoleRepsitory;
+    private final MemberRoleRepository memberRoleRepository;
     private final CategoryRepository categoryRepository;
     private final ChannelRepository channelRepository;
     private final StorageService storageService;
@@ -115,8 +115,8 @@ public class ServerService {
     }
 
     private void setOwnerAndRole(Long userId, Server newServer) {
-        memberRoleRepsitory.saveAll(MemberRole.createDefaultRoles(newServer));
-        MemberRole ownerRole = memberRoleRepsitory.findByRoleNameAndServerId(OWNER.getName(), newServer.getId())
+        memberRoleRepository.saveAll(MemberRole.createDefaultRoles(newServer));
+        MemberRole ownerRole = memberRoleRepository.findByRoleNameAndServerId(OWNER.getName(), newServer.getId())
                 .orElseThrow(() -> new DistoveException(ROLE_NOT_FOUND_ERROR));
         memberRepository.save(newMember(newServer, userId, ownerRole));
     }
