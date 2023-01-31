@@ -85,7 +85,7 @@ public class ServerService {
 
         return server;
     }
-    
+
     public List<Server> getServersByUserId(Long userId) {
 
         List<Member> members = memberRepository.findMembersByUserId(userId);

@@ -38,25 +38,23 @@ public class MemberController {
     public ResponseEntity<Object> getRolesByServerId(@RequestHeader("userId") Long userId,
                                                      @PathVariable Long serverId) {
         List<RoleResponse.MemberInfo> result = memberService.getMemberWithRolesByServerId(userId, serverId);
-        return ResultResponse.success(HttpStatus.OK, "서버에 설정된 멤버-역할 리스트 조회", result);
+        return ResultResponse.success(HttpStatus.OK, "멤버별 역할 리스트 조회", result);
     }
 
     @AuthorizedRole(name = CAN_UPDATE_MEMBER_ROLE)
     @GetMapping("/server/roles/{serverId}")
-    public ResponseEntity<Object> getMemberRoleDetail(@RequestHeader("userId") Long userId,
-                                                      @PathVariable Long serverId) {
-        List<RoleResponse.Detail> result = memberService.getServerRoleDetail(userId, serverId);
-        return ResultResponse.success(HttpStatus.OK, "서버에 설정된 역할 리스트 조회", result);
+    public ResponseEntity<Object> getMemberRoleDetail(@PathVariable Long serverId) {
+        List<RoleResponse.Detail> result = memberService.getServerRoleDetail(serverId);
+        return ResultResponse.success(HttpStatus.OK, "설정 가능한 역할 리스트 조회", result);
     }
 
     @AuthorizedRole(name = CAN_UPDATE_MEMBER_ROLE)
     @PatchMapping("/member/role/{serverId}")
-    public ResponseEntity<Object> updateMemberRole(@RequestHeader("userId") Long userId,
-                                                   @PathVariable Long serverId,
+    public ResponseEntity<Object> updateMemberRole(@PathVariable Long serverId,
                                                    @RequestParam Long roleId,
                                                    @RequestParam Long targetUserId) {
-        memberService.updateMemberRole(userId, serverId, roleId, targetUserId);
-        return ResultResponse.success(HttpStatus.OK, "특정 멤버의 역할 변경", null);
+        memberService.updateMemberRole(serverId, roleId, targetUserId);
+        return ResultResponse.success(HttpStatus.OK, "멤버 역할 변경", null);
     }
 
     // TODO : 초대 코드 로직 반영 X

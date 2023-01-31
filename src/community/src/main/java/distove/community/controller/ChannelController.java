@@ -22,7 +22,7 @@ public class ChannelController {
     private final ChannelService channelService;
 
     @AuthorizedRole(name = CAN_MANAGE_CHANNEL)
-    @PostMapping("/channel/{serverId}")
+    @PostMapping("/{serverId}/channel")
     public ResponseEntity<Object> createNewChannel(@RequestHeader("userId") Long userId,
                                                    @PathVariable Long serverId,
                                                    @RequestBody ChannelCreateRequest channelCreateRequest) {
@@ -32,7 +32,7 @@ public class ChannelController {
     }
 
     @AuthorizedRole(name = CAN_MANAGE_CHANNEL)
-    @PatchMapping("/channel/{serverId}")
+    @PatchMapping("/{serverId}")
     public ResponseEntity<Object> updateChannelName(@PathVariable Long serverId,
                                                     @RequestParam Long channelId,
                                                     @RequestBody ChannelUpdateRequest channelUpdateRequest) {
@@ -41,7 +41,7 @@ public class ChannelController {
     }
 
     @AuthorizedRole(name = CAN_MANAGE_CHANNEL)
-    @DeleteMapping("/channel/{serverId}")
+    @DeleteMapping("/{serverId}")
     public ResponseEntity<Object> deleteChannelById(@PathVariable Long serverId,
                                                     @RequestParam Long channelId) {
         channelService.deleteChannelById(channelId, serverId);
