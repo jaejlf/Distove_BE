@@ -2,6 +2,7 @@ package distove.auth.controller;
 
 import distove.auth.dto.request.EmailDuplicateRequest;
 import distove.auth.dto.request.LoginRequest;
+import distove.auth.dto.request.UpdateRequest;
 import distove.auth.dto.request.SignUpRequest;
 import distove.auth.dto.response.ResultResponse;
 import distove.auth.service.UserService;
@@ -36,7 +37,7 @@ public class UserController {
     }
 
     @PostMapping("/logout")
-    public ResponseEntity<Object> logout(@RequestHeader("AccessToken") String token) {
+    public ResponseEntity<Object> logout(@RequestHeader("token") String token) {
         return ResultResponse.success(
                 HttpStatus.OK,
                 "로그아웃 성공",
@@ -50,6 +51,15 @@ public class UserController {
                 HttpStatus.OK,
                 "이메일 사용 여부",
                 userService.checkEmailDuplicate(request)
+        );
+    }
+
+    @PatchMapping("/update")
+    public ResponseEntity<Object> updateUser(@RequestBody UpdateRequest request) {
+        return ResultResponse.success(
+                HttpStatus.OK,
+                "수정 성공",
+                userService.updateUser(request)
         );
     }
 

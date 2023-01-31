@@ -3,6 +3,7 @@ package distove.auth.service;
 
 import distove.auth.dto.request.EmailDuplicateRequest;
 import distove.auth.dto.request.LoginRequest;
+import distove.auth.dto.request.UpdateRequest;
 import distove.auth.dto.request.SignUpRequest;
 import distove.auth.dto.response.LogoutResponse;
 import distove.auth.dto.response.TokenResponse;
@@ -71,7 +72,7 @@ public class UserService {
             throw new DistoveException(PASSWORD_ERROR);
         }
 
-        String accessToken = jwtTokenProvider.generateAccessToken(request.getEmail());
+        String accessToken = jwtTokenProvider.generateAccessToken(request.getEmail(), user.getId());
         String refreshToken = jwtTokenProvider.generateRefreshToken();
 
         user.updateRefreshToken(refreshToken);
@@ -86,7 +87,7 @@ public class UserService {
      - 리프레시 토큰을 Redis 사용하지 않고 RDB에서 관리해보려 하는데 null 처리를 해서 토큰 관리를 해도 괜찮을지?
      */
     public LogoutResponse logout(String token) {
-        User user = userRepository.findByEmail(jwtTokenProvider.getEmail(token))
+        User user = userRepository.findById(jwtTokenProvider.getUserId(token))
                 .orElseThrow(() -> new DistoveException(ACCOUNT_NOT_FOUND));
 
         user.updateRefreshToken(null);
@@ -111,9 +112,17 @@ public class UserService {
         return users;
     }
 
+    public UserResponse updateUser(UpdateRequest request) {
+        User user = userRepository.findById(jwtTokenProvider.getUserId(request.getToken()))
+                .orElseThrow(() ->new DistoveException(ACCOUNT_NOT_FOUND));
+
+        user.updateUser(request.getNickname());
+
+        return UserResponse.of(user.getId(), user.getNickname(), user.getProfileImgUrl());
+    }
+
     public boolean checkEmailDuplicate(EmailDuplicateRequest request) {
         return userRepository.existsByEmail(request.getEmail());
     }
-
 
 }

@@ -28,17 +28,16 @@ public class JwtTokenProvider {
         this.key = Keys.hmacShaKeyFor(keyBytes);
     }
 
-    public String generateAccessToken(String email) {
+    public String generateAccessToken(String email, Long userId) {
         Map<String, Object> headers = new HashMap<>();
         headers.put("typ", "JWT");
         headers.put("alg", "HS256");
-
-//        Claims claims = Jwts.claims().setSubject(email);
         Claims claims = Jwts.claims().setSubject("userId");
-        claims.put("userId", 1L);
+        claims.put("userId", userId);
 
         Date now = new Date();
-        String jwt = Jwts.builder()
+
+        return Jwts.builder()
                 .setHeader(headers)
                 .setClaims(claims)
                 .setIssuedAt(now)
@@ -46,14 +45,6 @@ public class JwtTokenProvider {
                 .signWith(key, SignatureAlgorithm.HS256)
                 .compact();
 
-        log.info(String.valueOf(Jwts
-                .parserBuilder()
-                .setSigningKey(key)
-                .build()
-                .parseClaimsJws(jwt)
-                .getBody().get("userId")));
-
-        return jwt;
     }
 
     public String generateRefreshToken() {
@@ -84,14 +75,15 @@ public class JwtTokenProvider {
         }
     }
 
-    public String getEmail(String token) throws DistoveException {
+    public Long getUserId(String token) throws DistoveException {
         try {
-            return Jwts
+            return Long.valueOf(String.valueOf(Jwts
                     .parserBuilder()
                     .setSigningKey(key)
                     .build()
                     .parseClaimsJws(token)
-                    .getBody().getSubject();
+                    .getBody()
+                    .get("userId")));
         } catch (UnsupportedJwtException e) {
             throw new DistoveException(JWT_INVALID);
         } catch (ExpiredJwtException e) {
