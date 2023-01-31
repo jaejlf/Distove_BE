@@ -20,6 +20,7 @@ public class ChannelController {
     private final ChannelService channelService;
 
 
+    // TODO : CAN_MANAGE_CHANNEL
     @PostMapping("/channel")
     public ResponseEntity<Object> createNewChannel(@RequestHeader("userId") Long userId,
                                                    @RequestBody ChannelCreateRequest channelCreateRequest) {
@@ -29,6 +30,7 @@ public class ChannelController {
                 newChannelResponse(newChannel.getId(), newChannel.getName(), newChannel.getChannelTypeId()));
     }
 
+    // TODO : CAN_MANAGE_CHANNEL
     @PatchMapping("/channel/{channelId}")
     public ResponseEntity<Object> updateChannelName(@RequestHeader("userId") Long userId,
                                                     @PathVariable("channelId") Long channelId,
@@ -38,6 +40,7 @@ public class ChannelController {
         return ResultResponse.success(HttpStatus.OK, "채널 이름 수정 성공", channel);
     }
 
+    // TODO : CAN_MANAGE_CHANNEL
     @DeleteMapping("/channel/{channelId}")
     public ResponseEntity<Object> deleteChannelById(@RequestHeader("userId") Long userId,
                                                     @PathVariable("channelId") Long channelId) {

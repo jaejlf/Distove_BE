@@ -46,6 +46,7 @@ public class ServerController {
         return ResultResponse.success(HttpStatus.OK, "서버 생성 성공", server);
     }
 
+    // TODO : CAN_MANAGE_SERVER
     @PatchMapping("/server/{serverId}")
     public ResponseEntity<Object> updateServer(@RequestHeader("userId") Long userId,
                                                @PathVariable("serverId") Long serverId,
@@ -56,6 +57,7 @@ public class ServerController {
         return ResultResponse.success(HttpStatus.OK, "서버 수정 성공", server);
     }
 
+    // TODO : CAN_DELETE_SERVER
     @DeleteMapping("/server/{serverId}")
     public ResponseEntity<Object> deleteServerById(@RequestHeader("userId") Long userId,
                                                    @PathVariable("serverId") Long serverId) {

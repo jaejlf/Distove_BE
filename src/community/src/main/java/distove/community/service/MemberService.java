@@ -80,7 +80,7 @@ public class MemberService {
         memberRepository.save(newMember(server, userId, memberRole));
     }
 
-    public void updateMemberRole(Long userId, Long serverId, Long roleId) {
+    public void updateMemberRole(Long userId, Long serverId, Long roleId, Long targetUserId) {
         Server server = checkServerExist(serverId);
         Member member = checkMemberExist(userId, server);
         MemberRole memberRole = memberRoleRepository.findById(roleId)
@@ -88,8 +88,9 @@ public class MemberService {
 
         if (Objects.equals(memberRole.getRoleName(), OWNER.getName())) throw new DistoveException(NO_AUTH_ERROR);
 
-        member.updateRole(memberRole);
-        memberRepository.save(member);
+        Member target = checkMemberExist(targetUserId, server);
+        target.updateRole(memberRole);
+        memberRepository.save(target);
     }
 
     private Server checkServerExist(Long serverId) {

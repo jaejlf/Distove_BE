@@ -14,13 +14,6 @@ import java.util.List;
 @RestController
 public class MemberController {
 
-    /**
-     * TODO
-     * 현재 유저들 역할 GET
-     * 역할 변경
-     * 현재 서버의 역할 내려주기 (활성/비활성) -- 유저 id별
-     */
-
     private final MemberService memberService;
 
     @GetMapping("/member/roles/{serverId}")
@@ -33,6 +26,7 @@ public class MemberController {
                 result);
     }
 
+    // TODO : CAN_UPDATE_MEMBER_ROLE
     @GetMapping("/server/roles/{serverId}")
     public ResponseEntity<Object> getMemberRoleDetail(@RequestHeader("userId") Long userId,
                                                       @PathVariable Long serverId) {
@@ -43,11 +37,13 @@ public class MemberController {
                 result);
     }
 
+    // TODO : CAN_UPDATE_MEMBER_ROLE
     @PatchMapping("/member/role/{serverId}")
     public ResponseEntity<Object> updateMemberRole(@RequestHeader("userId") Long userId,
                                                    @PathVariable Long serverId,
-                                                   @RequestParam Long roleId) {
-        memberService.updateMemberRole(userId, serverId, roleId);
+                                                   @RequestParam Long roleId,
+                                                   @RequestParam Long targetUserId) {
+        memberService.updateMemberRole(userId, serverId, roleId, targetUserId);
         return ResultResponse.success(
                 HttpStatus.OK, "특정 멤버의 역할 변경", null);
     }
