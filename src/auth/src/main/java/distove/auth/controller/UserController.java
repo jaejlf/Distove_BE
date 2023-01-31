@@ -2,7 +2,7 @@ package distove.auth.controller;
 
 import distove.auth.dto.request.EmailDuplicateRequest;
 import distove.auth.dto.request.LoginRequest;
-import distove.auth.dto.request.UpdateRequest;
+import distove.auth.dto.request.UpdateNicknameRequest;
 import distove.auth.dto.request.SignUpRequest;
 import distove.auth.dto.response.ResultResponse;
 import distove.auth.service.UserService;
@@ -54,12 +54,12 @@ public class UserController {
         );
     }
 
-    @PatchMapping("/update")
-    public ResponseEntity<Object> updateUser(@RequestBody UpdateRequest request) {
+    @PutMapping("/nickname")
+    public ResponseEntity<Object> updateUser(@RequestBody UpdateNicknameRequest request) {
         return ResultResponse.success(
                 HttpStatus.OK,
                 "수정 성공",
-                userService.updateUser(request)
+                userService.updateNickname(request)
         );
     }
 

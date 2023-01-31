@@ -58,4 +58,8 @@ public class User {
         this.refreshToken = refreshToken;
         this.updatedAt = LocalDateTime.now();
     }
+
+    public void updateUser(String nickname) {
+        this.nickname = nickname;
+    }
 }

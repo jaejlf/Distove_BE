@@ -3,7 +3,7 @@ package distove.auth.service;
 
 import distove.auth.dto.request.EmailDuplicateRequest;
 import distove.auth.dto.request.LoginRequest;
-import distove.auth.dto.request.UpdateRequest;
+import distove.auth.dto.request.UpdateNicknameRequest;
 import distove.auth.dto.request.SignUpRequest;
 import distove.auth.dto.response.LogoutResponse;
 import distove.auth.dto.response.TokenResponse;
@@ -72,8 +72,8 @@ public class UserService {
             throw new DistoveException(PASSWORD_ERROR);
         }
 
-        String accessToken = jwtTokenProvider.generateAccessToken(request.getEmail(), user.getId());
-        String refreshToken = jwtTokenProvider.generateRefreshToken();
+        String accessToken = jwtTokenProvider.generateAccessToken(user.getId());
+        String refreshToken = jwtTokenProvider.generateRefreshToken(user.getId());
 
         user.updateRefreshToken(refreshToken);
         userRepository.save(user);
@@ -112,12 +112,12 @@ public class UserService {
         return users;
     }
 
-    public UserResponse updateUser(UpdateRequest request) {
+    public UserResponse updateNickname(UpdateNicknameRequest request) {
         User user = userRepository.findById(jwtTokenProvider.getUserId(request.getToken()))
                 .orElseThrow(() ->new DistoveException(ACCOUNT_NOT_FOUND));
 
         user.updateUser(request.getNickname());
-
+        userRepository.save(user);
         return UserResponse.of(user.getId(), user.getNickname(), user.getProfileImgUrl());
     }
 
