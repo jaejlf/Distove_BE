@@ -1,5 +1,6 @@
 package distove.auth.service;
 
+import distove.auth.dto.response.TokenResponse;
 import distove.auth.exception.DistoveException;
 import io.jsonwebtoken.*;
 import io.jsonwebtoken.io.Decoders;
@@ -28,9 +29,9 @@ public class JwtTokenProvider {
         this.key = Keys.hmacShaKeyFor(keyBytes);
     }
 
-    public String generateAccessToken(String email, Long userId) {
+    public String generateAccessToken(Long userId) {
         Map<String, Object> headers = new HashMap<>();
-        headers.put("typ", "JWT");
+        headers.put("typ", "AT");
         headers.put("alg", "HS256");
         Claims claims = Jwts.claims().setSubject("userId");
         claims.put("userId", userId);
@@ -41,15 +42,25 @@ public class JwtTokenProvider {
                 .setHeader(headers)
                 .setClaims(claims)
                 .setIssuedAt(now)
-                .setExpiration(new Date(now.getTime() + Duration.ofMinutes(43200).toMillis()))
+                .setExpiration(new Date(now.getTime() + Duration.ofMinutes(0).toMillis()))
                 .signWith(key, SignatureAlgorithm.HS256)
                 .compact();
 
     }
 
-    public String generateRefreshToken() {
+    public String generateRefreshToken(Long userId) {
+        Map<String, Object> headers = new HashMap<>();
+        headers.put("typ", "RT");
+        headers.put("alg", "HS256");
+        Claims claims = Jwts.claims().setSubject("userId");
+        claims.put("userId", userId);
+
         Date now = new Date();
+
         return Jwts.builder()
+                .setHeader(headers)
+                .setClaims(claims)
+                .setIssuedAt(now)
                 .setExpiration(new Date(now.getTime() + Duration.ofDays(30).toMillis()))
                 .signWith(key, SignatureAlgorithm.HS256)
                 .compact();
@@ -73,6 +84,10 @@ public class JwtTokenProvider {
         } catch (ExpiredJwtException e) {
             throw new DistoveException(JWT_EXPIRED);
         }
+    }
+
+    public TokenResponse reissue(String token) {
+        return TokenResponse.of(generateAccessToken(getUserId(token)), token);
     }
 
     public Long getUserId(String token) throws DistoveException {
