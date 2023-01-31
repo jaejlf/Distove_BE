@@ -29,7 +29,7 @@ public class MemberController {
         List<RoleResponse.MemberInfo> result = memberService.getMemberWithRolesByServerId(userId, serverId);
         return ResultResponse.success(
                 HttpStatus.OK,
-                "서버에 설정된 멤버-역할 리스트",
+                "서버에 설정된 멤버-역할 리스트 조회",
                 result);
     }
 
@@ -39,7 +39,7 @@ public class MemberController {
         List<RoleResponse.Detail> result = memberService.getServerRoleDetail(userId, serverId);
         return ResultResponse.success(
                 HttpStatus.OK,
-                "서버에 설정된 역할 리스트",
+                "서버에 설정된 역할 리스트 조회",
                 result);
     }
 

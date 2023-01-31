@@ -11,6 +11,7 @@ public class RoleResponse {
         private Long id;
         private String nickname;
         private String roleName;
+        private boolean isActive;
     }
 
     @Getter

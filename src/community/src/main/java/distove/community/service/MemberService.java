@@ -38,6 +38,10 @@ public class MemberService {
 
     public List<RoleResponse.MemberInfo> getMemberWithRolesByServerId(Long userId, Long serverId) {
         checkServerExist(serverId);
+
+        Member curMember = memberRepository.findByUserIdAndServerId(userId, serverId)
+                .orElseThrow(() -> new DistoveException(MEMBER_NOT_FOUND_ERROR));
+
         List<Member> members = getMembersByServerId(serverId);
         List<RoleResponse.MemberInfo> roleResponses = new ArrayList<>();
         for (Member member : members) {
@@ -45,15 +49,15 @@ public class MemberService {
             roleResponses.add(RoleResponse.MemberInfo.builder()
                     .id(member.getUserId())
                     .nickname(userClient.getUser(member.getUserId()).getNickname())
-                    .roleName(role.getRoleName()).build());
+                    .roleName(role.getRoleName())
+                    .isActive(getIsActive(curMember, member))
+                    .build());
         }
         return roleResponses;
     }
 
     public List<RoleResponse.Detail> getServerRoleDetail(Long userId, Long serverId) {
         checkServerExist(serverId);
-        Member member = memberRepository.findByUserIdAndServerId(userId, serverId)
-                .orElseThrow(() -> new DistoveException(MEMBER_NOT_FOUND_ERROR));
 
         List<MemberRole> roles = memberRoleRepository.findAllByServerId(serverId);
         List<RoleResponse.Detail> roleResponses = new ArrayList<>();
@@ -96,6 +100,13 @@ public class MemberService {
     private Member checkMemberExist(Long userId, Server server) {
         return memberRepository.findByUserIdAndServerId(userId, server.getId())
                 .orElseThrow(() -> new DistoveException(MEMBER_ALREADY_EXIST_ERROR));
+    }
+
+    private static boolean getIsActive(Member curMember, Member target) {
+        boolean isActive = false;
+        if (curMember.getRole().isCanUpdateMemberRole())
+            isActive = !Objects.equals(target.getRole().getRoleName(), OWNER.getName());
+        return isActive;
     }
 
 }
