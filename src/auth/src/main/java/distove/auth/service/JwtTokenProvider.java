@@ -33,16 +33,27 @@ public class JwtTokenProvider {
         headers.put("typ", "JWT");
         headers.put("alg", "HS256");
 
-        Claims claims = Jwts.claims().setSubject(email);
+//        Claims claims = Jwts.claims().setSubject(email);
+        Claims claims = Jwts.claims().setSubject("userId");
+        claims.put("userId", 1L);
 
         Date now = new Date();
-        return Jwts.builder()
+        String jwt = Jwts.builder()
                 .setHeader(headers)
                 .setClaims(claims)
                 .setIssuedAt(now)
                 .setExpiration(new Date(now.getTime() + Duration.ofMinutes(43200).toMillis()))
                 .signWith(key, SignatureAlgorithm.HS256)
                 .compact();
+
+        log.info(String.valueOf(Jwts
+                .parserBuilder()
+                .setSigningKey(key)
+                .build()
+                .parseClaimsJws(jwt)
+                .getBody().get("userId")));
+
+        return jwt;
     }
 
     public String generateRefreshToken() {
@@ -52,11 +63,12 @@ public class JwtTokenProvider {
                 .signWith(key, SignatureAlgorithm.HS256)
                 .compact();
     }
+
     /**
-     토큰 검증
-     - 헤더의 토큰을 받아 토큰을 sign한 key와 expire되었는지 검증하는 메서드
-     피드백 받고 싶은 부분
-     - 토큰 검증 과정에서 try-catch 구문을 많이 사용하게 되는데 예외 처리하는 최선의 방법일지 궁금합니다.
+     * 토큰 검증
+     * - 헤더의 토큰을 받아 토큰을 sign한 key와 expire되었는지 검증하는 메서드
+     * 피드백 받고 싶은 부분
+     * - 토큰 검증 과정에서 try-catch 구문을 많이 사용하게 되는데 예외 처리하는 최선의 방법일지 궁금합니다.
      */
     public boolean validToken(String token) {
         try {
