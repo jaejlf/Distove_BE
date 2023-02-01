@@ -8,7 +8,7 @@ import org.springframework.data.mongodb.core.mapping.Document;
 
 import java.time.LocalDateTime;
 
-import static distove.chat.enumerate.MessageType.*;
+import static distove.chat.enumerate.MessageType.MessageStatus;
 
 @Getter
 @Builder
