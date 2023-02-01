@@ -13,6 +13,7 @@ import org.springframework.web.multipart.MultipartFile;
 
 import java.io.IOException;
 import java.io.InputStream;
+import java.util.UUID;
 
 import static distove.community.exception.ErrorCode.IMAGE_UPLOAD_FAILED;
 
@@ -27,7 +28,7 @@ public class StorageService {
     private String bucket;
 
     public String upload(MultipartFile multipartFile) {
-        String fileName = multipartFile.getOriginalFilename();
+        String fileName = String.valueOf(UUID.randomUUID());
         ObjectMetadata objectMetadata = new ObjectMetadata();
         objectMetadata.setContentType(multipartFile.getContentType());
         try {

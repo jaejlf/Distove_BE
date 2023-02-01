@@ -1,16 +1,11 @@
 package distove.community.service;
 
+
 import distove.community.dto.response.CategoryResponse;
-import distove.community.entity.Category;
-import distove.community.entity.Channel;
-import distove.community.entity.Member;
-import distove.community.entity.Server;
+import distove.community.entity.*;
 import distove.community.enumerate.ChannelType;
 import distove.community.exception.DistoveException;
-import distove.community.repository.CategoryRepository;
-import distove.community.repository.ChannelRepository;
-import distove.community.repository.MemberRepository;
-import distove.community.repository.ServerRepository;
+import distove.community.repository.*;
 import distove.community.web.ChatClient;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
@@ -25,6 +20,8 @@ import static distove.community.dto.response.CategoryResponse.newCategoryRespons
 import static distove.community.entity.Category.newCategory;
 import static distove.community.entity.Member.newMember;
 import static distove.community.entity.Server.newServer;
+import static distove.community.enumerate.DefaultRoleName.OWNER;
+import static distove.community.exception.ErrorCode.ROLE_NOT_FOUND_ERROR;
 import static distove.community.exception.ErrorCode.SERVER_NOT_FOUND_ERROR;
 
 @Slf4j
@@ -37,10 +34,12 @@ public class ServerService {
     private final ChatClient chatClient;
     private final ServerRepository serverRepository;
     private final MemberRepository memberRepository;
+    private final MemberRoleRepository memberRoleRepository;
     private final CategoryRepository categoryRepository;
     private final ChannelRepository channelRepository;
     private final StorageService storageService;
     private final ChannelService channelService;
+
     private static final String defaultCategoryName = null;
     private static final String defaultChatCategoryName = "채팅 채널";
     private static final String defaultVoiceCategoryName = "음성 채널";
@@ -59,8 +58,6 @@ public class ServerService {
         return categoryResponses;
     }
 
-
-
     public Server createNewServer(Long userId, String name, MultipartFile image) {
         String imgUrl = null;
         if (!image.isEmpty()) {
@@ -71,16 +68,12 @@ public class ServerService {
 
         Category defaultChatCategory = categoryRepository.save(newCategory(defaultChatCategoryName, newServer));
         Category defaultVoiceCategory = categoryRepository.save(newCategory(defaultVoiceCategoryName, newServer));
-        channelService.createNewChannel(userId, defaultChannelName, defaultChatCategory.getId(), ChannelType.CHAT.getCode());
-        channelService.createNewChannel(userId, defaultChannelName, defaultVoiceCategory.getId(), ChannelType.VOICE.getCode());
+        channelService.createNewChannel(userId, newServer.getId(), defaultChannelName, defaultChatCategory.getId(), ChannelType.CHAT.getCode());
+        channelService.createNewChannel(userId, newServer.getId(), defaultChannelName, defaultVoiceCategory.getId(), ChannelType.VOICE.getCode());
 
-        memberRepository.save(newMember(newServer, userId));
-
+        setOwnerAndRole(userId, newServer);
         return newServer;
-
     }
-
-
 
     public Server updateServer(Long serverId, String name, String imgUrl, MultipartFile image) {
         Server server = serverRepository.findById(serverId)
@@ -92,7 +85,6 @@ public class ServerService {
 
         return server;
     }
-
 
     public List<Server> getServersByUserId(Long userId) {
 
@@ -120,4 +112,12 @@ public class ServerService {
         categoryRepository.deleteAllByServerId(serverId);
         serverRepository.deleteById(serverId);
     }
+
+    private void setOwnerAndRole(Long userId, Server newServer) {
+        memberRoleRepository.saveAll(MemberRole.createDefaultRoles(newServer));
+        MemberRole ownerRole = memberRoleRepository.findByRoleNameAndServerId(OWNER.getName(), newServer.getId())
+                .orElseThrow(() -> new DistoveException(ROLE_NOT_FOUND_ERROR));
+        memberRepository.save(newMember(newServer, userId, ownerRole));
+    }
+
 }

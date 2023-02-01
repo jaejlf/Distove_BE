@@ -20,11 +20,20 @@ public class Member {
 
     private Long userId;
 
-    public static Member newMember(Server server, Long userId) {
+    @ManyToOne
+    @JoinColumn(name = "role_id")
+    private MemberRole role;
+
+    public static Member newMember(Server server, Long userId, MemberRole role) {
         return Member.builder()
                 .server(server)
                 .userId(userId)
+                .role(role)
                 .build();
+    }
+
+    public void updateRole(MemberRole role) {
+        this.role = role;
     }
 
 }
