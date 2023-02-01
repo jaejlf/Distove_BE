@@ -22,9 +22,9 @@ public class ChannelController {
     private final ChannelService channelService;
 
     @AuthorizedRole(name = CAN_MANAGE_CHANNEL)
-    @PostMapping("/{serverId}/channel")
+    @PostMapping("/channel")
     public ResponseEntity<Object> createNewChannel(@RequestHeader("userId") Long userId,
-                                                   @PathVariable Long serverId,
+                                                   @RequestParam Long serverId,
                                                    @RequestBody ChannelCreateRequest channelCreateRequest) {
         Channel newChannel = channelService.createNewChannel(userId, serverId, channelCreateRequest.getName(), channelCreateRequest.getCategoryId(), channelCreateRequest.getChannelTypeId());
         return ResultResponse.success(HttpStatus.OK, "채널 생성 성공",
@@ -32,20 +32,19 @@ public class ChannelController {
     }
 
     @AuthorizedRole(name = CAN_MANAGE_CHANNEL)
-    @PatchMapping("/{serverId}")
-    public ResponseEntity<Object> updateChannelName(@PathVariable Long serverId,
-                                                    @RequestParam Long channelId,
+    @PatchMapping("/channel/{channelId}")
+    public ResponseEntity<Object> updateChannelName(@PathVariable Long channelId,
+                                                    @RequestParam Long serverId,
                                                     @RequestBody ChannelUpdateRequest channelUpdateRequest) {
         ChannelResponse channel = channelService.updateChannelName(channelId, serverId, channelUpdateRequest);
         return ResultResponse.success(HttpStatus.OK, "채널 이름 수정 성공", channel);
     }
 
     @AuthorizedRole(name = CAN_MANAGE_CHANNEL)
-    @DeleteMapping("/{serverId}")
-    public ResponseEntity<Object> deleteChannelById(@PathVariable Long serverId,
-                                                    @RequestParam Long channelId) {
+    @DeleteMapping("/channel/{channelId}")
+    public ResponseEntity<Object> deleteChannelById(@PathVariable Long channelId,
+                                                    @RequestParam Long serverId) {
         channelService.deleteChannelById(channelId, serverId);
         return ResultResponse.success(HttpStatus.OK, "채널 삭제 성공", null);
     }
-
 }

@@ -1,0 +1,49 @@
+package distove.community.service;
+
+import distove.community.exception.DistoveException;
+import io.jsonwebtoken.ExpiredJwtException;
+import io.jsonwebtoken.Jwts;
+import io.jsonwebtoken.io.Decoders;
+import io.jsonwebtoken.security.Keys;
+import org.springframework.beans.factory.annotation.Value;
+import org.springframework.stereotype.Component;
+
+import java.security.Key;
+
+import static distove.community.exception.ErrorCode.EXPIRED_JWT_ERROR;
+import static distove.community.exception.ErrorCode.INVALID_JWT_ERROR;
+
+@Component
+public class JwtProvider {
+
+    private final Key key;
+
+    public JwtProvider(@Value("${jwt.secret}") String secretKey) {
+        byte[] keyBytes = Decoders.BASE64.decode(secretKey);
+        this.key = Keys.hmacShaKeyFor(keyBytes);
+    }
+
+    public void validToken(String token) {
+        try {
+            Jwts.parserBuilder()
+                    .setSigningKey(key)
+                    .build()
+                    .parseClaimsJws(token);
+        } catch (ExpiredJwtException e) {
+            throw new DistoveException(EXPIRED_JWT_ERROR);
+        } catch (Exception e) {
+            throw new DistoveException(INVALID_JWT_ERROR);
+        }
+    }
+
+    public Long getUserId(String token) throws DistoveException {
+        return Long.valueOf(String.valueOf(
+                Jwts.parserBuilder()
+                        .setSigningKey(key)
+                        .build()
+                        .parseClaimsJws(token)
+                        .getBody()
+                        .get("userId")));
+    }
+
+}
