@@ -1,6 +1,7 @@
 package distove.community.controller;
 
 import distove.community.config.AuthorizedRole;
+import distove.community.config.RequestUser;
 import distove.community.dto.response.ResultResponse;
 import distove.community.dto.response.RoleResponse;
 import distove.community.entity.Member;
@@ -37,7 +38,7 @@ public class MemberController {
     }
 
     @GetMapping("/member/roles/{serverId}")
-    public ResponseEntity<Object> getRolesByServerId(@RequestHeader("userId") Long userId,
+    public ResponseEntity<Object> getRolesByServerId(@RequestUser Long userId,
                                                      @PathVariable Long serverId) {
         List<RoleResponse.MemberInfo> result = memberService.getMemberWithRolesByServerId(userId, serverId);
         return ResultResponse.success(HttpStatus.OK, "멤버별 역할 리스트 조회", result);
@@ -61,7 +62,7 @@ public class MemberController {
 
     // TODO : 초대 코드 로직 반영 X
     @PostMapping("/server/join/{serverId}")
-    public ResponseEntity<Object> joinServer(@RequestHeader("userId") Long userId,
+    public ResponseEntity<Object> joinServer(@RequestUser Long userId,
                                              @PathVariable("serverId") Long serverId) {
         memberService.joinServer(userId, serverId);
         return ResultResponse.success(HttpStatus.OK, "서버 초대 수락", null);

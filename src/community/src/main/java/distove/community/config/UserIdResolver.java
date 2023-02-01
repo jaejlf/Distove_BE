@@ -24,7 +24,6 @@ public class UserIdResolver implements HandlerMethodArgumentResolver {
 
     @Override
     public Long resolveArgument(MethodParameter parameter, ModelAndViewContainer mavContainer, NativeWebRequest webRequest, WebDataBinderFactory binderFactory) {
-        log.info("유저 id 리졸버 진입!");
         HttpServletRequest request = (HttpServletRequest) webRequest.getNativeRequest();
         return (Long) request.getAttribute("userId");
     }

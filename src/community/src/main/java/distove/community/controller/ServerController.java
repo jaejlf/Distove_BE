@@ -1,6 +1,7 @@
 package distove.community.controller;
 
 import distove.community.config.AuthorizedRole;
+import distove.community.config.RequestUser;
 import distove.community.dto.response.CategoryResponse;
 import distove.community.dto.response.ResultResponse;
 import distove.community.entity.Server;
@@ -23,7 +24,7 @@ public class ServerController {
     private final ServerService serverService;
 
     @GetMapping("/server")
-    public ResponseEntity<Object> getServersByUserId(@RequestHeader("userId") Long userId) {
+    public ResponseEntity<Object> getServersByUserId(@RequestUser Long userId) {
         List<Server> servers = serverService.getServersByUserId(userId);
         return ResultResponse.success(HttpStatus.OK, "서버 리스트 조회(By user)", servers);
     }
@@ -35,7 +36,7 @@ public class ServerController {
     }
 
     @PostMapping("/server")
-    public ResponseEntity<Object> createNewServer(@RequestHeader("userId") Long userId,
+    public ResponseEntity<Object> createNewServer(@RequestUser Long userId,
                                                   @RequestPart("name") String name,
                                                   @RequestPart(required = false, value = "image") MultipartFile image) {
         Server server = serverService.createNewServer(userId, name, image);

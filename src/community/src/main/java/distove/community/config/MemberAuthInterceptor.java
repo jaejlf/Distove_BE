@@ -15,9 +15,7 @@ import javax.servlet.http.HttpServletRequest;
 import javax.servlet.http.HttpServletResponse;
 import java.util.Map;
 
-import static distove.community.config.AuthorizedRole.Auth;
 import static distove.community.exception.ErrorCode.MEMBER_NOT_FOUND_ERROR;
-import static distove.community.exception.ErrorCode.NO_AUTH_ERROR;
 
 @Slf4j
 @Component
@@ -29,13 +27,14 @@ public class MemberAuthInterceptor implements HandlerInterceptor {
 
     @Override
     public boolean preHandle(HttpServletRequest request, HttpServletResponse response, Object handler) {
-        log.info("----- AuthCheckInterceptor 진입 -----");
+        log.info("-----> AuthCheckInterceptor 진입");
 
-        String token = request.getHeader("token");
-        jwtProvider.validToken(token);
+        log.info("인증 구현 전까지 무조건 pass <-----");
+//        String token = request.getHeader("token");
+//        jwtProvider.validToken(token);
 
-//      Long userId = Long.valueOf(request.getHeader("userId")); // 토큰에서 user Id 꺼내기
-        Long userId = jwtProvider.getUserId(token);
+        Long userId = Long.valueOf(request.getHeader("userId"));
+//        Long userId = jwtProvider.getUserId(token);
         request.setAttribute("userId", userId);
 
         HandlerMethod handlerMethod = (HandlerMethod) handler;
@@ -45,23 +44,24 @@ public class MemberAuthInterceptor implements HandlerInterceptor {
     }
 
     private void checkHasAuthorizedRole(HttpServletRequest request, Long userId, AuthorizedRole authorizedRole) {
-        log.info("----- Authorized Role 체크 -----");
-        Member member;
-        Auth auth = authorizedRole.name();
-        switch (auth) {
-            case CAN_DELETE_SERVER:
-                member = getMemberByPath(request, userId);
-                if (!member.getRole().isCanDeleteServer()) throw new DistoveException(NO_AUTH_ERROR);
-            case CAN_MANAGE_SERVER:
-                member = getMemberByPath(request, userId);
-                if (!member.getRole().isCanManageServer()) throw new DistoveException(NO_AUTH_ERROR);
-            case CAN_MANAGE_CHANNEL:
-                member = getMemberByQuery(request, userId);
-                if (!member.getRole().isCanManageChannel()) throw new DistoveException(NO_AUTH_ERROR);
-            case CAN_UPDATE_MEMBER_ROLE:
-                member = getMemberByPath(request, userId);
-                if (!member.getRole().isCanUpdateMemberRole()) throw new DistoveException(NO_AUTH_ERROR);
-        }
+        log.info("-----> Authorized Role 체크");
+        log.info("역할 구현 전까지 무조건 pass <-----");
+//        Member member;
+//        Auth auth = authorizedRole.name();
+//        switch (auth) {
+//            case CAN_DELETE_SERVER:
+//                member = getMemberByPath(request, userId);
+//                if (!member.getRole().isCanDeleteServer()) throw new DistoveException(NO_AUTH_ERROR);
+//            case CAN_MANAGE_SERVER:
+//                member = getMemberByPath(request, userId);
+//                if (!member.getRole().isCanManageServer()) throw new DistoveException(NO_AUTH_ERROR);
+//            case CAN_MANAGE_CHANNEL:
+//                member = getMemberByQuery(request, userId);
+//                if (!member.getRole().isCanManageChannel()) throw new DistoveException(NO_AUTH_ERROR);
+//            case CAN_UPDATE_MEMBER_ROLE:
+//                member = getMemberByPath(request, userId);
+//                if (!member.getRole().isCanUpdateMemberRole()) throw new DistoveException(NO_AUTH_ERROR);
+//        }
     }
 
     private Member getMemberByPath(HttpServletRequest request, Long userId) {
