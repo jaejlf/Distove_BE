@@ -8,6 +8,7 @@ import distove.community.service.MemberService;
 import distove.community.web.UserClient;
 import distove.community.web.UserResponse;
 import lombok.RequiredArgsConstructor;
+import lombok.extern.slf4j.Slf4j;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
@@ -17,6 +18,7 @@ import java.util.List;
 
 import static distove.community.config.AuthorizedRole.Auth.CAN_UPDATE_MEMBER_ROLE;
 
+@Slf4j
 @RequiredArgsConstructor
 @RestController
 public class MemberController {

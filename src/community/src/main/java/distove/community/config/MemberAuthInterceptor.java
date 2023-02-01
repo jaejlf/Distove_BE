@@ -34,16 +34,18 @@ public class MemberAuthInterceptor implements HandlerInterceptor {
         String token = request.getHeader("token");
         jwtProvider.validToken(token);
 
+//      Long userId = Long.valueOf(request.getHeader("userId")); // 토큰에서 user Id 꺼내기
+        Long userId = jwtProvider.getUserId(token);
+        request.setAttribute("userId", userId);
+
         HandlerMethod handlerMethod = (HandlerMethod) handler;
         AuthorizedRole authorizedRole = handlerMethod.getMethodAnnotation(AuthorizedRole.class);
-        if (authorizedRole != null) checkHasAuthorizedRole(request, token, authorizedRole);
+        if (authorizedRole != null) checkHasAuthorizedRole(request, userId, authorizedRole);
         return true;
     }
 
-    private void checkHasAuthorizedRole(HttpServletRequest request, String token, AuthorizedRole authorizedRole) {
-//      Long userId = Long.valueOf(request.getHeader("userId")); // 토큰에서 user Id 꺼내기
-        Long userId = jwtProvider.getUserId(token);
-
+    private void checkHasAuthorizedRole(HttpServletRequest request, Long userId, AuthorizedRole authorizedRole) {
+        log.info("----- Authorized Role 체크 -----");
         Member member;
         Auth auth = authorizedRole.name();
         switch (auth) {
