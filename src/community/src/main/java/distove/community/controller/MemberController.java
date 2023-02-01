@@ -2,6 +2,7 @@ package distove.community.controller;
 
 import distove.community.config.AuthorizedRole;
 import distove.community.config.RequestUser;
+import distove.community.dto.response.MemberResponse;
 import distove.community.dto.response.ResultResponse;
 import distove.community.dto.response.RoleResponse;
 import distove.community.entity.Member;
@@ -26,6 +27,13 @@ public class MemberController {
 
     private final MemberService memberService;
     private final UserClient userClient;
+
+    @GetMapping("/member")
+    public ResponseEntity<Object> getMemberInfo(@RequestUser Long userId,
+                                                @RequestParam Long serverId) {
+        MemberResponse result = memberService.getMemberInfo(userId, serverId);
+        return ResultResponse.success(HttpStatus.OK, "현재 멤버 정보 조회", result);
+    }
 
     @GetMapping("/server/{serverId}/member/list")
     public ResponseEntity<Object> getMembersByServerId(@PathVariable("serverId") Long serverId) {

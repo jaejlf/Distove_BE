@@ -1,5 +1,6 @@
 package distove.community.service;
 
+import distove.community.dto.response.MemberResponse;
 import distove.community.dto.response.RoleResponse;
 import distove.community.entity.Member;
 import distove.community.entity.MemberRole;
@@ -9,6 +10,7 @@ import distove.community.repository.MemberRepository;
 import distove.community.repository.MemberRoleRepository;
 import distove.community.repository.ServerRepository;
 import distove.community.web.UserClient;
+import distove.community.web.UserResponse;
 import lombok.RequiredArgsConstructor;
 import org.springframework.stereotype.Service;
 
@@ -89,6 +91,13 @@ public class MemberService {
         Member target = checkMemberExist(targetUserId, serverId);
         target.updateRole(memberRole);
         memberRepository.save(target);
+    }
+
+    public MemberResponse getMemberInfo(Long userId, Long serverId) {
+        UserResponse userResponse = userClient.getUser(userId);
+        Member member = memberRepository.findByUserIdAndServerId(userId, serverId)
+                .orElseThrow(() -> new DistoveException(MEMBER_NOT_FOUND_ERROR));
+        return MemberResponse.of(userResponse, member);
     }
 
     private Server checkServerExist(Long serverId) {
