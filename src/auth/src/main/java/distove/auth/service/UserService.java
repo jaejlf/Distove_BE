@@ -44,7 +44,6 @@ public class UserService {
             profileImgUrl = storageService.uploadToS3(request.getProfileImg());
         }
 
-
         User user = new User(request.getEmail(), bCryptPasswordEncoder.encode(request.getPassword()), request.getNickname(), profileImgUrl);
         userRepository.save(user);
 
@@ -68,7 +67,6 @@ public class UserService {
     }
 
     public LogoutResponse logout(String token) {
-        log.info("dd : {}", jwtTokenProvider.getUserId(token).toString());
         User user = userRepository.findById(jwtTokenProvider.getUserId(token))
                 .orElseThrow(() -> new DistoveException(ACCOUNT_NOT_FOUND));
 
@@ -103,12 +101,20 @@ public class UserService {
         return UserResponse.of(user.getId(), user.getNickname(), user.getProfileImgUrl());
     }
 
-
     public UserResponse updateProfileImage(String token, UpdateProfileImageRequest request) {
+        String profileImgUrl;
         User user = userRepository.findById(jwtTokenProvider.getUserId(token))
                 .orElseThrow(() -> new DistoveException(ACCOUNT_NOT_FOUND));
 
-        String profileImgUrl = storageService.updateS3(request.getProfileImg(), user.getProfileImgUrl().split("/")[3]);
+        if (user.getProfileImgUrl() != defaultImageUrl) {
+            storageService.deleteFile(user.getProfileImgUrl());
+        }
+
+        if (request.getProfileImg().isEmpty()) {
+            profileImgUrl = defaultImageUrl;
+        } else {
+            profileImgUrl = storageService.uploadToS3(request.getProfileImg());
+        }
 
         user.updateUserProfileImageUrl(profileImgUrl);
         userRepository.save(user);
@@ -116,22 +122,13 @@ public class UserService {
     }
 
     public TokenResponse reissue(String token) {
-        log.info("1 = {}", token);
-        log.info("2 = {}", getUserIdFromDatabase(token).toString());
-        log.info("3 = {}", jwtTokenProvider.generateAccessToken(getUserIdFromDatabase(token)), token);
         return TokenResponse.of(jwtTokenProvider.generateAccessToken(getUserIdFromDatabase(token)), token);
     }
 
-
     public Long getUserIdFromDatabase(String token) {
-        log.info("유저아이디 get = {}", jwtTokenProvider.getUserId(token).toString());
         User user = userRepository.findById(jwtTokenProvider.getUserId(token))
                 .orElseThrow(() -> new DistoveException(ACCOUNT_NOT_FOUND));
-        log.info(user.getEmail());
-        log.info("유저 아이디", user.getId());
         return user.getId();
-
-
     }
 
     public boolean checkEmailDuplicate (EmailDuplicateRequest request){

@@ -98,5 +98,4 @@ public class JwtTokenProvider {
             throw new DistoveException(JWT_EXPIRED);
         }
     }
-
-    }
+}

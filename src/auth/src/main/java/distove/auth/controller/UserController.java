@@ -34,7 +34,7 @@ public class UserController {
     }
 
     @PostMapping("/logout")
-    public ResponseEntity<Object> logout(@RequestHeader ("token") String token) {
+    public ResponseEntity<Object> logout(@RequestHeader("token") String token) {
         log.info(token);
         return ResultResponse.success(
                 HttpStatus.OK,
@@ -53,7 +53,7 @@ public class UserController {
     }
 
     @PutMapping("/nickname")
-    public ResponseEntity<Object> updateUser(@RequestHeader ("token") String token, @RequestBody UpdateNicknameRequest request) {
+    public ResponseEntity<Object> updateUser(@RequestHeader("token") String token, @RequestBody UpdateNicknameRequest request) {
         return ResultResponse.success(
                 HttpStatus.OK,
                 "닉네임 수정 성공",
@@ -62,8 +62,7 @@ public class UserController {
     }
 
     @PutMapping("/profileimage")
-    public ResponseEntity<Object> updateProfileImage(@RequestHeader ("token") String token, @ModelAttribute UpdateProfileImageRequest request) {
-        log.info(token);
+    public ResponseEntity<Object> updateProfileImage(@RequestHeader("token") String token, @ModelAttribute UpdateProfileImageRequest request) {
         return ResultResponse.success(
                 HttpStatus.OK,
                 "프로필 사진 수정 성공",
@@ -73,7 +72,6 @@ public class UserController {
 
     @GetMapping("/reissue")
     public ResponseEntity<Object> reissue(@RequestHeader("token") String token) {
-        log.info(token);
         return ResultResponse.success(
                 HttpStatus.CREATED,
                 "토큰 재발급",

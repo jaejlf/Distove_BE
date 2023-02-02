@@ -1,5 +1,6 @@
 package distove.auth.service;
 
+import com.amazonaws.AmazonServiceException;
 import com.amazonaws.services.s3.AmazonS3;
 import com.amazonaws.services.s3.model.CannedAccessControlList;
 import com.amazonaws.services.s3.model.ObjectMetadata;
@@ -28,8 +29,7 @@ public class StorageService {
     private String bucket;
 
     public String uploadToS3(MultipartFile multipartFile) {
-        String ext = extractExt(String.valueOf(multipartFile.getOriginalFilename()));
-        String fileName = String.valueOf(UUID.randomUUID()) + '.' + ext;
+        String fileName = String.valueOf(UUID.randomUUID());
         ObjectMetadata objectMetadata = new ObjectMetadata();
         objectMetadata.setContentType(multipartFile.getContentType());
 
@@ -44,27 +44,12 @@ public class StorageService {
         return amazonS3Client.getUrl(bucket, fileName).toString();
     }
 
-    public String updateS3(MultipartFile multipartFile, String filePath) {
-
-        amazonS3Client.deleteObject(bucket, filePath);
-        String ext = extractExt(String.valueOf(multipartFile.getOriginalFilename()));
-        String fileName = String.valueOf(UUID.randomUUID()) + '.' + ext;
-        ObjectMetadata objectMetadata = new ObjectMetadata();
-        objectMetadata.setContentType(multipartFile.getContentType());
-
+    public void deleteFile(String originImgUrl) {
+        if (originImgUrl == null) return;
         try {
-            InputStream inputStream = multipartFile.getInputStream();
-            objectMetadata.setContentLength(inputStream.available());
-            amazonS3Client.putObject(new PutObjectRequest(bucket, fileName, inputStream, objectMetadata)
-                    .withCannedAcl(CannedAccessControlList.PublicRead));
-        } catch (IOException e) {
-            throw new DistoveException(FILE_UPLOAD_ERROR);
+            amazonS3Client.deleteObject(bucket, originImgUrl.split("/")[3]);
+        } catch (AmazonServiceException e) {
+            e.printStackTrace();
         }
-        return amazonS3Client.getUrl(bucket, fileName).toString();
-    }
-
-    public String extractExt(String originalFilename) {
-        int pos = originalFilename.lastIndexOf(".");
-        return originalFilename.substring(pos + 1);
     }
 }
