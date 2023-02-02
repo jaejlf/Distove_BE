@@ -9,14 +9,17 @@ import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
 
+import javax.validation.Valid;
+
 @Slf4j
 @RestController
 @AllArgsConstructor
+
 public class UserController {
     private final UserService userService;
 
     @PostMapping("/join")
-    public ResponseEntity<Object> join(@ModelAttribute JoinRequest request) {
+    public ResponseEntity<Object> join(@Valid @ModelAttribute JoinRequest request) {
         return ResultResponse.success(
                 HttpStatus.CREATED,
                 "회원가입",
@@ -40,15 +43,6 @@ public class UserController {
                 HttpStatus.OK,
                 "로그아웃 성공",
                 userService.logout(token)
-        );
-    }
-
-    @PostMapping("/email")
-    public ResponseEntity<Object> checkEmailDuplicate(@RequestBody EmailDuplicateRequest request) {
-        return ResultResponse.success(
-                HttpStatus.OK,
-                "이메일 사용 여부",
-                userService.checkEmailDuplicate(request)
         );
     }
 
