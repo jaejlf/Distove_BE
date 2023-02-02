@@ -38,7 +38,8 @@ public class UserService {
             throw new DistoveException(DUPLICATE_EMAIL);
         }
 
-        if (request.getProfileImg().isEmpty()) {
+        log.info("아주아주 불안해");
+        if (request.getProfileImg() == null || request.getProfileImg().isEmpty()) {
             profileImgUrl = defaultImageUrl;
         } else {
             profileImgUrl = storageService.uploadToS3(request.getProfileImg());
@@ -58,8 +59,8 @@ public class UserService {
             throw new DistoveException(PASSWORD_ERROR);
         }
 
-        String accessToken = jwtTokenProvider.generateAccessToken(user.getId());
-        String refreshToken = jwtTokenProvider.generateRefreshToken(user.getId());
+        String accessToken = jwtTokenProvider.createToken(user.getId(), "AT");
+        String refreshToken = jwtTokenProvider.createToken(user.getId(), "RT");
 
         user.updateRefreshToken(refreshToken);
         userRepository.save(user);
@@ -122,7 +123,10 @@ public class UserService {
     }
 
     public TokenResponse reissue(String token) {
-        return TokenResponse.of(jwtTokenProvider.generateAccessToken(getUserIdFromDatabase(token)), token);
+        if (jwtTokenProvider.getTypeOfToken(token).equals("RT")) {
+            return TokenResponse.of(jwtTokenProvider.createToken(getUserIdFromDatabase(token), "AT"), token);
+        }
+        throw new DistoveException(NOT_REFRESH_TOKEN);
     }
 
     public Long getUserIdFromDatabase(String token) {
@@ -131,7 +135,4 @@ public class UserService {
         return user.getId();
     }
 
-    public boolean checkEmailDuplicate (EmailDuplicateRequest request){
-        return userRepository.existsByEmail(request.getEmail());
-    }
 }
