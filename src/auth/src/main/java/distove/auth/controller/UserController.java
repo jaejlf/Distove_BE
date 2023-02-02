@@ -2,7 +2,6 @@ package distove.auth.controller;
 
 import distove.auth.dto.request.*;
 import distove.auth.dto.response.ResultResponse;
-import distove.auth.service.JwtTokenProvider;
 import distove.auth.service.UserService;
 import lombok.AllArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
@@ -15,14 +14,13 @@ import org.springframework.web.bind.annotation.*;
 @AllArgsConstructor
 public class UserController {
     private final UserService userService;
-    private final JwtTokenProvider jwtTokenProvider;
 
-    @PostMapping("/signup")
-    public ResponseEntity<Object> signUp(@ModelAttribute SignUpRequest request) {
+    @PostMapping("/join")
+    public ResponseEntity<Object> join(@ModelAttribute JoinRequest request) {
         return ResultResponse.success(
                 HttpStatus.CREATED,
                 "회원가입",
-                userService.signUp(request)
+                userService.join(request)
         );
     }
 
@@ -36,7 +34,8 @@ public class UserController {
     }
 
     @PostMapping("/logout")
-    public ResponseEntity<Object> logout(@RequestHeader("token") String token) {
+    public ResponseEntity<Object> logout(@RequestHeader ("token") String token) {
+        log.info(token);
         return ResultResponse.success(
                 HttpStatus.OK,
                 "로그아웃 성공",
@@ -54,29 +53,31 @@ public class UserController {
     }
 
     @PutMapping("/nickname")
-    public ResponseEntity<Object> updateUser(@RequestBody UpdateNicknameRequest request) {
+    public ResponseEntity<Object> updateUser(@RequestHeader ("token") String token, @RequestBody UpdateNicknameRequest request) {
         return ResultResponse.success(
                 HttpStatus.OK,
                 "닉네임 수정 성공",
-                userService.updateNickname(request)
+                userService.updateNickname(token, request)
         );
     }
 
     @PutMapping("/profileimage")
-    public ResponseEntity<Object> updateProfileImage(@ModelAttribute UpdateProfileImageRequest request){
+    public ResponseEntity<Object> updateProfileImage(@RequestHeader ("token") String token, @ModelAttribute UpdateProfileImageRequest request) {
+        log.info(token);
         return ResultResponse.success(
                 HttpStatus.OK,
                 "프로필 사진 수정 성공",
-                userService.updateProfileImage(request)
+                userService.updateProfileImage(token, request)
         );
     }
 
     @GetMapping("/reissue")
     public ResponseEntity<Object> reissue(@RequestHeader("token") String token) {
+        log.info(token);
         return ResultResponse.success(
                 HttpStatus.CREATED,
                 "토큰 재발급",
-                jwtTokenProvider.reissue(token)
+                userService.reissue(token)
         );
     }
 }

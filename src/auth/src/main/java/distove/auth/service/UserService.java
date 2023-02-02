@@ -31,7 +31,7 @@ public class UserService {
     @Value("${default.image.address}")
     private String defaultImageUrl;
 
-    public UserResponse signUp(SignUpRequest request) {
+    public UserResponse join(JoinRequest request) {
         String profileImgUrl;
 
         if (userRepository.existsByEmail(request.getEmail())) {
@@ -68,6 +68,7 @@ public class UserService {
     }
 
     public LogoutResponse logout(String token) {
+        log.info("dd : {}", jwtTokenProvider.getUserId(token).toString());
         User user = userRepository.findById(jwtTokenProvider.getUserId(token))
                 .orElseThrow(() -> new DistoveException(ACCOUNT_NOT_FOUND));
 
@@ -93,8 +94,8 @@ public class UserService {
         return users;
     }
 
-    public UserResponse updateNickname(UpdateNicknameRequest request) {
-        User user = userRepository.findById(jwtTokenProvider.getUserId(request.getToken()))
+    public UserResponse updateNickname(String token, UpdateNicknameRequest request) {
+        User user = userRepository.findById(jwtTokenProvider.getUserId(token))
                 .orElseThrow(() -> new DistoveException(ACCOUNT_NOT_FOUND));
 
         user.updateUserNickname(request.getNickname());
@@ -103,8 +104,8 @@ public class UserService {
     }
 
 
-    public UserResponse updateProfileImage(UpdateProfileImageRequest request) {
-        User user = userRepository.findById(jwtTokenProvider.getUserId(request.getToken()))
+    public UserResponse updateProfileImage(String token, UpdateProfileImageRequest request) {
+        User user = userRepository.findById(jwtTokenProvider.getUserId(token))
                 .orElseThrow(() -> new DistoveException(ACCOUNT_NOT_FOUND));
 
         String profileImgUrl = storageService.updateS3(request.getProfileImg(), user.getProfileImgUrl().split("/")[3]);
@@ -114,7 +115,26 @@ public class UserService {
         return UserResponse.of(user.getId(), user.getNickname(), user.getProfileImgUrl());
     }
 
-    public boolean checkEmailDuplicate(EmailDuplicateRequest request) {
+    public TokenResponse reissue(String token) {
+        log.info("1 = {}", token);
+        log.info("2 = {}", getUserIdFromDatabase(token).toString());
+        log.info("3 = {}", jwtTokenProvider.generateAccessToken(getUserIdFromDatabase(token)), token);
+        return TokenResponse.of(jwtTokenProvider.generateAccessToken(getUserIdFromDatabase(token)), token);
+    }
+
+
+    public Long getUserIdFromDatabase(String token) {
+        log.info("유저아이디 get = {}", jwtTokenProvider.getUserId(token).toString());
+        User user = userRepository.findById(jwtTokenProvider.getUserId(token))
+                .orElseThrow(() -> new DistoveException(ACCOUNT_NOT_FOUND));
+        log.info(user.getEmail());
+        log.info("유저 아이디", user.getId());
+        return user.getId();
+
+
+    }
+
+    public boolean checkEmailDuplicate (EmailDuplicateRequest request){
         return userRepository.existsByEmail(request.getEmail());
     }
 }
