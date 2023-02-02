@@ -4,10 +4,10 @@ import distove.chat.dto.request.FileUploadRequest;
 import distove.chat.dto.request.MessageRequest;
 import distove.chat.dto.response.MessageResponse;
 import distove.chat.dto.response.PagedMessageResponse;
+import distove.chat.dto.response.ReplyInfoResponse;
 import distove.chat.dto.response.TypedUserResponse;
 import distove.chat.entity.Connection;
 import distove.chat.entity.Message;
-import distove.chat.dto.response.ReplyInfoResponse;
 import distove.chat.enumerate.MessageType;
 import distove.chat.exception.DistoveException;
 import distove.chat.repository.ConnectionRepository;
@@ -23,14 +23,16 @@ import org.springframework.data.domain.Pageable;
 import org.springframework.stereotype.Service;
 
 import java.util.ArrayList;
+import java.util.Collections;
 import java.util.List;
 import java.util.Objects;
 import java.util.stream.Collectors;
 
+import static distove.chat.dto.request.MessageRequest.*;
 import static distove.chat.entity.Message.newMessage;
 import static distove.chat.entity.Message.newReply;
-import static distove.chat.enumerate.MessageType.WELCOME;
-import static distove.chat.enumerate.MessageType.isFileType;
+import static distove.chat.enumerate.MessageType.*;
+import static distove.chat.enumerate.MessageType.MessageStatus.*;
 import static distove.chat.exception.ErrorCode.*;
 
 @Slf4j
@@ -47,20 +49,35 @@ public class MessageService {
     private final UserClient userClient;
 
     public MessageResponse publishMessage(Long userId, Long channelId, MessageRequest request) {
-        Message message = createMessageByType(channelId, request, userId);
+        checkStatusCanChanged(request.getType(), request.getStatus());
+
+        Message message;
+        switch (request.getStatus()) {
+            case CREATED:
+                message = createMessage(channelId, request, userId);
+                break;
+            case MODIFIED:
+                message = modifyMessage(request, userId);
+                break;
+            case DELETED:
+                message = deleteMessage(request, userId);
+                messageRepository.deleteById(message.getId());
+                break;
+            default:
+                throw new DistoveException(MESSAGE_TYPE_ERROR);
+        }
+
         UserResponse writer = userClient.getUser(userId);
         return MessageResponse.ofDefault(message, writer, userId);
     }
 
     public MessageResponse publishFile(Long userId, Long channelId, MessageType type, FileUploadRequest request) {
         String fileUploadUrl = storageService.uploadToS3(request.getFile(), type);
-        MessageRequest messageRequest = new MessageRequest(
-                type,
-                fileUploadUrl,
-                request.getParentId()
-        );
+        Message message = createMessage(
+                channelId,
+                ofFile(type, fileUploadUrl, request.getParentId()),
+                userId);
 
-        Message message = createMessageByType(channelId, messageRequest, userId);
         UserResponse writer = userClient.getUser(userId);
         return MessageResponse.ofDefault(message, writer, userId);
     }
@@ -74,7 +91,7 @@ public class MessageService {
         saveWelcomeMessage(userId, channelId);
 
         Pageable pageable = PageRequest.of(page - 1, pageSize);
-        Page<Message> messagePage = messageRepository.findAllByChannelIdAndParentIdIsNull(channelId, pageable);
+        Page<Message> messagePage = messageRepository.findAllByChannelIdAndParentIdIsNullOrderByCreatedAtDesc(channelId, pageable);
 
         int totalPage = messagePage.getTotalPages();
         List<MessageResponse> messageResponses = new ArrayList<>();
@@ -86,6 +103,7 @@ public class MessageService {
                 messageResponses.add(MessageResponse.ofParent(message, writer, userId, getReplyInfo(message)));
             }
         }
+        Collections.reverse(messageResponses);
         return PagedMessageResponse.ofDefault(totalPage, messageResponses);
     }
 
@@ -114,13 +132,15 @@ public class MessageService {
 
     public PagedMessageResponse getChildrenByParentId(Long userId, String parentId, int page) {
         Pageable pageable = PageRequest.of(page - 1, pageSize);
-        Page<Message> replyPage = messageRepository.findAllByParentId(parentId, pageable);
+        Page<Message> replyPage = messageRepository.findAllByParentIdOrderByCreatedAtDesc(parentId, pageable);
 
         int totalPage = replyPage.getTotalPages();
         List<MessageResponse> messageResponses = replyPage.getContent()
                 .stream()
                 .map(x -> MessageResponse.ofDefault(x, userClient.getUser(x.getUserId()), userId))
                 .collect(Collectors.toList());
+        
+        Collections.reverse(messageResponses);
 
         ReplyInfoResponse replyInfo = getReplyInfo(getMessage(parentId));
         return PagedMessageResponse.ofChild(totalPage, replyInfo, messageResponses);
@@ -130,42 +150,31 @@ public class MessageService {
         messageRepository.deleteAllByChannelId(channelId);
     }
 
-    private Message createMessageByType(Long channelId, MessageRequest request, Long userId) {
-        Message origin, message;
-        MessageType type = request.getType();
-
-        switch (type) {
-            case TEXT:
-            case FILE:
-            case IMAGE:
-            case VIDEO:
-                if (request.getParentId() != null) {
-                    message = messageRepository.save(
-                            newReply(channelId, userId, type, request.getContent(), request.getParentId()));
-                } else {
-                    message = messageRepository.save(
-                            newMessage(channelId, userId, type, request.getContent()));
-                }
-                break;
-            case MODIFIED:
-                origin = getMessage(request.getMessageId());
-                checkAuthorization(userId, origin);
-                origin.updateMessage(type, request.getContent());
-                message = messageRepository.save(origin);
-                break;
-            case DELETED:
-                origin = getMessage(request.getMessageId());
-                checkAuthorization(userId, origin);
-                deleteAssociatedData(origin);
-                origin.updateMessage(type, "삭제된 메시지입니다");
-                message = origin;
-                messageRepository.deleteById(origin.getId());
-                break;
-            default:
-                throw new DistoveException(MESSAGE_TYPE_ERROR);
+    private Message createMessage(Long channelId, MessageRequest request, Long userId) {
+        Message message;
+        if (request.getParentId() != null) {
+            message = messageRepository.save(
+                    newReply(channelId, userId, request.getType(), CREATED, request.getContent(), request.getParentId()));
+        } else {
+            message = messageRepository.save(
+                    newMessage(channelId, userId, request.getType(), CREATED, request.getContent()));
         }
-
         return message;
+    }
+
+    private Message modifyMessage(MessageRequest request, Long userId) {
+        Message origin = getMessage(request.getMessageId());
+        checkAuthorization(userId, origin);
+        origin.updateMessage(MODIFIED, request.getContent());
+        return messageRepository.save(origin);
+    }
+
+    private Message deleteMessage(MessageRequest request, Long userId) {
+        Message origin = getMessage(request.getMessageId());
+        checkAuthorization(userId, origin);
+        deleteAssociatedData(origin);
+        origin.updateMessage(DELETED, "삭제된 메시지입니다");
+        return origin;
     }
 
     private ReplyInfoResponse getReplyInfo(Message message) {
@@ -208,7 +217,7 @@ public class MessageService {
 
         addUserToConnection(userId, connection, connectedMemberIds);
         UserResponse writer = userClient.getUser(userId);
-        messageRepository.save(newMessage(channelId, userId, WELCOME, writer.getNickname()));
+        messageRepository.save(newMessage(channelId, userId, WELCOME, CREATED, writer.getNickname()));
     }
 
     private void addUserToConnection(Long userId, Connection connection, List<Long> connectedMemberIds) {

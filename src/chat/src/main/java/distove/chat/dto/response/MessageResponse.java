@@ -10,6 +10,8 @@ import lombok.Getter;
 import java.time.LocalDateTime;
 import java.util.Objects;
 
+import static distove.chat.enumerate.MessageType.*;
+
 @Getter
 @Builder
 @JsonInclude(JsonInclude.Include.NON_NULL)
@@ -17,6 +19,7 @@ public class MessageResponse {
 
     private String id;
     private MessageType type;
+    private MessageStatus status;
     private String content;
     private LocalDateTime createdAt;
     private UserResponse writer;
@@ -27,6 +30,7 @@ public class MessageResponse {
         return MessageResponse.builder()
                 .id(message.getId())
                 .type(message.getType())
+                .status(message.getStatus())
                 .content(message.getContent())
                 .createdAt(message.getCreatedAt())
                 .writer(writer)
@@ -38,6 +42,7 @@ public class MessageResponse {
         return MessageResponse.builder()
                 .id(message.getId())
                 .type(message.getType())
+                .status(message.getStatus())
                 .content(message.getContent())
                 .createdAt(message.getCreatedAt())
                 .writer(writer)
