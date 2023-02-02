@@ -1,9 +1,6 @@
 package distove.auth.controller;
 
-import distove.auth.dto.request.EmailDuplicateRequest;
-import distove.auth.dto.request.LoginRequest;
-import distove.auth.dto.request.SignUpRequest;
-import distove.auth.dto.request.UpdateNicknameRequest;
+import distove.auth.dto.request.*;
 import distove.auth.dto.response.ResultResponse;
 import distove.auth.service.JwtTokenProvider;
 import distove.auth.service.UserService;
@@ -60,8 +57,17 @@ public class UserController {
     public ResponseEntity<Object> updateUser(@RequestBody UpdateNicknameRequest request) {
         return ResultResponse.success(
                 HttpStatus.OK,
-                "수정 성공",
+                "닉네임 수정 성공",
                 userService.updateNickname(request)
+        );
+    }
+
+    @PutMapping("/profileimage")
+    public ResponseEntity<Object> updateProfileImage(@ModelAttribute UpdateProfileImageRequest request){
+        return ResultResponse.success(
+                HttpStatus.OK,
+                "프로필 사진 수정 성공",
+                userService.updateProfileImage(request)
         );
     }
 

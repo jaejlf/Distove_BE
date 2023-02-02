@@ -13,6 +13,7 @@ import org.springframework.web.multipart.MultipartFile;
 
 import java.io.IOException;
 import java.io.InputStream;
+import java.util.UUID;
 
 import static distove.auth.exception.ErrorCode.FILE_UPLOAD_ERROR;
 
@@ -27,9 +28,11 @@ public class StorageService {
     private String bucket;
 
     public String uploadToS3(MultipartFile multipartFile) {
-        String fileName = multipartFile.getOriginalFilename();
+        String ext = extractExt(String.valueOf(multipartFile.getOriginalFilename()));
+        String fileName = String.valueOf(UUID.randomUUID()) + '.' + ext;
         ObjectMetadata objectMetadata = new ObjectMetadata();
         objectMetadata.setContentType(multipartFile.getContentType());
+
         try {
             InputStream inputStream = multipartFile.getInputStream();
             objectMetadata.setContentLength(inputStream.available());
@@ -41,4 +44,27 @@ public class StorageService {
         return amazonS3Client.getUrl(bucket, fileName).toString();
     }
 
+    public String updateS3(MultipartFile multipartFile, String filePath) {
+
+        amazonS3Client.deleteObject(bucket, filePath);
+        String ext = extractExt(String.valueOf(multipartFile.getOriginalFilename()));
+        String fileName = String.valueOf(UUID.randomUUID()) + '.' + ext;
+        ObjectMetadata objectMetadata = new ObjectMetadata();
+        objectMetadata.setContentType(multipartFile.getContentType());
+
+        try {
+            InputStream inputStream = multipartFile.getInputStream();
+            objectMetadata.setContentLength(inputStream.available());
+            amazonS3Client.putObject(new PutObjectRequest(bucket, fileName, inputStream, objectMetadata)
+                    .withCannedAcl(CannedAccessControlList.PublicRead));
+        } catch (IOException e) {
+            throw new DistoveException(FILE_UPLOAD_ERROR);
+        }
+        return amazonS3Client.getUrl(bucket, fileName).toString();
+    }
+
+    public String extractExt(String originalFilename) {
+        int pos = originalFilename.lastIndexOf(".");
+        return originalFilename.substring(pos + 1);
+    }
 }
