@@ -1,5 +1,6 @@
 package distove.community.service;
 
+import com.amazonaws.AmazonServiceException;
 import com.amazonaws.services.s3.AmazonS3;
 import com.amazonaws.services.s3.model.CannedAccessControlList;
 import com.amazonaws.services.s3.model.ObjectMetadata;
@@ -13,6 +14,7 @@ import org.springframework.web.multipart.MultipartFile;
 
 import java.io.IOException;
 import java.io.InputStream;
+import java.util.UUID;
 
 import static distove.community.exception.ErrorCode.IMAGE_UPLOAD_FAILED;
 
@@ -26,9 +28,11 @@ public class StorageService {
     @Value("${cloud.aws.s3.bucket}")
     private String bucket;
 
+    @Value("${cloud.aws.ceph.url}")
+    private String url;
+
     public String upload(MultipartFile multipartFile) {
-        log.info("hello{}",multipartFile.getOriginalFilename());
-        String fileName = multipartFile.getOriginalFilename();
+        String fileName = String.valueOf(UUID.randomUUID());
         ObjectMetadata objectMetadata = new ObjectMetadata();
         objectMetadata.setContentType(multipartFile.getContentType());
         try {
@@ -39,8 +43,16 @@ public class StorageService {
         } catch (IOException e) {
             throw new DistoveException(IMAGE_UPLOAD_FAILED);
         }
-        return amazonS3Client.getUrl(bucket, fileName).toString();
+        return url + fileName;
     }
 
+    public void deleteFile(String originImgUrl) {
+        if (originImgUrl == null) return;
+        try {
+            amazonS3Client.deleteObject(bucket, originImgUrl.split("/")[4]);
+        } catch (AmazonServiceException e) {
+            e.printStackTrace();
+        }
+    }
 
 }
