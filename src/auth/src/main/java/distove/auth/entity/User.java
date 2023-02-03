@@ -59,7 +59,7 @@ public class User {
         this.nickname = nickname;
     }
 
-    public void updateUserProfileImageUrl(String profileImgUrl) {
+    public void updateUserProfileImgUrl(String profileImgUrl) {
         this.profileImgUrl = profileImgUrl;
     }
 }
