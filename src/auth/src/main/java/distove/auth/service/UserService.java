@@ -1,7 +1,10 @@
 package distove.auth.service;
 
 
-import distove.auth.dto.request.*;
+import distove.auth.dto.request.JoinRequest;
+import distove.auth.dto.request.LoginRequest;
+import distove.auth.dto.request.UpdateNicknameRequest;
+import distove.auth.dto.request.UpdateProfileImgRequest;
 import distove.auth.dto.response.LogoutResponse;
 import distove.auth.dto.response.TokenResponse;
 import distove.auth.dto.response.UserResponse;
@@ -14,6 +17,7 @@ import org.springframework.beans.factory.annotation.Value;
 import org.springframework.security.crypto.bcrypt.BCryptPasswordEncoder;
 import org.springframework.stereotype.Service;
 
+import javax.servlet.http.HttpServletResponse;
 import java.util.ArrayList;
 import java.util.List;
 
@@ -38,7 +42,6 @@ public class UserService {
             throw new DistoveException(DUPLICATE_EMAIL);
         }
 
-        log.info("아주아주 불안해");
         if (request.getProfileImg() == null || request.getProfileImg().isEmpty()) {
             profileImgUrl = defaultImgUrl;
         } else {
@@ -51,7 +54,7 @@ public class UserService {
         return UserResponse.of(user.getId(), user.getNickname(), user.getProfileImgUrl());
     }
 
-    public TokenResponse login(LoginRequest request) {
+    public TokenResponse login(LoginRequest request, HttpServletResponse response) {
         User user = userRepository.findByEmail(request.getEmail())
                 .orElseThrow(() -> new DistoveException(ACCOUNT_NOT_FOUND));
 
@@ -62,9 +65,11 @@ public class UserService {
         String accessToken = jwtTokenProvider.createToken(user.getId(), "AT");
         String refreshToken = jwtTokenProvider.createToken(user.getId(), "RT");
 
+        response.setHeader("Set-Cookie", jwtTokenProvider.createTokenCookie(refreshToken).toString());
         user.updateRefreshToken(refreshToken);
         userRepository.save(user);
-        return TokenResponse.of(accessToken, refreshToken);
+
+        return TokenResponse.of(accessToken);
     }
 
     public LogoutResponse logout(String token) {
@@ -124,9 +129,10 @@ public class UserService {
 
     }
 
-    public TokenResponse reissue(String token) {
+    public TokenResponse reissue(String token, HttpServletResponse response) {
         if (jwtTokenProvider.getTypeOfToken(token).equals("RT")) {
-            return TokenResponse.of(jwtTokenProvider.createToken(getUserIdFromDatabase(token), "AT"), token);
+            response.setHeader("Set-Cookie", jwtTokenProvider.createTokenCookie(token).toString());
+            return TokenResponse.of(jwtTokenProvider.createToken(getUserIdFromDatabase(token), "AT"));
         }
 
         throw new DistoveException(NOT_REFRESH_TOKEN);

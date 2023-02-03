@@ -9,6 +9,7 @@ import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
 
+import javax.servlet.http.HttpServletResponse;
 import javax.validation.Valid;
 
 @Slf4j
@@ -28,17 +29,16 @@ public class UserController {
     }
 
     @PostMapping("/login")
-    public ResponseEntity<Object> login(@RequestBody LoginRequest request) {
+    public ResponseEntity<Object> login(@RequestBody LoginRequest request, HttpServletResponse response) {
         return ResultResponse.success(
                 HttpStatus.CREATED,
                 "로그인 성공",
-                userService.login(request)
+                userService.login(request,response)
         );
     }
 
     @PostMapping("/logout")
     public ResponseEntity<Object> logout(@RequestHeader("token") String token) {
-        log.info(token);
         return ResultResponse.success(
                 HttpStatus.OK,
                 "로그아웃 성공",
@@ -65,11 +65,11 @@ public class UserController {
     }
 
     @GetMapping("/reissue")
-    public ResponseEntity<Object> reissue(@RequestHeader("token") String token) {
+    public ResponseEntity<Object> reissue(@RequestHeader("token") String token, HttpServletResponse response) {
         return ResultResponse.success(
                 HttpStatus.CREATED,
                 "토큰 재발급",
-                userService.reissue(token)
+                userService.reissue(token, response)
         );
     }
 }
