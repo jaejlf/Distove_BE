@@ -74,7 +74,10 @@ public class SignalingService {
                 users.add(userClient.getUser(parti.getUserId()));
             }
             participant.getWebSocketSession().sendMessage(toJson(newExistingParticipantsResponse(users)));
+        } else {
+            participant.getWebSocketSession().sendMessage(toJson(newExistingParticipantsResponse(new ArrayList<>())));
         }
+
         participantRepository.insert(participant);
     }
 
