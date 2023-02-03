@@ -26,11 +26,11 @@ public class ConnectionService {
     private final ConnectionRepository connectionRepository;
     private final MessageRepository messageRepository;
 
-    public void createConnection(Long channelId, Long userId) {
+    public void createConnection(Long userId, Long channelId) {
         List<Long> connectedMemberIds = new ArrayList<>();
         connectedMemberIds.add(userId);
 
-        Connection connection = newConnection(channelId,connectedMemberIds);
+        Connection connection = newConnection(channelId, connectedMemberIds);
         connectionRepository.save(connection);
 
         UserResponse writer = userClient.getUser(userId);

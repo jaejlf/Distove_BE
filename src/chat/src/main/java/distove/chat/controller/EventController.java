@@ -1,27 +1,24 @@
 package distove.chat.controller;
 
-import distove.chat.service.ConnectionService;
-import distove.chat.service.MessageService;
+import distove.chat.service.EventService;
 import lombok.RequiredArgsConstructor;
 import org.springframework.web.bind.annotation.*;
 
 @RequiredArgsConstructor
 @RestController
-public class WebController {
+public class EventController {
 
-    private final ConnectionService connectionService;
-    private final MessageService messageService;
+    private final EventService eventService;
 
     @PostMapping("/connection/{channelId}")
     public void createConnection(@RequestHeader("userId") Long userId,
                                  @PathVariable Long channelId) {
-        connectionService.createConnection(channelId, userId);
+        eventService.requestNewChannel(userId, channelId);
     }
 
     @DeleteMapping("/clear/{channelId}")
     public void clearAll(@PathVariable Long channelId) {
-        connectionService.clearAll(channelId);
-        messageService.clearAll(channelId);
+        eventService.requestDelChannel(channelId);
     }
 
 }
