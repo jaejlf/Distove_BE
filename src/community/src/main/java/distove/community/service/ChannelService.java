@@ -13,6 +13,8 @@ import org.springframework.stereotype.Service;
 
 import javax.transaction.Transactional;
 
+import java.util.Objects;
+
 import static distove.community.dto.response.ChannelResponse.newChannelResponse;
 import static distove.community.entity.Channel.newChannel;
 import static distove.community.exception.ErrorCode.CATEGORY_NOT_FOUND_ERROR;
@@ -26,23 +28,21 @@ public class ChannelService {
     private final CategoryRepository categoryRepository;
     private final ChatClient chatClient;
 
-    public ChannelResponse updateChannelName(Long channelId, ChannelUpdateRequest channelUpdateRequest) {
-        Channel channel = channelRepository.findById(channelId)
-                .orElseThrow(() -> new DistoveException(CHANNEL_NOT_FOUND_ERROR));
+    public ChannelResponse updateChannelName(Long channelId, Long serverId, ChannelUpdateRequest channelUpdateRequest) {
+        Channel channel = checkChannelExist(channelId, serverId);
         channel.updateChannel(channelUpdateRequest.getName());
         channelRepository.save(channel);
         return newChannelResponse(channel.getId(), channel.getName(), channel.getChannelTypeId());
     }
 
-    public void deleteChannelById(Long channelId) {
-        channelRepository.findById(channelId)
-                .orElseThrow(() -> new DistoveException(CHANNEL_NOT_FOUND_ERROR));
+    public void deleteChannelById(Long channelId, Long serverId) {
+        checkChannelExist(channelId, serverId);
         channelRepository.deleteById(channelId);
         chatClient.clearAll(channelId);
     }
 
-    public Channel createNewChannel(Long userId, String name, Long categoryId, Integer channelTypeId) {
-        Category category = categoryRepository.findById(categoryId)
+    public Channel createNewChannel(Long userId, Long serverId, String name, Long categoryId, Integer channelTypeId) {
+        Category category = categoryRepository.findByIdAndServerId(categoryId, serverId)
                 .orElseThrow(() -> new DistoveException(CATEGORY_NOT_FOUND_ERROR));
         Channel newChannel = channelRepository.save(newChannel(
                 name,
@@ -53,6 +53,16 @@ public class ChannelService {
         chatClient.createConnection(userId, newChannel.getId());
 
         return newChannel;
+    }
+
+    private Channel checkChannelExist(Long channelId, Long serverId) {
+        Channel channel = channelRepository.findById(channelId)
+                .orElseThrow(() -> new DistoveException(CHANNEL_NOT_FOUND_ERROR));
+
+        if (!Objects.equals(channel.getCategory().getServer().getId(), serverId))
+            throw new DistoveException(CHANNEL_NOT_FOUND_ERROR);
+
+        return channel;
     }
 
 }
