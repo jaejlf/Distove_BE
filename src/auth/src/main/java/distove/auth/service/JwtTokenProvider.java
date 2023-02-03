@@ -32,41 +32,33 @@ public class JwtTokenProvider {
         this.key = Keys.hmacShaKeyFor(keyBytes);
     }
 
-    public String generateAccessToken(Long userId) {
+    public String createToken(Long userId, String type) {
         Map<String, Object> headers = new HashMap<>();
-        headers.put("typ", "AT");
         headers.put("alg", "HS256");
         Claims claims = Jwts.claims().setSubject("userId");
         claims.put("userId", userId);
 
         Date now = new Date();
 
-        return Jwts.builder()
-                .setHeader(headers)
-                .setClaims(claims)
-                .setIssuedAt(now)
-                .setExpiration(new Date(now.getTime() + Duration.ofMinutes(43200).toMillis()))
-                .signWith(key, SignatureAlgorithm.HS256)
-                .compact();
-
-    }
-
-    public String generateRefreshToken(Long userId) {
-        Map<String, Object> headers = new HashMap<>();
-        headers.put("typ", "RT");
-        headers.put("alg", "HS256");
-        Claims claims = Jwts.claims().setSubject("userId");
-        claims.put("userId", userId);
-
-        Date now = new Date();
-
-        return Jwts.builder()
-                .setHeader(headers)
-                .setClaims(claims)
-                .setIssuedAt(now)
-                .setExpiration(new Date(now.getTime() + Duration.ofDays(30).toMillis()))
-                .signWith(key, SignatureAlgorithm.HS256)
-                .compact();
+        if (type.equals("AT")) {
+            headers.put("typ", "AT");
+            return Jwts.builder()
+                    .setHeader(headers)
+                    .setClaims(claims)
+                    .setIssuedAt(now)
+                    .setExpiration(new Date(now.getTime() + Duration.ofMinutes(43200).toMillis()))
+                    .signWith(key, SignatureAlgorithm.HS256)
+                    .compact();
+        } else {
+            headers.put("typ", "RT");
+            return Jwts.builder()
+                    .setHeader(headers)
+                    .setClaims(claims)
+                    .setIssuedAt(now)
+                    .setExpiration(new Date(now.getTime() + Duration.ofDays(30).toMillis()))
+                    .signWith(key, SignatureAlgorithm.HS256)
+                    .compact();
+        }
     }
 
     public boolean validToken(String token) {
@@ -76,6 +68,20 @@ public class JwtTokenProvider {
                     .build()
                     .parseClaimsJws(token);
             return true;
+        } catch (UnsupportedJwtException e) {
+            throw new DistoveException(JWT_INVALID);
+        } catch (ExpiredJwtException e) {
+            throw new DistoveException(JWT_EXPIRED);
+        }
+    }
+
+    public String getTypeOfToken(String token) {
+        try {
+            return Jwts.parserBuilder()
+                    .setSigningKey(key)
+                    .build()
+                    .parseClaimsJws(token).getHeader().get("typ").toString();
+
         } catch (UnsupportedJwtException e) {
             throw new DistoveException(JWT_INVALID);
         } catch (ExpiredJwtException e) {
@@ -98,5 +104,4 @@ public class JwtTokenProvider {
             throw new DistoveException(JWT_EXPIRED);
         }
     }
-
-    }
+}
