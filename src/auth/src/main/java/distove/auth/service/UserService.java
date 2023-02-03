@@ -28,7 +28,7 @@ public class UserService {
     private final JwtTokenProvider jwtTokenProvider;
     private final StorageService storageService;
 
-    @Value("${default.image.address}")
+    @Value("${default.img.address}")
     private String defaultImgUrl;
 
     public UserResponse join(JoinRequest request) {
@@ -118,7 +118,7 @@ public class UserService {
         }
 
         storageService.deleteFile(user.getProfileImgUrl());
-        user.updateUserProfileImageUrl(profileImgUrl);
+        user.updateUserProfileImgUrl(profileImgUrl);
         userRepository.save(user);
         return UserResponse.of(user.getId(), user.getNickname(), user.getProfileImgUrl());
 

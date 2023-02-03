@@ -55,8 +55,8 @@ public class UserController {
         );
     }
 
-    @PutMapping("/profileimage")
-    public ResponseEntity<Object> updateProfileImage(@RequestHeader("token") String token, @ModelAttribute UpdateProfileImgRequest request) {
+    @PutMapping("/profileimg")
+    public ResponseEntity<Object> updateProfileImg(@RequestHeader("token") String token, @ModelAttribute UpdateProfileImgRequest request) {
         return ResultResponse.success(
                 HttpStatus.OK,
                 "프로필 사진 수정 성공",
