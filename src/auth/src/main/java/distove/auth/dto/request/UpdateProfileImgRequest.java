@@ -6,6 +6,6 @@ import org.springframework.web.multipart.MultipartFile;
 
 @Setter
 @Getter
-public class UpdateProfileImageRequest {
+public class UpdateProfileImgRequest {
     private MultipartFile profileImg;
 }

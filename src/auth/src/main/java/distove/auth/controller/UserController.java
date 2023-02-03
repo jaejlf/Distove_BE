@@ -56,11 +56,11 @@ public class UserController {
     }
 
     @PutMapping("/profileimage")
-    public ResponseEntity<Object> updateProfileImage(@RequestHeader("token") String token, @ModelAttribute UpdateProfileImageRequest request) {
+    public ResponseEntity<Object> updateProfileImage(@RequestHeader("token") String token, @ModelAttribute UpdateProfileImgRequest request) {
         return ResultResponse.success(
                 HttpStatus.OK,
                 "프로필 사진 수정 성공",
-                userService.updateProfileImage(token, request)
+                userService.updateProfileImg(token, request)
         );
     }
 

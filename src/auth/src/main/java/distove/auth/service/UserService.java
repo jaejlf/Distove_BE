@@ -29,7 +29,7 @@ public class UserService {
     private final StorageService storageService;
 
     @Value("${default.image.address}")
-    private String defaultImageUrl;
+    private String defaultImgUrl;
 
     public UserResponse join(JoinRequest request) {
         String profileImgUrl;
@@ -40,7 +40,7 @@ public class UserService {
 
         log.info("아주아주 불안해");
         if (request.getProfileImg() == null || request.getProfileImg().isEmpty()) {
-            profileImgUrl = defaultImageUrl;
+            profileImgUrl = defaultImgUrl;
         } else {
             profileImgUrl = storageService.uploadToS3(request.getProfileImg());
         }
@@ -102,30 +102,33 @@ public class UserService {
         return UserResponse.of(user.getId(), user.getNickname(), user.getProfileImgUrl());
     }
 
-    public UserResponse updateProfileImage(String token, UpdateProfileImageRequest request) {
+    public UserResponse updateProfileImg(String token, UpdateProfileImgRequest request) {
         String profileImgUrl;
         User user = userRepository.findById(jwtTokenProvider.getUserId(token))
                 .orElseThrow(() -> new DistoveException(ACCOUNT_NOT_FOUND));
 
-        if (user.getProfileImgUrl() != defaultImageUrl) {
-            storageService.deleteFile(user.getProfileImgUrl());
+        if (request.getProfileImg() == null || request.getProfileImg().isEmpty()) {
+            profileImgUrl = defaultImgUrl;
+            if (user.getProfileImgUrl().equals(profileImgUrl)) {
+                return UserResponse.of(user.getId(), user.getNickname(), user.getProfileImgUrl());
+            }
         }
-
-        if (request.getProfileImg().isEmpty()) {
-            profileImgUrl = defaultImageUrl;
-        } else {
+        else {
             profileImgUrl = storageService.uploadToS3(request.getProfileImg());
         }
 
+        storageService.deleteFile(user.getProfileImgUrl());
         user.updateUserProfileImageUrl(profileImgUrl);
         userRepository.save(user);
         return UserResponse.of(user.getId(), user.getNickname(), user.getProfileImgUrl());
+
     }
 
     public TokenResponse reissue(String token) {
         if (jwtTokenProvider.getTypeOfToken(token).equals("RT")) {
             return TokenResponse.of(jwtTokenProvider.createToken(getUserIdFromDatabase(token), "AT"), token);
         }
+
         throw new DistoveException(NOT_REFRESH_TOKEN);
     }
 
