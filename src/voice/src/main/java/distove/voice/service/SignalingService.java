@@ -67,8 +67,7 @@ public class SignalingService {
         UserResponse user = userClient.getUser(participant.getUserId());
         if (!participants.isEmpty()) {
             for (final Participant otherParticipant : participants) {
-                otherParticipant.getWebSocketSession()
-                        .sendMessage(toJson(newNewParticipantArrivedResponse(user)));
+                otherParticipant.getWebSocketSession().sendMessage(toJson(newNewParticipantArrivedResponse(user)));
             }
             List<UserResponse> users = new ArrayList<>();
             for (Participant parti : participants) {
@@ -105,24 +104,26 @@ public class SignalingService {
         if (participant.getUserId().equals(sender.getUserId())) {
             return participant.getMediaEndpoint();
         }
-        WebRtcEndpoint incomingMediaEndpoint = participant.getIncomingParticipants().stream()
-                .filter(incomingParticipant -> incomingParticipant.getUserId().equals(sender.getUserId())).findFirst()
-                .get().getMediaEndpoint();
-        if (incomingMediaEndpoint == null) {
-            incomingMediaEndpoint = new WebRtcEndpoint.Builder(participant.getRoom().getPipeline()).build();
-            incomingMediaEndpoint.addIceCandidateFoundListener(event -> {
-                try {
-                    synchronized (participant.getWebSocketSession()) {
-                        participant.getWebSocketSession()
-                                .sendMessage(toJson(newIceCandidateResponse(sender.getUserId(), event.getCandidate())));
-                    }
-                } catch (IOException e) {
-                    log.debug(e.getMessage());
-                }
-            });
-        }
-        sender.getMediaEndpoint().connect(incomingMediaEndpoint);
-        return incomingMediaEndpoint;
+
+        IncomingParticipant incomingParticipant = participant.getIncomingParticipants().stream()
+                .filter(i -> i.getUserId().equals(sender.getUserId())).findFirst().orElseGet(() -> {
+                    WebRtcEndpoint incomingMediaEndpoint = new WebRtcEndpoint.Builder(participant.getRoom()
+                            .getPipeline()).build();
+                    incomingMediaEndpoint.addIceCandidateFoundListener(event -> {
+                        try {
+                            synchronized (participant.getWebSocketSession()) {
+                                participant.getWebSocketSession()
+                                        .sendMessage(toJson(newIceCandidateResponse(sender.getUserId(), event.getCandidate())));
+                            }
+                        } catch (IOException e) {
+                            log.debug(e.getMessage());
+                        }
+                    });
+                    return newIncomingParticipant(sender.getUserId(), incomingMediaEndpoint);
+                });
+
+        sender.getMediaEndpoint().connect(incomingParticipant.getMediaEndpoint());
+        return incomingParticipant.getMediaEndpoint();
     }
 
 
@@ -137,11 +138,10 @@ public class SignalingService {
         List<Participant> participants = participantRepository.findParticipantsByRoom(room);
         if (!participants.isEmpty()) {
             for (Participant otherParticipant : participants) {
-                otherParticipant.getIncomingParticipants()
-                        .removeIf(incomingParticipant -> {
-                            incomingParticipant.getMediaEndpoint().release();
-                            return incomingParticipant.getUserId().equals(participant.getUserId());
-                        });
+                otherParticipant.getIncomingParticipants().removeIf(incomingParticipant -> {
+                    incomingParticipant.getMediaEndpoint().release();
+                    return incomingParticipant.getUserId().equals(participant.getUserId());
+                });
                 otherParticipant.getWebSocketSession()
                         .sendMessage(toJson(newLeftRoomResponse(participant.getUserId())));
             }
