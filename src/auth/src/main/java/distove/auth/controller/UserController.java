@@ -55,7 +55,7 @@ public class UserController {
         );
     }
 
-    @PutMapping("/profileimage")
+    @PutMapping("/profileimg")
     public ResponseEntity<Object> updateProfileImage(@RequestHeader("token") String token, @ModelAttribute UpdateProfileImgRequest request) {
         return ResultResponse.success(
                 HttpStatus.OK,
