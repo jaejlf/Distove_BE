@@ -28,6 +28,9 @@ public class StorageService {
     @Value("${cloud.aws.s3.bucket}")
     private String bucket;
 
+    @Value("${cloud.aws.ceph.url}")
+    private String url;
+
     public String uploadToS3(MultipartFile multipartFile) {
         String fileName = String.valueOf(UUID.randomUUID());
         ObjectMetadata objectMetadata = new ObjectMetadata();
@@ -41,13 +44,13 @@ public class StorageService {
         } catch (IOException e) {
             throw new DistoveException(FILE_UPLOAD_ERROR);
         }
-        return amazonS3Client.getUrl(bucket, fileName).toString();
+        return url + fileName;
     }
 
     public void deleteFile(String originImgUrl) {
         if (originImgUrl == null) return;
         try {
-            amazonS3Client.deleteObject(bucket, originImgUrl.split("/")[3]);
+            amazonS3Client.deleteObject(bucket, originImgUrl.split("/")[4]);
         } catch (AmazonServiceException e) {
             e.printStackTrace();
         }
