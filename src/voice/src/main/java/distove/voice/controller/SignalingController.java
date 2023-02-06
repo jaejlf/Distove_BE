@@ -27,8 +27,6 @@ public class SignalingController extends TextWebSocketHandler {
     private final SignalingService signalingService;
     private static final ObjectMapper mapper = new ObjectMapper();
     private static final Gson gson = new GsonBuilder().create();
-
-    //for test
     List<WebSocketSession> sessions = new CopyOnWriteArrayList<>();
 
     @Override
