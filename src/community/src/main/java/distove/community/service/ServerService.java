@@ -15,6 +15,8 @@ import org.springframework.web.multipart.MultipartFile;
 import javax.transaction.Transactional;
 import java.util.ArrayList;
 import java.util.List;
+import java.util.Map;
+import java.util.stream.Collectors;
 
 import static distove.community.dto.response.CategoryResponse.newCategoryResponse;
 import static distove.community.entity.Category.newCategory;
@@ -27,7 +29,6 @@ import static distove.community.exception.ErrorCode.SERVER_NOT_FOUND_ERROR;
 @Slf4j
 @Service
 @RequiredArgsConstructor
-@Transactional
 
 public class ServerService {
 
@@ -45,19 +46,22 @@ public class ServerService {
     private static final String defaultVoiceCategoryName = "음성 채널";
     private static final String defaultChannelName = "일반";
 
+    //refact
     public List<CategoryResponse> getCategoriesWithChannelsByServerId(Long serverId) {
         List<Category> categories = categoryRepository.findCategoriesByServerId(serverId);
-        List<CategoryResponse> categoryResponses = new ArrayList<>();
-        for (Category category : categories) {
-            categoryResponses.add(newCategoryResponse(
-                    category.getId(),
-                    category.getName(),
-                    channelRepository.findChannelsByCategoryId(category.getId()))
-            );
+        List<Channel.Info> channels = channelRepository.findChannelsInfoByCategoryIn(categories);
+        Map<Long, CategoryResponse> categoryHashMap = categories.stream()
+                .collect(Collectors.toMap(
+                        category -> category.getId(),
+                        category -> newCategoryResponse(category.getId(), category.getName(), new ArrayList<>())
+                ));
+        for (Channel.Info channel : channels) {
+            categoryHashMap.get(channel.getId()).getChannels().add(channel);
         }
-        return categoryResponses;
+        return new ArrayList<>(categoryHashMap.values());
     }
 
+    @Transactional
     public Server createNewServer(Long userId, String name, MultipartFile image) {
         String imgUrl = null;
         if (!image.isEmpty()) {
@@ -75,6 +79,7 @@ public class ServerService {
         return newServer;
     }
 
+    @Transactional
     public Server updateServer(Long serverId, String name, String imgUrl, MultipartFile image) {
         Server server = serverRepository.findById(serverId)
                 .orElseThrow(() -> new DistoveException(SERVER_NOT_FOUND_ERROR));
@@ -86,32 +91,28 @@ public class ServerService {
         return server;
     }
 
+    //
     public List<Server> getServersByUserId(Long userId) {
 
         List<Member> members = memberRepository.findMembersByUserId(userId);
-        List<Server> servers = new ArrayList<>();
-        for (Member m : members) {
-            servers.add(m.getServer());
-        }
+        List<Server> servers = members.stream().map(member -> member.getServer()).collect(Collectors.toList());
         return servers;
 
     }
 
+    @Transactional
     public void deleteServerById(Long serverId) {
-        Server server = serverRepository.findById(serverId)
-                .orElseThrow(() -> new DistoveException(SERVER_NOT_FOUND_ERROR));
+//        Server server = serverRepository.findById(serverId)
+//                .orElseThrow(() -> new DistoveException(SERVER_NOT_FOUND_ERROR));
         List<Category> categories = categoryRepository.findCategoriesByServerId(serverId);
-        for (Category category : categories) {
-            for (Channel channel : channelRepository.deleteAllByCategoryId(category.getId())) {
-                if (channel.getChannelTypeId().equals(ChannelType.CHAT.getCode())) {
-                    chatClient.clearAll(channel.getId());
-                }
-            }
-        }
+        List<Channel> channels = channelRepository.findChannelsByCategoryInAndChannelTypeIdEquals(categories,ChannelType.CHAT.getCode());
+//        chatClient.clearAllByList(channels);
+        channelRepository.deleteAllByCategoryIn(categories);
         memberRepository.deleteAllByServerId(serverId);
         categoryRepository.deleteAllByServerId(serverId);
         serverRepository.deleteById(serverId);
     }
+
 
     private void setOwnerAndRole(Long userId, Server newServer) {
         memberRoleRepository.saveAll(MemberRole.createDefaultRoles(newServer));
