@@ -1,6 +1,5 @@
 package distove.community.dto.response;
 
-import distove.community.entity.Channel;
 import lombok.Builder;
 import lombok.Getter;
 
@@ -11,9 +10,9 @@ import java.util.List;
 public class CategoryResponse {
     private Long id;
     private String name;
-    private List<Channel.Info> channels;
+    private List<ChannelResponse> channels;
 
-    public static CategoryResponse newCategoryResponse(Long id, String name, List<Channel.Info> channels) {
+    public static CategoryResponse newCategoryResponse(Long id, String name, List<ChannelResponse> channels) {
         return CategoryResponse.builder()
                 .id(id)
                 .name(name)

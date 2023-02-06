@@ -19,6 +19,7 @@ import java.util.Map;
 import java.util.stream.Collectors;
 
 import static distove.community.dto.response.CategoryResponse.newCategoryResponse;
+import static distove.community.dto.response.ChannelResponse.newChannelResponse;
 import static distove.community.entity.Category.newCategory;
 import static distove.community.entity.Member.newMember;
 import static distove.community.entity.Server.newServer;
@@ -49,14 +50,14 @@ public class ServerService {
     //refact
     public List<CategoryResponse> getCategoriesWithChannelsByServerId(Long serverId) {
         List<Category> categories = categoryRepository.findCategoriesByServerId(serverId);
-        List<Channel.Info> channels = channelRepository.findChannelsInfoByCategoryIn(categories);
+        List<Channel> channels = channelRepository.findChannelsByCategoryIn(categories);
         Map<Long, CategoryResponse> categoryHashMap = categories.stream()
                 .collect(Collectors.toMap(
                         category -> category.getId(),
                         category -> newCategoryResponse(category.getId(), category.getName(), new ArrayList<>())
                 ));
-        for (Channel.Info channel : channels) {
-            categoryHashMap.get(channel.getId()).getChannels().add(channel);
+        for (Channel channel : channels) {
+            categoryHashMap.get(channel.getCategory().getId()).getChannels().add(newChannelResponse(channel.getId(),channel.getName(), channel.getChannelTypeId()));
         }
         return new ArrayList<>(categoryHashMap.values());
     }
@@ -102,8 +103,7 @@ public class ServerService {
 
     @Transactional
     public void deleteServerById(Long serverId) {
-//        Server server = serverRepository.findById(serverId)
-//                .orElseThrow(() -> new DistoveException(SERVER_NOT_FOUND_ERROR));
+
         List<Category> categories = categoryRepository.findCategoriesByServerId(serverId);
         List<Channel> channels = channelRepository.findChannelsByCategoryInAndChannelTypeIdEquals(categories,ChannelType.CHAT.getCode());
 //        chatClient.clearAllByList(channels);
