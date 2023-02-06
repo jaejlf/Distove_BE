@@ -14,6 +14,6 @@ public interface ChannelRepository extends JpaRepository<Channel,Long> {
     Optional<Channel> findById(Long id);
     void deleteById(Long id);
     List<Channel.Info> findChannelsByCategoryId(Long id);
-    void deleteAllByCategoryId(Long categoryId);
+    List<Channel> deleteAllByCategoryId(Long categoryId);
 
 }

@@ -2,18 +2,19 @@ package distove.voice.dto.response;
 
 
 import com.fasterxml.jackson.annotation.JsonAutoDetect;
-import distove.voice.entity.Participant;
+import distove.voice.enumerate.MessageType;
 import lombok.Builder;
 
 @JsonAutoDetect(fieldVisibility = JsonAutoDetect.Visibility.ANY)
-
+@Builder
 public class LeftRoomResponse {
-    private final String type = "participantLeft";
+    private final String type = MessageType.PARTICIPANT_LEFT.getType();
     private final Long userId;
 
-    @Builder
 
-    public LeftRoomResponse(Participant participant) {
-        this.userId = participant.getUserId();
+    public static LeftRoomResponse newLeftRoomResponse(Long userId) {
+        return LeftRoomResponse.builder()
+                .userId(userId)
+                .build();
     }
 }

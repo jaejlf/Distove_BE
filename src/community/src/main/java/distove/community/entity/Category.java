@@ -1,13 +1,17 @@
 package distove.community.entity;
 
+import lombok.AllArgsConstructor;
+import lombok.Builder;
 import lombok.Getter;
-import lombok.RequiredArgsConstructor;
+import lombok.NoArgsConstructor;
 
 import javax.persistence.*;
 
 @Getter
 @Entity
-@RequiredArgsConstructor
+@Builder
+@AllArgsConstructor
+@NoArgsConstructor
 public class Category {
     @Id
     @GeneratedValue(strategy = GenerationType.IDENTITY)
@@ -22,15 +26,15 @@ public class Category {
 //    @OneToMany(mappedBy = "category")
 //    private List<Channel> channels = new ArrayList<>();
 
-
-    public Category(String name, Server server){
-        this.name = name;
-        this.server = server;
-    }
-
-//    public interface CategoryWithOutServer{
-//        Long getId();
-//        String getName();
-//
+//    @Builder
+//    public Category(String name, Server server){
+//        this.name = name;
+//        this.server = server;
 //    }
+    public static Category newCategory(String name, Server server) {
+        return Category.builder()
+                .name(name)
+                .server(server)
+                .build();
+    }
 }
