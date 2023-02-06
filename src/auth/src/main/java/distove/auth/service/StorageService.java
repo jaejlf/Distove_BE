@@ -1,5 +1,6 @@
 package distove.auth.service;
 
+import com.amazonaws.AmazonServiceException;
 import com.amazonaws.services.s3.AmazonS3;
 import com.amazonaws.services.s3.model.CannedAccessControlList;
 import com.amazonaws.services.s3.model.ObjectMetadata;
@@ -27,9 +28,11 @@ public class StorageService {
     @Value("${cloud.aws.s3.bucket}")
     private String bucket;
 
+    @Value("${cloud.aws.ceph.url}")
+    private String url;
+
     public String uploadToS3(MultipartFile multipartFile) {
-        String ext = extractExt(String.valueOf(multipartFile.getOriginalFilename()));
-        String fileName = String.valueOf(UUID.randomUUID()) + '.' + ext;
+        String fileName = String.valueOf(UUID.randomUUID());
         ObjectMetadata objectMetadata = new ObjectMetadata();
         objectMetadata.setContentType(multipartFile.getContentType());
 
@@ -41,30 +44,15 @@ public class StorageService {
         } catch (IOException e) {
             throw new DistoveException(FILE_UPLOAD_ERROR);
         }
-        return amazonS3Client.getUrl(bucket, fileName).toString();
+        return url + fileName;
     }
 
-    public String updateS3(MultipartFile multipartFile, String filePath) {
-
-        amazonS3Client.deleteObject(bucket, filePath);
-        String ext = extractExt(String.valueOf(multipartFile.getOriginalFilename()));
-        String fileName = String.valueOf(UUID.randomUUID()) + '.' + ext;
-        ObjectMetadata objectMetadata = new ObjectMetadata();
-        objectMetadata.setContentType(multipartFile.getContentType());
-
+    public void deleteFile(String originImgUrl) {
+        if (originImgUrl == null) return;
         try {
-            InputStream inputStream = multipartFile.getInputStream();
-            objectMetadata.setContentLength(inputStream.available());
-            amazonS3Client.putObject(new PutObjectRequest(bucket, fileName, inputStream, objectMetadata)
-                    .withCannedAcl(CannedAccessControlList.PublicRead));
-        } catch (IOException e) {
-            throw new DistoveException(FILE_UPLOAD_ERROR);
+            amazonS3Client.deleteObject(bucket, originImgUrl.split("/")[4]);
+        } catch (AmazonServiceException e) {
+            e.printStackTrace();
         }
-        return amazonS3Client.getUrl(bucket, fileName).toString();
-    }
-
-    public String extractExt(String originalFilename) {
-        int pos = originalFilename.lastIndexOf(".");
-        return originalFilename.substring(pos + 1);
     }
 }

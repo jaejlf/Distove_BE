@@ -1,5 +1,6 @@
 package distove.community.service;
 
+import com.amazonaws.AmazonServiceException;
 import com.amazonaws.services.s3.AmazonS3;
 import com.amazonaws.services.s3.model.CannedAccessControlList;
 import com.amazonaws.services.s3.model.ObjectMetadata;
@@ -27,6 +28,9 @@ public class StorageService {
     @Value("${cloud.aws.s3.bucket}")
     private String bucket;
 
+    @Value("${cloud.aws.ceph.url}")
+    private String url;
+
     public String upload(MultipartFile multipartFile) {
         String fileName = String.valueOf(UUID.randomUUID());
         ObjectMetadata objectMetadata = new ObjectMetadata();
@@ -39,8 +43,16 @@ public class StorageService {
         } catch (IOException e) {
             throw new DistoveException(IMAGE_UPLOAD_FAILED);
         }
-        return amazonS3Client.getUrl(bucket, fileName).toString();
+        return url + fileName;
     }
 
+    public void deleteFile(String originImgUrl) {
+        if (originImgUrl == null) return;
+        try {
+            amazonS3Client.deleteObject(bucket, originImgUrl.split("/")[4]);
+        } catch (AmazonServiceException e) {
+            e.printStackTrace();
+        }
+    }
 
 }

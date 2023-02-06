@@ -23,6 +23,7 @@ import org.springframework.data.domain.Pageable;
 import org.springframework.stereotype.Service;
 
 import java.util.ArrayList;
+import java.util.Collections;
 import java.util.List;
 import java.util.Objects;
 import java.util.stream.Collectors;
@@ -90,7 +91,7 @@ public class MessageService {
         saveWelcomeMessage(userId, channelId);
 
         Pageable pageable = PageRequest.of(page - 1, pageSize);
-        Page<Message> messagePage = messageRepository.findAllByChannelIdAndParentIdIsNull(channelId, pageable);
+        Page<Message> messagePage = messageRepository.findAllByChannelIdAndParentIdIsNullOrderByCreatedAtDesc(channelId, pageable);
 
         int totalPage = messagePage.getTotalPages();
         List<MessageResponse> messageResponses = new ArrayList<>();
@@ -102,6 +103,7 @@ public class MessageService {
                 messageResponses.add(MessageResponse.ofParent(message, writer, userId, getReplyInfo(message)));
             }
         }
+        Collections.reverse(messageResponses);
         return PagedMessageResponse.ofDefault(totalPage, messageResponses);
     }
 
@@ -130,13 +132,15 @@ public class MessageService {
 
     public PagedMessageResponse getChildrenByParentId(Long userId, String parentId, int page) {
         Pageable pageable = PageRequest.of(page - 1, pageSize);
-        Page<Message> replyPage = messageRepository.findAllByParentId(parentId, pageable);
+        Page<Message> replyPage = messageRepository.findAllByParentIdOrderByCreatedAtDesc(parentId, pageable);
 
         int totalPage = replyPage.getTotalPages();
         List<MessageResponse> messageResponses = replyPage.getContent()
                 .stream()
                 .map(x -> MessageResponse.ofDefault(x, userClient.getUser(x.getUserId()), userId))
                 .collect(Collectors.toList());
+        
+        Collections.reverse(messageResponses);
 
         ReplyInfoResponse replyInfo = getReplyInfo(getMessage(parentId));
         return PagedMessageResponse.ofChild(totalPage, replyInfo, messageResponses);
