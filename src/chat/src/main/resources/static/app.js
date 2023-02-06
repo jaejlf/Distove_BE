@@ -38,7 +38,8 @@ function sendName() {
                     'type': $("#type").val(),
                     'status': $("#status").val(),
                     'content': $("#content").val(),
-                    'messageId': $("#messageId").val()
+                    'messageId': $("#messageId").val(),
+
                 }
             ));
         } else {
@@ -48,7 +49,7 @@ function sendName() {
                     'status': $("#status").val(),
                     'content': $("#content").val(),
                     'messageId': $("#messageId").val(),
-                    'replyName': $("#replyName").val()
+                    'replyName': $("#replyName").val(),
                 }
             ));
         }
@@ -60,7 +61,8 @@ function sendName() {
                     'status': $("#status").val(),
                     'content': $("#content").val(),
                     'messageId': $("#messageId").val(),
-                    'parentId': $("#parentId").val()
+                    'parentId': $("#parentId").val(),
+
                 }
             ));
         } else {
@@ -71,11 +73,23 @@ function sendName() {
                     'content': $("#content").val(),
                     'messageId': $("#messageId").val(),
                     'replyName': $("#replyName").val(),
-                    'parentId': $("#parentId").val()
+                    'parentId': $("#parentId").val(),
+
                 }
             ));
         }
     }
+}
+
+function sendEmoji() {
+
+    stompClient.send($("#pub").val(), {'userId': $("#userIdForEmoji").val()}, JSON.stringify(
+        {
+            'messageId': $("#messageIdForEmoji").val(),
+            'emoji': $("#emoji").val()
+        }
+    ));
+
 }
 
 $(function () {
@@ -90,5 +104,8 @@ $(function () {
     });
     $("#send").click(function () {
         sendName();
+    });
+    $("#sendEmoji").click(function () {
+        sendEmoji();
     });
 });

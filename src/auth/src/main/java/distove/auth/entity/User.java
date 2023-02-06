@@ -55,11 +55,11 @@ public class User {
         this.updatedAt = LocalDateTime.now();
     }
 
-    public void updateUserNickname(String nickname) {
+    public void updateNickname(String nickname) {
         this.nickname = nickname;
     }
 
-    public void updateUserProfileImgUrl(String profileImgUrl) {
+    public void updateProfileImgUrl(String profileImgUrl) {
         this.profileImgUrl = profileImgUrl;
     }
 }
