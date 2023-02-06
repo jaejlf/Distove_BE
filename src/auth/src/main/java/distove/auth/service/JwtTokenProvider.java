@@ -1,5 +1,6 @@
 package distove.auth.service;
 
+import distove.auth.entity.RefreshToken;
 import distove.auth.exception.DistoveException;
 import io.jsonwebtoken.*;
 import io.jsonwebtoken.io.Decoders;
@@ -62,6 +63,7 @@ public class JwtTokenProvider {
         }
     }
 
+
     public ResponseCookie createTokenCookie(String refreshToken) {
         return ResponseCookie.from("refreshToken", refreshToken)
                 .maxAge(60*60*24*30)
@@ -72,6 +74,10 @@ public class JwtTokenProvider {
                 .domain("distove.onstove.com")
                 .build();
     }
+    public RefreshToken refreshTokenToEntity(String token, Long userId) {
+        return new RefreshToken(token, userId);
+    }
+
     public boolean validToken(String token) {
         try {
             Jwts.parserBuilder()

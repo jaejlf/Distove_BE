@@ -102,7 +102,7 @@ public class UserService {
         User user = userRepository.findById(jwtTokenProvider.getUserId(token))
                 .orElseThrow(() -> new DistoveException(ACCOUNT_NOT_FOUND));
 
-        user.updateUserNickname(request.getNickname());
+        user.updateNickname(request.getNickname());
         userRepository.save(user);
         return UserResponse.of(user.getId(), user.getNickname(), user.getProfileImgUrl());
     }
@@ -123,7 +123,7 @@ public class UserService {
         }
 
         storageService.deleteFile(user.getProfileImgUrl());
-        user.updateUserProfileImgUrl(profileImgUrl);
+        user.updateProfileImgUrl(profileImgUrl);
         userRepository.save(user);
         return UserResponse.of(user.getId(), user.getNickname(), user.getProfileImgUrl());
 
