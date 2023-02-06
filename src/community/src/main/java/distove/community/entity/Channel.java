@@ -1,13 +1,15 @@
 package distove.community.entity;
 
-import lombok.Builder;
-import lombok.Getter;
-import lombok.RequiredArgsConstructor;
+import lombok.*;
 
 import javax.persistence.*;
+
+
+@Builder
 @Getter
 @Entity
-@RequiredArgsConstructor
+@AllArgsConstructor
+@NoArgsConstructor
 public class Channel {
     @Id
     @GeneratedValue(strategy = GenerationType.IDENTITY)
@@ -18,23 +20,26 @@ public class Channel {
     private Integer channelTypeId;
 
     @ManyToOne
-    @JoinColumn(name ="category_id")
+    @JoinColumn(name = "category_id")
     private Category category;
 
-    @Builder
-    public Channel(String name, Integer channelTypeId, Category category){
-        this.name = name;
-        this.channelTypeId = channelTypeId;
-        this.category = category;
+    public static Channel newChannel(String name, Integer channelTypeId, Category category) {
+        return Channel.builder()
+                .name(name)
+                .channelTypeId(channelTypeId)
+                .category(category)
+                .build();
     }
 
-    public void updateChannel(String name){
+    public void updateChannel(String name) {
         this.name = name;
     }
 
     public interface Info {
         Long getId();
+
         String getName();
+
         Integer getChannelTypeId();
     }
 }

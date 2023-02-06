@@ -3,23 +3,37 @@ package distove.community.entity;
 import lombok.*;
 
 import javax.persistence.*;
+
 @Getter
-//@NamedEntityGraph(name="Member.server",attributeNodes = @NamedAttributeNode("server"))
 @Entity
-@NoArgsConstructor(access = AccessLevel.PROTECTED)
+@Builder
+@NoArgsConstructor
+@AllArgsConstructor
 public class Member {
     @Id
     @GeneratedValue(strategy = GenerationType.IDENTITY)
     private Long id;
 
     @ManyToOne
-    @JoinColumn(name ="server_id")
+    @JoinColumn(name = "server_id")
     public Server server;
 
     private Long userId;
 
-//    public interface UserServer{
-//        Long getServer().getId();
-//    }
+    @ManyToOne
+    @JoinColumn(name = "role_id")
+    private MemberRole role;
+
+    public static Member newMember(Server server, Long userId, MemberRole role) {
+        return Member.builder()
+                .server(server)
+                .userId(userId)
+                .role(role)
+                .build();
+    }
+
+    public void updateRole(MemberRole role) {
+        this.role = role;
+    }
 
 }

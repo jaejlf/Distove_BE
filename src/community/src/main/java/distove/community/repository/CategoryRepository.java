@@ -6,9 +6,10 @@ import org.springframework.stereotype.Repository;
 
 import java.util.List;
 import java.util.Optional;
+
 @Repository
-public interface CategoryRepository extends JpaRepository<Category,Long> {
-    Optional<Category> findById(Long id);
+public interface CategoryRepository extends JpaRepository<Category, Long> {
     List<Category> findCategoriesByServerId(Long serverId);
     void deleteAllByServerId(Long serverId);
+    Optional<Category> findByIdAndServerId(Long categoryId, Long serverId);
 }
