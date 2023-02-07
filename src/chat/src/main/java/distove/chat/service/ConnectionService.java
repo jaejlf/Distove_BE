@@ -37,8 +37,14 @@ public class ConnectionService {
         messageRepository.save(newMessage(channelId, userId, WELCOME, MessageStatus.CREATED, writer.getNickname()));
     }
 
-    public void clearAll(Long channelId) {
+    public void clear(Long channelId) {
         connectionRepository.deleteAllByChannelId(channelId);
+    }
+
+    public void clearAll(List<Long> channelIds) {
+        for (Long channelId : channelIds) {
+            connectionRepository.deleteAllByChannelId(channelId);
+        }
     }
 
 }

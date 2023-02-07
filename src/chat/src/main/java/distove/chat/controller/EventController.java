@@ -4,6 +4,8 @@ import distove.chat.service.EventService;
 import lombok.RequiredArgsConstructor;
 import org.springframework.web.bind.annotation.*;
 
+import java.util.List;
+
 @RequiredArgsConstructor
 @RestController
 public class EventController {
@@ -17,8 +19,13 @@ public class EventController {
     }
 
     @DeleteMapping("/clear/{channelId}")
-    public void clearAll(@PathVariable Long channelId) {
+    public void clear(@PathVariable Long channelId) {
         eventService.requestDelChannel(channelId);
+    }
+
+    @DeleteMapping("/clear/list")
+    public void clearAll(@RequestParam List<Long> channelIds) {
+        eventService.requestDelChannelList(channelIds);
     }
 
 }

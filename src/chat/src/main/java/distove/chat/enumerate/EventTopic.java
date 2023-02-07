@@ -1,6 +1,7 @@
 package distove.chat.enumerate;
 
 import distove.chat.event.DelChannelEvent;
+import distove.chat.event.DelChannelListEvent;
 import distove.chat.event.Event;
 import distove.chat.process.EventQ;
 import distove.chat.event.NewChannelEvent;
@@ -17,7 +18,9 @@ import static distove.chat.exception.ErrorCode.EVENT_HANDLE_ERROR;
 public enum EventTopic {
 
     NEW_CHANNEL(NewChannelEvent.class, new EventQ<NewChannelEvent>()),
-    DEL_CHANNEL(DelChannelEvent.class, new EventQ<DelChannelEvent>());
+    DEL_CHANNEL(DelChannelEvent.class, new EventQ<DelChannelEvent>()),
+    DEL_CHANNEL_LIST(DelChannelListEvent.class, new EventQ<DelChannelListEvent>());
+
 
     private final Class<? extends Event> eventType;
     private final EventQ<? extends Event> eventQ;

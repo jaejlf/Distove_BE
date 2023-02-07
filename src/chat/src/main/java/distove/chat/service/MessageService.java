@@ -142,7 +142,7 @@ public class MessageService {
         return PagedMessageResponse.ofChild(totalPage, replyInfo, messageResponses);
     }
 
-    public void clearAll(Long channelId) {
+    public void clear(Long channelId) {
         messageRepository.deleteAllByChannelId(channelId);
     }
 
@@ -225,6 +225,12 @@ public class MessageService {
     private Connection checkChannelExist(Long channelId) {
         return connectionRepository.findByChannelId(channelId)
                 .orElseThrow(() -> new DistoveException(CHANNEL_NOT_FOUND_ERROR));
+    }
+
+    public void clearAll(List<Long> channelIds) {
+        for (Long channelId : channelIds) {
+            messageRepository.deleteAllByChannelId(channelId);
+        }
     }
 
 }
