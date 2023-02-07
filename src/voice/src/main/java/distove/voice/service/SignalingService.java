@@ -126,6 +126,8 @@ public class SignalingService {
                 });
 
         sender.getMediaEndpoint().connect(incomingParticipant.getMediaEndpoint());
+        incomingParticipant.getMediaEndpoint().gatherCandidates();
+
         return incomingParticipant.getMediaEndpoint();
     }
 
