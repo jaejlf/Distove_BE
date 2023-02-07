@@ -57,7 +57,7 @@ public class UserService {
                 .orElseThrow(() -> new DistoveException(ACCOUNT_NOT_FOUND));
 
         if (!bCryptPasswordEncoder.matches(request.getPassword(), user.getPassword())) {
-            throw new DistoveException(INVALID_PASSWORD);
+            throw new DistoveException(INVAILD_PASSWORD);
         }
 
         String accessToken = jwtTokenProvider.createToken(user.getId(), "AT");
