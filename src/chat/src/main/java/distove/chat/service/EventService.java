@@ -1,8 +1,11 @@
 package distove.chat.service;
 
+import distove.chat.entity.EventFail;
 import distove.chat.event.DelChannelEvent;
 import distove.chat.event.DelChannelListEvent;
 import distove.chat.event.NewChannelEvent;
+import distove.chat.exception.DistoveException;
+import distove.chat.repository.EventFailRepository;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.stereotype.Service;
@@ -10,6 +13,7 @@ import org.springframework.stereotype.Service;
 import java.util.List;
 
 import static distove.chat.enumerate.EventTopic.getEventQ;
+import static distove.chat.exception.ErrorCode.EVENT_HANDLE_ERROR;
 
 @Service
 @RequiredArgsConstructor
@@ -18,6 +22,7 @@ public class EventService {
 
     private final ConnectionService connectionService;
     private final MessageService messageService;
+    private final EventFailRepository eventFailRepository;
 
     public void requestNewChannel(Long userId, Long channelId) {
         getEventQ(NewChannelEvent.class)
@@ -41,14 +46,24 @@ public class EventService {
 
     public void runDelChannel(DelChannelEvent event) {
         log.info(">>>>> CONSUME 'DEL CHANNEL' TOPIC");
-        connectionService.clear(event.getChannelId());
-        messageService.clear(event.getChannelId());
+        try {
+            connectionService.clear(event.getChannelId());
+            messageService.clear(event.getChannelId());
+        } catch (Exception e) {
+            eventFailRepository.save(new EventFail(event));
+            throw new DistoveException(EVENT_HANDLE_ERROR);
+        }
     }
 
     public void runDelChannelList(DelChannelListEvent event) {
         log.info(">>>>> CONSUME 'DEL LIST CHANNEL' TOPIC");
-        connectionService.clearAll(event.getChannelIds());
-        messageService.clearAll(event.getChannelIds());
+        try {
+            connectionService.clearAll(event.getChannelIds());
+            messageService.clearAll(event.getChannelIds());
+        } catch (Exception e) {
+            eventFailRepository.save(new EventFail(event));
+            throw new DistoveException(EVENT_HANDLE_ERROR);
+        }
     }
 
 }
