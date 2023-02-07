@@ -43,7 +43,7 @@ public class JwtTokenProvider {
         Date now = new Date();
 
         if (type.equals("AT")) {
-            headers.put("typ", "AT");
+            headers.put("type", "AT");
             return Jwts.builder()
                     .setHeader(headers)
                     .setClaims(claims)
@@ -52,7 +52,7 @@ public class JwtTokenProvider {
                     .signWith(key, SignatureAlgorithm.HS256)
                     .compact();
         } else {
-            headers.put("typ", "RT");
+            headers.put("type", "RT");
             return Jwts.builder()
                     .setHeader(headers)
                     .setClaims(claims)
@@ -66,7 +66,7 @@ public class JwtTokenProvider {
 
     public ResponseCookie createTokenCookie(String refreshToken) {
         return ResponseCookie.from("refreshToken", refreshToken)
-                .maxAge(60*60*24*30)
+                .maxAge(60 * 60 * 24 * 30)
                 .path("/")
                 .httpOnly(true)
                 .secure(true)
@@ -74,6 +74,7 @@ public class JwtTokenProvider {
                 .domain("distove.onstove.com")
                 .build();
     }
+
     public RefreshToken refreshTokenToEntity(String token, Long userId) {
         return new RefreshToken(token, userId);
     }
@@ -97,7 +98,7 @@ public class JwtTokenProvider {
             return Jwts.parserBuilder()
                     .setSigningKey(key)
                     .build()
-                    .parseClaimsJws(token).getHeader().get("typ").toString();
+                    .parseClaimsJws(token).getHeader().get("type").toString();
 
         } catch (UnsupportedJwtException e) {
             throw new DistoveException(JWT_INVALID);
@@ -115,10 +116,10 @@ public class JwtTokenProvider {
                     .parseClaimsJws(token)
                     .getBody()
                     .get("userId")));
-        } catch (UnsupportedJwtException e) {
-            throw new DistoveException(JWT_INVALID);
         } catch (ExpiredJwtException e) {
             throw new DistoveException(JWT_EXPIRED);
+        } catch (Exception e) {
+            throw new DistoveException(JWT_INVALID);
         }
     }
 }
