@@ -1,7 +1,6 @@
 package distove.chat.service;
 
 import distove.chat.dto.request.ReactionRequest;
-import distove.chat.dto.response.MessageResponse;
 import distove.chat.dto.response.ReactionMessageResponse;
 import distove.chat.dto.response.ReactionResponse;
 import distove.chat.entity.Message;
@@ -40,7 +39,7 @@ public class ReactionService {
                 message.getReactions() : new ArrayList<Reaction>();
         Set<Long> userIds = new HashSet<>(Arrays.asList(userId));
 
-        Boolean isReacted = false;
+        boolean isReacted = false;
         for (Reaction r : reactions) {
             userIds.addAll(r.getUserIds());
             if(r.getEmoji().equals(emoji)){
