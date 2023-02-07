@@ -42,7 +42,7 @@ public class MemberService {
         checkServerExist(serverId);
 
         Member curMember = memberRepository.findByUserIdAndServerId(userId, serverId)
-                .orElseThrow(() -> new DistoveException(MEMBER_NOT_FOUND_ERROR));
+                .orElseThrow(() -> new DistoveException(MEMBER_NOT_FOUND));
 
         List<Member> members = getMembersByServerId(serverId);
         List<RoleResponse.MemberInfo> roleResponses = new ArrayList<>();
@@ -74,19 +74,19 @@ public class MemberService {
 
     public void joinServer(Long userId, Long serverId) {
         if (memberRepository.findByUserIdAndServerId(userId, serverId).isPresent())
-            throw new DistoveException(MEMBER_ALREADY_EXIST_ERROR);
+            throw new DistoveException(MEMBER_ALREADY_EXIST);
 
         Server server = checkServerExist(serverId);
         MemberRole memberRole = memberRoleRepository.findByRoleNameAndServerId(MEMBER.getName(), serverId)
-                .orElseThrow(() -> new DistoveException(ROLE_NOT_FOUND_ERROR));
+                .orElseThrow(() -> new DistoveException(ROLE_NOT_FOUND));
         memberRepository.save(newMember(server, userId, memberRole));
     }
 
     public void updateMemberRole(Long serverId, Long roleId, Long targetUserId) {
         MemberRole memberRole = memberRoleRepository.findById(roleId)
-                .orElseThrow(() -> new DistoveException(ROLE_NOT_FOUND_ERROR));
+                .orElseThrow(() -> new DistoveException(ROLE_NOT_FOUND));
 
-        if (Objects.equals(memberRole.getRoleName(), OWNER.getName())) throw new DistoveException(NO_AUTH_ERROR);
+        if (Objects.equals(memberRole.getRoleName(), OWNER.getName())) throw new DistoveException(NO_AUTH);
 
         Member target = checkMemberExist(targetUserId, serverId);
         target.updateRole(memberRole);
@@ -96,18 +96,18 @@ public class MemberService {
     public MemberResponse getMemberInfo(Long userId, Long serverId) {
         UserResponse userResponse = userClient.getUser(userId);
         Member member = memberRepository.findByUserIdAndServerId(userId, serverId)
-                .orElseThrow(() -> new DistoveException(MEMBER_NOT_FOUND_ERROR));
+                .orElseThrow(() -> new DistoveException(MEMBER_NOT_FOUND));
         return MemberResponse.of(userResponse, member);
     }
 
     private Server checkServerExist(Long serverId) {
         return serverRepository.findById(serverId)
-                .orElseThrow(() -> new DistoveException(SERVER_NOT_FOUND_ERROR));
+                .orElseThrow(() -> new DistoveException(SERVER_NOT_FOUND));
     }
 
     private Member checkMemberExist(Long userId, Long serverId) {
         return memberRepository.findByUserIdAndServerId(userId, serverId)
-                .orElseThrow(() -> new DistoveException(MEMBER_NOT_FOUND_ERROR));
+                .orElseThrow(() -> new DistoveException(MEMBER_NOT_FOUND));
     }
 
     private static boolean getIsActive(Member curMember, Member target) {

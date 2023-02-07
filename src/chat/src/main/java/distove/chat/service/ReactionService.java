@@ -1,7 +1,6 @@
 package distove.chat.service;
 
 import distove.chat.dto.request.ReactionRequest;
-import distove.chat.dto.response.MessageResponse;
 import distove.chat.dto.response.ReactionMessageResponse;
 import distove.chat.dto.response.ReactionResponse;
 import distove.chat.entity.Message;
@@ -21,7 +20,7 @@ import java.util.stream.Collectors;
 import static distove.chat.dto.response.ReactionMessageResponse.newReactionMessageResponse;
 import static distove.chat.dto.response.ReactionResponse.newReactionResponse;
 import static distove.chat.entity.Reaction.newReaction;
-import static distove.chat.exception.ErrorCode.MESSAGE_NOT_FOUND_ERROR;
+import static distove.chat.exception.ErrorCode.MESSAGE_NOT_FOUND;
 
 @Service
 @Slf4j
@@ -35,7 +34,7 @@ public class ReactionService {
     public ReactionMessageResponse reactMessage(ReactionRequest reactionRequest, Long userId) {
         String emoji = reactionRequest.getEmoji();
         Message message = messageRepository.findById(reactionRequest.getMessageId())
-                .orElseThrow(() -> new DistoveException(MESSAGE_NOT_FOUND_ERROR));
+                .orElseThrow(() -> new DistoveException(MESSAGE_NOT_FOUND));
         List<Reaction> reactions = message.getReactions() != null ?
                 message.getReactions() : new ArrayList<Reaction>();
         Set<Long> userIds = new HashSet<>(Arrays.asList(userId));

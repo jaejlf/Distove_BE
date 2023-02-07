@@ -21,12 +21,4 @@ public class MessageRequest {
     private String parentId;
     private String replyName; // reply 최초 생성 시에만 필요
 
-    public static MessageRequest ofFile(MessageType type, String content, String parentId) {
-        return MessageRequest.builder()
-                .type(type)
-                .content(content)
-                .parentId(parentId)
-                .build();
-    }
-
 }
