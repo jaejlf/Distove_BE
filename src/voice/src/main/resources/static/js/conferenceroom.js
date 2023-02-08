@@ -41,7 +41,7 @@ ws.onmessage = function (message) {
             receiveVideoResponse(parsedMessage);
             break;
         case 'iceCandidate':
-            participants[parsedMessage.name].rtcPeer.addIceCandidate(parsedMessage.candidate, function (error) {
+            participants[parsedMessage.userId].rtcPeer.addIceCandidate(parsedMessage.candidateInfo, function (error) {
                 if (error) {
                     console.error("Error adding candidate: " + error);
 

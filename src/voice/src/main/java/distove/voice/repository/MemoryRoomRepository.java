@@ -6,35 +6,32 @@ import org.springframework.stereotype.Repository;
 import java.util.ArrayList;
 import java.util.List;
 import java.util.Optional;
+import java.util.concurrent.ConcurrentHashMap;
+import java.util.concurrent.ConcurrentMap;
 
 @Repository
-
 public class MemoryRoomRepository implements RoomRepository {
-    private static final List<Room> rooms = new ArrayList<>();
+    //    private static Integer seq = 1;
+    private static final ConcurrentMap<Long, Room> rooms = new ConcurrentHashMap<>();
 
     @Override
     public Optional<Room> findRoomByChannelId(Long channelId) {
-        return rooms.stream().filter(room -> room.getChannelId().equals(channelId)).findAny();
-    }
-
-    @Override
-    public Optional<Room> findRoomById(String id) {
-        return rooms.stream().filter(room -> room.getId().equals(id)).findAny();
+        return Optional.ofNullable(rooms.get(channelId));
     }
 
     @Override
     public Room save(Room room) {
-        rooms.add(room);
+        rooms.put(room.getChannelId(), room);
         return room;
     }
 
     @Override
-    public void deleteById(String id) {
-        rooms.removeIf(room -> room.getId().equals(id));
+    public void deleteByChannelId(Long channelId) {
+        rooms.remove(channelId);
     }
 
     @Override
     public List<Room> findAll() {
-        return rooms;
+        return new ArrayList<>(rooms.values());
     }
 }

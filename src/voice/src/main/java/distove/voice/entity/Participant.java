@@ -5,24 +5,27 @@ import lombok.Getter;
 import org.kurento.client.WebRtcEndpoint;
 import org.springframework.web.socket.WebSocketSession;
 
-import java.util.ArrayList;
-import java.util.List;
+import java.util.concurrent.ConcurrentHashMap;
+import java.util.concurrent.ConcurrentMap;
 
 @Getter
 public class Participant {
 
-    private String id;
+    private int id;
     private final Long userId;
     @JsonIgnore
     private final Room room;
     private final WebRtcEndpoint mediaEndpoint;
     private final WebSocketSession webSocketSession;
-    private final List<IncomingParticipant> incomingParticipants = new ArrayList<>();
+    private final ConcurrentMap<Long, IncomingParticipant> incomingParticipants = new ConcurrentHashMap<>();
 
-    public Participant(Long userId, Room room, WebSocketSession webSocketSession, WebRtcEndpoint mediaEndpoint) {
+    public Participant(Long userId, Room room, WebRtcEndpoint mediaEndpoint, WebSocketSession webSocketSession) {
         this.userId = userId;
         this.room = room;
-        this.webSocketSession = webSocketSession;
         this.mediaEndpoint = mediaEndpoint;
+        this.webSocketSession = webSocketSession;
+
     }
+
+
 }

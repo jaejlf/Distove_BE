@@ -9,7 +9,6 @@ import java.util.List;
 @Getter
 public class Room {
 
-    private String id;
     private final Long channelId;
     private final MediaPipeline pipeline;
     private final List<Participant> participants = new ArrayList<>();
@@ -18,5 +17,6 @@ public class Room {
         this.channelId = channelId;
         this.pipeline = pipeline;
     }
+
 
 }
