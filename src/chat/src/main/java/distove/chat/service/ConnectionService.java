@@ -30,6 +30,8 @@ public class ConnectionService {
         List<Long> connectedMemberIds = new ArrayList<>();
         connectedMemberIds.add(userId);
 
+        if (connectionRepository.findByChannelId(channelId).isPresent()) return;
+
         Connection connection = newConnection(channelId, connectedMemberIds);
         connectionRepository.save(connection);
 
