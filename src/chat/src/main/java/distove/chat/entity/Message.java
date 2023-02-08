@@ -7,6 +7,7 @@ import nonapi.io.github.classgraph.json.Id;
 import org.springframework.data.mongodb.core.mapping.Document;
 
 import java.time.LocalDateTime;
+import java.util.List;
 
 import static distove.chat.enumerate.MessageType.*;
 
@@ -26,6 +27,7 @@ public class Message {
     private String replyName;
     private Long stUserId;
     private String parentId;
+    private List<Reaction> reactions;
 
     public static Message newMessage(Long channelId, Long userId, MessageType type, MessageStatus status, String content) {
         return Message.builder()
@@ -58,6 +60,10 @@ public class Message {
     public void addReplyInfo(String replyName, Long stUserId) {
         this.replyName = replyName;
         this.stUserId = stUserId;
+    }
+
+    public void updateReaction(List<Reaction> reactions) {
+        this.reactions = reactions;
     }
 
 }

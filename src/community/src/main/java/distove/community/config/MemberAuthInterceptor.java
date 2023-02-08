@@ -15,7 +15,7 @@ import javax.servlet.http.HttpServletRequest;
 import javax.servlet.http.HttpServletResponse;
 import java.util.Map;
 
-import static distove.community.exception.ErrorCode.MEMBER_NOT_FOUND_ERROR;
+import static distove.community.exception.ErrorCode.MEMBER_NOT_FOUND;
 
 @Slf4j
 @Component
@@ -68,13 +68,13 @@ public class MemberAuthInterceptor implements HandlerInterceptor {
         Map pathVariables = (Map) request.getAttribute(HandlerMapping.URI_TEMPLATE_VARIABLES_ATTRIBUTE);
         String serverId = pathVariables.get("serverId").toString();
         return memberRepository.findByUserIdAndServerId(userId, Long.valueOf(serverId))
-                .orElseThrow(() -> new DistoveException(MEMBER_NOT_FOUND_ERROR));
+                .orElseThrow(() -> new DistoveException(MEMBER_NOT_FOUND));
     }
 
     private Member getMemberByQuery(HttpServletRequest request, Long userId) {
         String serverId = request.getParameter("serverId");
         return memberRepository.findByUserIdAndServerId(userId, Long.valueOf(serverId))
-                .orElseThrow(() -> new DistoveException(MEMBER_NOT_FOUND_ERROR));
+                .orElseThrow(() -> new DistoveException(MEMBER_NOT_FOUND));
     }
 
 }

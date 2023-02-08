@@ -1,16 +1,19 @@
 package distove.voice.dto.response;
 
 import com.fasterxml.jackson.annotation.JsonAutoDetect;
-import distove.voice.entity.Participant;
+import distove.voice.enumerate.MessageType;
+import distove.voice.web.UserResponse;
 import lombok.Builder;
 
+@Builder
 @JsonAutoDetect(fieldVisibility = JsonAutoDetect.Visibility.ANY)
 public class NewParticipantArrivedResponse {
-    private final String type = "newParticipantArrived";
-    private final Long userId;
+    private final String type = MessageType.NEW_PARTICIPANT_ARRIVED.getType();
+    private final UserResponse user;
 
-    @Builder
-    public NewParticipantArrivedResponse(Participant newParticipant) {
-        this.userId = newParticipant.getUserId();
+    public static NewParticipantArrivedResponse newNewParticipantArrivedResponse(UserResponse user) {
+        return NewParticipantArrivedResponse.builder()
+                .user(user)
+                .build();
     }
 }
