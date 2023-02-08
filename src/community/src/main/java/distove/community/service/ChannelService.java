@@ -17,8 +17,8 @@ import java.util.Objects;
 
 import static distove.community.dto.response.ChannelResponse.newChannelResponse;
 import static distove.community.entity.Channel.newChannel;
-import static distove.community.exception.ErrorCode.CATEGORY_NOT_FOUND_ERROR;
-import static distove.community.exception.ErrorCode.CHANNEL_NOT_FOUND_ERROR;
+import static distove.community.exception.ErrorCode.CATEGORY_NOT_FOUND;
+import static distove.community.exception.ErrorCode.CHANNEL_NOT_FOUND;
 
 @Service
 @RequiredArgsConstructor
@@ -43,7 +43,7 @@ public class ChannelService {
 
     public Channel createNewChannel(Long userId, Long serverId, String name, Long categoryId, Integer channelTypeId) {
         Category category = categoryRepository.findByIdAndServerId(categoryId, serverId)
-                .orElseThrow(() -> new DistoveException(CATEGORY_NOT_FOUND_ERROR));
+                .orElseThrow(() -> new DistoveException(CATEGORY_NOT_FOUND));
         Channel newChannel = channelRepository.save(newChannel(
                 name,
                 channelTypeId,
@@ -57,10 +57,10 @@ public class ChannelService {
 
     private Channel checkChannelExist(Long channelId, Long serverId) {
         Channel channel = channelRepository.findById(channelId)
-                .orElseThrow(() -> new DistoveException(CHANNEL_NOT_FOUND_ERROR));
+                .orElseThrow(() -> new DistoveException(CHANNEL_NOT_FOUND));
 
         if (!Objects.equals(channel.getCategory().getServer().getId(), serverId))
-            throw new DistoveException(CHANNEL_NOT_FOUND_ERROR);
+            throw new DistoveException(CHANNEL_NOT_FOUND);
 
         return channel;
     }
