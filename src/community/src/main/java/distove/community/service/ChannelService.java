@@ -50,7 +50,6 @@ public class ChannelService {
                 category
         ));
         if (newChannel.getChannelTypeId() == 1) chatClient.createConnection(userId, newChannel.getId());
-        chatClient.createConnection(userId, newChannel.getId());
 
         return newChannel;
     }
