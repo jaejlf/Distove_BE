@@ -26,11 +26,9 @@ public class ConnectionService {
     private final ConnectionRepository connectionRepository;
     private final MessageRepository messageRepository;
 
-    public void createConnection(Long channelId, Long userId) {
+    public void createConnection(Long userId, Long channelId) {
         List<Long> connectedMemberIds = new ArrayList<>();
         connectedMemberIds.add(userId);
-
-        if (connectionRepository.findByChannelId(channelId).isPresent()) return;
 
         Connection connection = newConnection(channelId, connectedMemberIds);
         connectionRepository.save(connection);
@@ -39,8 +37,14 @@ public class ConnectionService {
         messageRepository.save(newMessage(channelId, userId, WELCOME, MessageStatus.CREATED, writer.getNickname()));
     }
 
-    public void clearAll(Long channelId) {
+    public void clear(Long channelId) {
         connectionRepository.deleteAllByChannelId(channelId);
+    }
+
+    public void clearAll(List<Long> channelIds) {
+        for (Long channelId : channelIds) {
+            connectionRepository.deleteAllByChannelId(channelId);
+        }
     }
 
 }
