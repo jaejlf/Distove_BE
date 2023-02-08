@@ -63,7 +63,7 @@ public class SignalingService {
             }
         });
         Participant participant = new Participant(userId, room, outgoingMediaEndpoint, webSocketSession);
-        List<Participant> participants = participantRepository.findParticipantsByRoom(room);
+        List<Participant> participants = participantRepository.findParticipantsByChannelId(room.getChannelId());
         UserResponse user = userClient.getUser(participant.getUserId());
 
 //        boolean imNewParticipant = false;
@@ -145,27 +145,31 @@ public class SignalingService {
     public void leaveRoom(WebSocketSession webSocketSession) throws IOException {
         Participant participant = participantRepository.findParticipantByWebSocketSession(webSocketSession)
                 .orElseThrow(() -> new DistoveException(PARTICIPANT_NOT_FOUND_ERROR));
-//        if (participant.getMediaEndpoint() != null) {
+        log.info("who is leaving {}", participant.getUserId());
         participant.getMediaEndpoint().release();
-        participantRepository.deleteParticipant(participant);
         Room room = roomRepository.findRoomByChannelId(participant.getRoom().getChannelId())
                 .orElseThrow(() -> new DistoveException(ROOM_NOT_FOUND_ERROR));
+        log.info("which room participant leave {}", room.getChannelId());
 
-        List<Participant> participants = participantRepository.findParticipantsByRoom(room);
+        List<Participant> participants = participantRepository.findParticipantsByChannelId(room.getChannelId());
+
         if (!participants.isEmpty()) {
+            log.info("participants not empty ");
             for (Participant otherParticipant : participants) {
+                log.info("participant who is still here {}", otherParticipant.getUserId());
+                otherParticipant.getWebSocketSession()
+                        .sendMessage(toJson(newLeftRoomResponse(participant.getUserId())));
                 if (otherParticipant.getIncomingParticipants().containsKey(participant.getUserId())) {
                     otherParticipant.getIncomingParticipants().get(participant.getUserId()).getMediaEndpoint()
                             .release();
                     otherParticipant.getIncomingParticipants().remove(participant.getUserId());
                 }
-                otherParticipant.getWebSocketSession()
-                        .sendMessage(toJson(newLeftRoomResponse(participant.getUserId())));
             }
         } else {
             closeRoom(room);
         }
-//        }
+        participantRepository.deleteParticipant(participant);
+
 
     }
 

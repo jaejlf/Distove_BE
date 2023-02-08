@@ -1,7 +1,6 @@
 package distove.voice.repository;
 
 import distove.voice.entity.Participant;
-import distove.voice.entity.Room;
 import org.springframework.stereotype.Repository;
 import org.springframework.web.socket.WebSocketSession;
 
@@ -37,9 +36,10 @@ public class MemoryParticipantRepository implements ParticipantRepository {
     }
 
     @Override
-    public List<Participant> findParticipantsByRoom(Room room) {
+    public List<Participant> findParticipantsByChannelId(Long channelId) {
         return participants.values().stream()
-                .filter(participant -> participant.getRoom().equals(room)).collect(Collectors.toList());
+                .filter(participant -> participant.getRoom().getChannelId().equals(channelId))
+                .collect(Collectors.toList());
     }
 
     @Override

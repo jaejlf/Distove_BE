@@ -1,7 +1,6 @@
 package distove.voice.repository;
 
 import distove.voice.entity.Participant;
-import distove.voice.entity.Room;
 import org.springframework.stereotype.Repository;
 import org.springframework.web.socket.WebSocketSession;
 
@@ -17,7 +16,7 @@ public interface ParticipantRepository {
 
     void deleteParticipant(Participant participant);
 
-    List<Participant> findParticipantsByRoom(Room room);
+    List<Participant> findParticipantsByChannelId(Long channelId);
 
     void insert(Participant participant);
 
