@@ -40,10 +40,10 @@ public class UserService {
             throw new DistoveException(DUPLICATE_EMAIL);
         }
 
-        if (request.getProfileImg() == null || request.getProfileImg().isEmpty()) {
-            profileImgUrl = defaultImgUrl;
-        } else {
+        if (request.getProfileImg() != null && !(request.getProfileImg().isEmpty())) {
             profileImgUrl = storageService.uploadToS3(request.getProfileImg());
+        } else {
+            profileImgUrl = null;
         }
 
         User user = new User(request.getEmail(), bCryptPasswordEncoder.encode(request.getPassword()), request.getNickname(), profileImgUrl);
@@ -57,13 +57,13 @@ public class UserService {
                 .orElseThrow(() -> new DistoveException(ACCOUNT_NOT_FOUND));
 
         if (!bCryptPasswordEncoder.matches(request.getPassword(), user.getPassword())) {
-            throw new DistoveException(INVAILD_PASSWORD);
+            throw new DistoveException(INVALID_PASSWORD);
         }
 
         String accessToken = jwtTokenProvider.createToken(user.getId(), "AT");
         String refreshToken = jwtTokenProvider.createToken(user.getId(), "RT");
 
-        String cookie = jwtTokenProvider.createTokenCookie(refreshToken).toString();
+        String cookie = jwtTokenProvider.createCookieFromToken(refreshToken).toString();
         user.updateRefreshToken(refreshToken);
         userRepository.save(user);
 
@@ -110,13 +110,10 @@ public class UserService {
         User user = userRepository.findById(jwtTokenProvider.getUserId(token))
                 .orElseThrow(() -> new DistoveException(ACCOUNT_NOT_FOUND));
 
-        if (request.getProfileImg() == null || request.getProfileImg().isEmpty()) {
-            profileImgUrl = defaultImgUrl;
-            if (user.getProfileImgUrl().equals(profileImgUrl)) {
-                return UserResponse.of(user.getId(), user.getNickname(), user.getProfileImgUrl());
-            }
-        } else {
+        if (request.getProfileImg() != null && !(request.getProfileImg().isEmpty())) {
             profileImgUrl = storageService.uploadToS3(request.getProfileImg());
+        } else {
+            profileImgUrl = null;
         }
 
         storageService.deleteFile(user.getProfileImgUrl());
@@ -128,7 +125,7 @@ public class UserService {
 
     public TokenResponse reissue(String token) {
         if (jwtTokenProvider.getTypeOfToken(token).equals("RT")) {
-            String cookie = jwtTokenProvider.createTokenCookie(token).toString();
+            String cookie = jwtTokenProvider.createCookieFromToken(token).toString();
             return TokenResponse.of(jwtTokenProvider.createToken(getUserIdFromDatabase(token), "AT"), cookie);
         }
 
