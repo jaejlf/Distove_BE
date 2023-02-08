@@ -5,7 +5,6 @@ import distove.auth.dto.request.JoinRequest;
 import distove.auth.dto.request.LoginRequest;
 import distove.auth.dto.request.UpdateNicknameRequest;
 import distove.auth.dto.request.UpdateProfileImgRequest;
-import distove.auth.dto.response.LogoutResponse;
 import distove.auth.dto.response.TokenResponse;
 import distove.auth.dto.response.UserResponse;
 import distove.auth.entity.User;
@@ -17,7 +16,6 @@ import org.springframework.beans.factory.annotation.Value;
 import org.springframework.security.crypto.bcrypt.BCryptPasswordEncoder;
 import org.springframework.stereotype.Service;
 
-import javax.servlet.http.HttpServletResponse;
 import java.util.ArrayList;
 import java.util.List;
 
@@ -54,31 +52,31 @@ public class UserService {
         return UserResponse.of(user.getId(), user.getNickname(), user.getProfileImgUrl());
     }
 
-    public TokenResponse login(LoginRequest request, HttpServletResponse response) {
+    public TokenResponse login(LoginRequest request) {
         User user = userRepository.findByEmail(request.getEmail())
                 .orElseThrow(() -> new DistoveException(ACCOUNT_NOT_FOUND));
 
         if (!bCryptPasswordEncoder.matches(request.getPassword(), user.getPassword())) {
-            throw new DistoveException(PASSWORD_ERROR);
+            throw new DistoveException(INVAILD_PASSWORD);
         }
 
         String accessToken = jwtTokenProvider.createToken(user.getId(), "AT");
         String refreshToken = jwtTokenProvider.createToken(user.getId(), "RT");
 
-        response.setHeader("Set-Cookie", jwtTokenProvider.createTokenCookie(refreshToken).toString());
+        String cookie = jwtTokenProvider.createTokenCookie(refreshToken).toString();
         user.updateRefreshToken(refreshToken);
         userRepository.save(user);
 
-        return TokenResponse.of(accessToken);
+        return TokenResponse.of(accessToken, cookie);
     }
 
-    public LogoutResponse logout(String token) {
+    public UserResponse logout(String token) {
         User user = userRepository.findById(jwtTokenProvider.getUserId(token))
                 .orElseThrow(() -> new DistoveException(ACCOUNT_NOT_FOUND));
 
         user.updateRefreshToken(null);
         userRepository.save(user);
-        return LogoutResponse.of(user.getEmail());
+        return UserResponse.of(user.getId(), user.getNickname(), user.getEmail());
     }
 
     public UserResponse getUser(Long userId) {
@@ -87,10 +85,10 @@ public class UserService {
         return UserResponse.of(user.getId(), user.getNickname(), user.getProfileImgUrl());
     }
 
-    public List<UserResponse> getUsers(List<Long> usersId) {
+    public List<UserResponse> getUsers(List<Long> userIds) {
         List<UserResponse> users = new ArrayList<>();
 
-        for (Long userId : usersId) {
+        for (Long userId : userIds) {
             User user = userRepository.findById(userId)
                     .orElseThrow(() -> new DistoveException(ACCOUNT_NOT_FOUND));
             users.add(UserResponse.of(user.getId(), user.getNickname(), user.getProfileImgUrl()));
@@ -117,8 +115,7 @@ public class UserService {
             if (user.getProfileImgUrl().equals(profileImgUrl)) {
                 return UserResponse.of(user.getId(), user.getNickname(), user.getProfileImgUrl());
             }
-        }
-        else {
+        } else {
             profileImgUrl = storageService.uploadToS3(request.getProfileImg());
         }
 
@@ -129,15 +126,16 @@ public class UserService {
 
     }
 
-    public TokenResponse reissue(String token, HttpServletResponse response) {
+    public TokenResponse reissue(String token) {
         if (jwtTokenProvider.getTypeOfToken(token).equals("RT")) {
-            response.setHeader("Set-Cookie", jwtTokenProvider.createTokenCookie(token).toString());
-            return TokenResponse.of(jwtTokenProvider.createToken(getUserIdFromDatabase(token), "AT"));
+            String cookie = jwtTokenProvider.createTokenCookie(token).toString();
+            return TokenResponse.of(jwtTokenProvider.createToken(getUserIdFromDatabase(token), "AT"), cookie);
         }
 
         throw new DistoveException(NOT_REFRESH_TOKEN);
     }
 
+    //refreshToken
     public Long getUserIdFromDatabase(String token) {
         User user = userRepository.findById(jwtTokenProvider.getUserId(token))
                 .orElseThrow(() -> new DistoveException(ACCOUNT_NOT_FOUND));
