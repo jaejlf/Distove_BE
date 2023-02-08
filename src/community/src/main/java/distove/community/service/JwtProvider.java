@@ -10,8 +10,8 @@ import org.springframework.stereotype.Component;
 
 import java.security.Key;
 
-import static distove.community.exception.ErrorCode.EXPIRED_JWT_ERROR;
-import static distove.community.exception.ErrorCode.INVALID_JWT_ERROR;
+import static distove.community.exception.ErrorCode.JWT_EXPIRED;
+import static distove.community.exception.ErrorCode.JWT_INVALID;
 
 @Component
 public class JwtProvider {
@@ -30,9 +30,9 @@ public class JwtProvider {
                     .build()
                     .parseClaimsJws(token);
         } catch (ExpiredJwtException e) {
-            throw new DistoveException(EXPIRED_JWT_ERROR);
+            throw new DistoveException(JWT_EXPIRED);
         } catch (Exception e) {
-            throw new DistoveException(INVALID_JWT_ERROR);
+            throw new DistoveException(JWT_INVALID);
         }
     }
 
