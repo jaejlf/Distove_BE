@@ -20,5 +20,7 @@ public interface ParticipantRepository {
 
     void insert(Participant participant);
 
+    void save(Long userId, Participant participant);
+
     List<Participant> findAll();
 }

@@ -106,17 +106,24 @@ public class SignalingService {
                 .orElseThrow(() -> new DistoveException(PARTICIPANT_NOT_FOUND_ERROR));
         Participant sender = participantRepository.findParticipantByUserId(senderUserId)
                 .orElseThrow(() -> new DistoveException(PARTICIPANT_NOT_FOUND_ERROR));
+
         WebRtcEndpoint incomingMediaEndpointFromYou = getIncomingMediaEndpointFromYou(participant, sender);
         participant.getIncomingParticipants()
                 .put(senderUserId, newIncomingParticipant(senderUserId, incomingMediaEndpointFromYou));
         webSocketSession.sendMessage(toJson(newSdpAnswerResponse(senderUserId, incomingMediaEndpointFromYou.processOffer(sdpOffer))));
         incomingMediaEndpointFromYou.gatherCandidates();
+        participantRepository.save(participant.getUserId(), participant);
     }
 
     private WebRtcEndpoint getIncomingMediaEndpointFromYou(Participant participant, Participant sender) {
         if (participant.getUserId().equals(sender.getUserId())) {
             return participant.getMediaEndpoint();
         }
+        Room roomA = roomRepository.findRoomByChannelId(participant.getRoom().getChannelId())
+                .orElseThrow(() -> new DistoveException(ROOM_NOT_FOUND_ERROR));
+        Room roomB = roomRepository.findRoomByChannelId(sender.getRoom().getChannelId())
+                .orElseThrow(() -> new DistoveException(ROOM_NOT_FOUND_ERROR));
+
 
         IncomingParticipant incomingParticipant = participant.getIncomingParticipants().get(sender.getUserId());
         if (incomingParticipant == null) {
@@ -134,7 +141,10 @@ public class SignalingService {
             });
             incomingParticipant = newIncomingParticipant(sender.getUserId(), incomingMediaEndpoint);
         }
-
+        log.info("loop start");
+        for (Room room : roomRepository.findAll()) {
+            log.info("existing room {} {}", room.getChannelId(), room.getPipeline());
+        }
         sender.getMediaEndpoint().connect(incomingParticipant.getMediaEndpoint());
         incomingParticipant.getMediaEndpoint().gatherCandidates();
 

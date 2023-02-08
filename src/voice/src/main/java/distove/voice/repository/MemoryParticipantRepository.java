@@ -16,7 +16,7 @@ import java.util.stream.Collectors;
 public class MemoryParticipantRepository implements ParticipantRepository {
 
     //    private static final List<Participant> participants = new CopyOnWriteArrayList<>();
-    private static final ConcurrentMap<Long, Participant> participants = new ConcurrentHashMap<>();
+    public static final ConcurrentMap<Long, Participant> participants = new ConcurrentHashMap<>();
 
     @Override
     public Optional<Participant> findParticipantByWebSocketSession(WebSocketSession webSocketSession) {
@@ -44,6 +44,11 @@ public class MemoryParticipantRepository implements ParticipantRepository {
 
     @Override
     public void insert(Participant participant) {
+        participants.put(participant.getUserId(), participant);
+    }
+
+    @Override
+    public void save(Long userId, Participant participant) {
         participants.put(participant.getUserId(), participant);
     }
 

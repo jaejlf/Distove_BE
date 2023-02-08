@@ -9,9 +9,8 @@ import java.util.concurrent.ConcurrentHashMap;
 import java.util.concurrent.ConcurrentMap;
 
 @Getter
-public class Participant {
+public class Participant implements Cloneable {
 
-    private int id;
     private final Long userId;
     @JsonIgnore
     private final Room room;

@@ -12,7 +12,7 @@ import java.util.concurrent.ConcurrentMap;
 @Repository
 public class MemoryRoomRepository implements RoomRepository {
     //    private static Integer seq = 1;
-    private static final ConcurrentMap<Long, Room> rooms = new ConcurrentHashMap<>();
+    public static final ConcurrentMap<Long, Room> rooms = new ConcurrentHashMap<>();
 
     @Override
     public Optional<Room> findRoomByChannelId(Long channelId) {
