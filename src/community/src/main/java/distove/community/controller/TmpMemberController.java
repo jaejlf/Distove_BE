@@ -23,7 +23,7 @@ import static distove.community.config.AuthorizedRole.Auth.CAN_UPDATE_MEMBER_ROL
 @Slf4j
 @RequiredArgsConstructor
 @RestController
-public class MemberController {
+public class TmpMemberController {
 
     private final MemberService memberService;
     private final UserClient userClient;
