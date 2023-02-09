@@ -17,11 +17,9 @@ import org.springframework.stereotype.Service;
 import javax.transaction.Transactional;
 import java.util.ArrayList;
 import java.util.List;
-import java.util.Objects;
 
 import static distove.community.entity.Member.newMember;
 import static distove.community.enumerate.DefaultRoleName.MEMBER;
-import static distove.community.enumerate.DefaultRoleName.OWNER;
 import static distove.community.exception.ErrorCode.*;
 
 @Service
@@ -40,7 +38,6 @@ public class MemberService {
 
     public List<RoleResponse.MemberInfo> getMemberWithRolesByServerId(Long userId, Long serverId) {
         checkServerExist(serverId);
-
         Member curMember = memberRepository.findByUserIdAndServerId(userId, serverId)
                 .orElseThrow(() -> new DistoveException(MEMBER_NOT_FOUND));
 
@@ -52,7 +49,7 @@ public class MemberService {
                     .id(member.getUserId())
                     .nickname(userClient.getUser(member.getUserId()).getNickname())
                     .roleName(role.getRoleName())
-                    .isActive(getIsActive(curMember, member))
+                    .isActive(curMember.getRole().isCanUpdateMemberRole())
                     .build());
         }
         return roleResponses;
@@ -66,7 +63,6 @@ public class MemberService {
             roleResponses.add(RoleResponse.Detail.builder()
                     .roleId(role.getId())
                     .roleName(role.getRoleName())
-                    .isActive(!Objects.equals(role.getRoleName(), OWNER.getName()))
                     .build());
         }
         return roleResponses;
@@ -85,8 +81,6 @@ public class MemberService {
     public void updateMemberRole(Long serverId, Long roleId, Long targetUserId) {
         MemberRole memberRole = memberRoleRepository.findById(roleId)
                 .orElseThrow(() -> new DistoveException(ROLE_NOT_FOUND));
-
-        if (Objects.equals(memberRole.getRoleName(), OWNER.getName())) throw new DistoveException(NO_AUTH);
 
         Member target = checkMemberExist(targetUserId, serverId);
         target.updateRole(memberRole);
@@ -108,13 +102,6 @@ public class MemberService {
     private Member checkMemberExist(Long userId, Long serverId) {
         return memberRepository.findByUserIdAndServerId(userId, serverId)
                 .orElseThrow(() -> new DistoveException(MEMBER_NOT_FOUND));
-    }
-
-    private static boolean getIsActive(Member curMember, Member target) {
-        boolean isActive = false;
-        if (curMember.getRole().isCanUpdateMemberRole())
-            isActive = !Objects.equals(target.getRole().getRoleName(), OWNER.getName());
-        return isActive;
     }
 
 }
