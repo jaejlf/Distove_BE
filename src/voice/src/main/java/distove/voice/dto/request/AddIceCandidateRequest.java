@@ -6,7 +6,7 @@ import org.kurento.client.IceCandidate;
 
 @Getter
 public class AddIceCandidateRequest {
-    String type;
-    Long userId;
-    IceCandidate candidateInfo;
+    private String type;
+    private Long userId;
+    private IceCandidate candidateInfo;
 }

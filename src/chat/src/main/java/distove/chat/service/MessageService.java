@@ -28,11 +28,10 @@ import java.util.List;
 import java.util.Objects;
 import java.util.stream.Collectors;
 
-import static distove.chat.dto.request.MessageRequest.*;
 import static distove.chat.entity.Message.newMessage;
 import static distove.chat.entity.Message.newReply;
-import static distove.chat.enumerate.MessageType.*;
 import static distove.chat.enumerate.MessageType.MessageStatus.*;
+import static distove.chat.enumerate.MessageType.*;
 import static distove.chat.exception.ErrorCode.*;
 
 @Slf4j
@@ -54,13 +53,13 @@ public class MessageService {
         Message message;
         switch (request.getStatus()) {
             case CREATED:
-                message = createMessage(channelId, request, userId);
+                message = createMessage(channelId, request.getParentId(), request.getType(), request.getContent(), userId);
                 break;
             case MODIFIED:
-                message = modifyMessage(request, userId);
+                message = modifyMessage(request.getMessageId(), request.getContent(), userId);
                 break;
             case DELETED:
-                message = deleteMessage(request, userId);
+                message = deleteMessage(request.getMessageId(), userId);
                 messageRepository.deleteById(message.getId());
                 break;
             default:
@@ -75,7 +74,9 @@ public class MessageService {
         String fileUploadUrl = storageService.uploadToS3(request.getFile(), type);
         Message message = createMessage(
                 channelId,
-                ofFile(type, fileUploadUrl, request.getParentId()),
+                request.getParentId(),
+                type,
+                fileUploadUrl,
                 userId);
 
         UserResponse writer = userClient.getUser(userId);
@@ -139,38 +140,38 @@ public class MessageService {
                 .stream()
                 .map(x -> MessageResponse.ofDefault(x, userClient.getUser(x.getUserId()), userId))
                 .collect(Collectors.toList());
-        
+
         Collections.reverse(messageResponses);
 
         ReplyInfoResponse replyInfo = getReplyInfo(getMessage(parentId));
         return PagedMessageResponse.ofChild(totalPage, replyInfo, messageResponses);
     }
 
-    public void clearAll(Long channelId) {
+    public void clear(Long channelId) {
         messageRepository.deleteAllByChannelId(channelId);
     }
 
-    private Message createMessage(Long channelId, MessageRequest request, Long userId) {
+    private Message createMessage(Long channelId, String parentId, MessageType type, String content, Long userId) {
         Message message;
-        if (request.getParentId() != null) {
+        if (parentId != null) {
             message = messageRepository.save(
-                    newReply(channelId, userId, request.getType(), CREATED, request.getContent(), request.getParentId()));
+                    newReply(channelId, userId, type, CREATED, content, parentId));
         } else {
             message = messageRepository.save(
-                    newMessage(channelId, userId, request.getType(), CREATED, request.getContent()));
+                    newMessage(channelId, userId, type, CREATED, content));
         }
         return message;
     }
 
-    private Message modifyMessage(MessageRequest request, Long userId) {
-        Message origin = getMessage(request.getMessageId());
+    private Message modifyMessage(String messageId, String content, Long userId) {
+        Message origin = getMessage(messageId);
         checkAuthorization(userId, origin);
-        origin.updateMessage(MODIFIED, request.getContent());
+        origin.updateMessage(MODIFIED, content);
         return messageRepository.save(origin);
     }
 
-    private Message deleteMessage(MessageRequest request, Long userId) {
-        Message origin = getMessage(request.getMessageId());
+    private Message deleteMessage(String messageId, Long userId) {
+        Message origin = getMessage(messageId);
         checkAuthorization(userId, origin);
         deleteAssociatedData(origin);
         origin.updateMessage(DELETED, "삭제된 메시지입니다");
@@ -190,11 +191,11 @@ public class MessageService {
 
     private Message getMessage(String messageId) {
         return messageRepository.findById(messageId)
-                .orElseThrow(() -> new DistoveException(MESSAGE_NOT_FOUND_ERROR));
+                .orElseThrow(() -> new DistoveException(MESSAGE_NOT_FOUND));
     }
 
     private static void checkAuthorization(Long userId, Message message) {
-        if (!Objects.equals(message.getUserId(), userId)) throw new DistoveException(NO_AUTH_ERROR);
+        if (!Objects.equals(message.getUserId(), userId)) throw new DistoveException(NO_AUTH);
     }
 
     private void deleteAssociatedData(Message origin) {
@@ -228,7 +229,13 @@ public class MessageService {
 
     private Connection checkChannelExist(Long channelId) {
         return connectionRepository.findByChannelId(channelId)
-                .orElseThrow(() -> new DistoveException(CHANNEL_NOT_FOUND_ERROR));
+                .orElseThrow(() -> new DistoveException(CHANNEL_NOT_FOUND));
+    }
+
+    public void clearAll(List<Long> channelIds) {
+        for (Long channelId : channelIds) {
+            messageRepository.deleteAllByChannelId(channelId);
+        }
     }
 
 }
