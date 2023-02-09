@@ -91,7 +91,7 @@ public class SignalingService {
     }
 
     public Room getRoomByChannelId(Long channelId) {
-        Room room = roomRepository.findRoomByChannelId(channelId).orElse(createNewRoomByChannelId(channelId));
+        Room room = roomRepository.findRoomByChannelId(channelId).orElseGet(() -> createNewRoomByChannelId(channelId));
         return room;
     }
 
@@ -102,10 +102,12 @@ public class SignalingService {
 
 
     public void sdpOffer(WebSocketSession webSocketSession, Long senderUserId, String sdpOffer) throws IOException {
+
         Participant participant = participantRepository.findParticipantByWebSocketSession(webSocketSession)
                 .orElseThrow(() -> new DistoveException(PARTICIPANT_NOT_FOUND_ERROR));
         Participant sender = participantRepository.findParticipantByUserId(senderUserId)
                 .orElseThrow(() -> new DistoveException(PARTICIPANT_NOT_FOUND_ERROR));
+//        log.info("me {}, you {}", participant.getUserId(), senderUserId);
 
         WebRtcEndpoint incomingMediaEndpointFromYou = getIncomingMediaEndpointFromYou(participant, sender);
         participant.getIncomingParticipants()
@@ -119,10 +121,10 @@ public class SignalingService {
         if (participant.getUserId().equals(sender.getUserId())) {
             return participant.getMediaEndpoint();
         }
-        Room roomA = roomRepository.findRoomByChannelId(participant.getRoom().getChannelId())
-                .orElseThrow(() -> new DistoveException(ROOM_NOT_FOUND_ERROR));
-        Room roomB = roomRepository.findRoomByChannelId(sender.getRoom().getChannelId())
-                .orElseThrow(() -> new DistoveException(ROOM_NOT_FOUND_ERROR));
+//        Room roomA = roomRepository.findRoomByChannelId(participant.getRoom().getChannelId())
+//                .orElseThrow(() -> new DistoveException(ROOM_NOT_FOUND_ERROR));
+//        Room roomB = roomRepository.findRoomByChannelId(sender.getRoom().getChannelId())
+//                .orElseThrow(() -> new DistoveException(ROOM_NOT_FOUND_ERROR));
 
 
         IncomingParticipant incomingParticipant = participant.getIncomingParticipants().get(sender.getUserId());
@@ -141,10 +143,10 @@ public class SignalingService {
             });
             incomingParticipant = newIncomingParticipant(sender.getUserId(), incomingMediaEndpoint);
         }
-        log.info("loop start");
-        for (Room room : roomRepository.findAll()) {
-            log.info("existing room {} {}", room.getChannelId(), room.getPipeline());
-        }
+//        log.info("loop start");
+//        for (Room room : roomRepository.findAll()) {
+//            log.info("existing room {} {}", room.getChannelId(), room.getPipeline());
+//        }
         sender.getMediaEndpoint().connect(incomingParticipant.getMediaEndpoint());
         incomingParticipant.getMediaEndpoint().gatherCandidates();
 
@@ -155,18 +157,18 @@ public class SignalingService {
     public void leaveRoom(WebSocketSession webSocketSession) throws IOException {
         Participant participant = participantRepository.findParticipantByWebSocketSession(webSocketSession)
                 .orElseThrow(() -> new DistoveException(PARTICIPANT_NOT_FOUND_ERROR));
-        log.info("who is leaving {}", participant.getUserId());
+//        log.info("who is leaving {}", participant.getUserId());
         participant.getMediaEndpoint().release();
         Room room = roomRepository.findRoomByChannelId(participant.getRoom().getChannelId())
                 .orElseThrow(() -> new DistoveException(ROOM_NOT_FOUND_ERROR));
-        log.info("which room participant leave {}", room.getChannelId());
+//        log.info("which room participant leave {}", room.getChannelId());
 
         List<Participant> participants = participantRepository.findParticipantsByChannelId(room.getChannelId());
 
         if (!participants.isEmpty()) {
-            log.info("participants not empty ");
+//            log.info("participants not empty ");
             for (Participant otherParticipant : participants) {
-                log.info("participant who is still here {}", otherParticipant.getUserId());
+//                log.info("participant who is still here {}", otherParticipant.getUserId());
                 otherParticipant.getWebSocketSession()
                         .sendMessage(toJson(newLeftRoomResponse(participant.getUserId())));
                 if (otherParticipant.getIncomingParticipants().containsKey(participant.getUserId())) {
