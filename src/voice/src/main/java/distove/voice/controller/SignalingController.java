@@ -51,7 +51,10 @@ public class SignalingController extends TextWebSocketHandler {
                 AddIceCandidateRequest addIceCandidateRequest = mapper.readValue(response.getPayload(), AddIceCandidateRequest.class);
                 signalingService.addIceCandidate(webSocketSession, addIceCandidateRequest.getUserId(), addIceCandidateRequest.getCandidateInfo());
                 break;
+            case "resetAllroom":
+                break;
             default:
+                signalingService.preDestroy();
                 break;
         }
     }

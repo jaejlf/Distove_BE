@@ -19,7 +19,6 @@ import org.springframework.stereotype.Service;
 import org.springframework.web.socket.TextMessage;
 import org.springframework.web.socket.WebSocketSession;
 
-import javax.annotation.PreDestroy;
 import java.io.IOException;
 import java.util.ArrayList;
 import java.util.List;
@@ -203,7 +202,7 @@ public class SignalingService {
         }
     }
 
-    @PreDestroy
+    //    @PreDestroy
     public void preDestroy() {
         List<Participant> participants = participantRepository.findAll();
         List<Room> rooms = roomRepository.findAll();
