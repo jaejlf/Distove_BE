@@ -12,16 +12,22 @@ import distove.community.repository.ServerRepository;
 import distove.community.web.UserClient;
 import distove.community.web.UserResponse;
 import lombok.RequiredArgsConstructor;
+import lombok.extern.slf4j.Slf4j;
 import org.springframework.stereotype.Service;
 
 import javax.transaction.Transactional;
 import java.util.ArrayList;
+import java.util.Collections;
 import java.util.List;
+import java.util.Objects;
+import java.util.stream.Collectors;
 
 import static distove.community.entity.Member.newMember;
 import static distove.community.enumerate.DefaultRoleName.MEMBER;
+import static distove.community.enumerate.DefaultRoleName.OWNER;
 import static distove.community.exception.ErrorCode.*;
 
+@Slf4j
 @Service
 @RequiredArgsConstructor
 @Transactional
@@ -83,6 +89,8 @@ public class MemberService {
                 .orElseThrow(() -> new DistoveException(ROLE_NOT_FOUND));
 
         Member target = checkMemberExist(targetUserId, serverId);
+        if (Objects.equals(target.getRole().getRoleName(), OWNER.getName())) checkOwnerIsUnique(serverId);
+
         target.updateRole(memberRole);
         memberRepository.save(target);
     }
@@ -102,6 +110,17 @@ public class MemberService {
     private Member checkMemberExist(Long userId, Long serverId) {
         return memberRepository.findByUserIdAndServerId(userId, serverId)
                 .orElseThrow(() -> new DistoveException(MEMBER_NOT_FOUND));
+    }
+
+    private void checkOwnerIsUnique(Long serverId) {
+        List<String> roleNames = memberRepository.findMembersByServerId(serverId)
+                .stream()
+                .map(Member::getRole)
+                .map(MemberRole::getRoleName)
+                .collect(Collectors.toList());
+
+        if (Collections.frequency(roleNames, OWNER.getName()) == 1)
+            throw new DistoveException(CANNOT_CHANGE_ROLE); // OWNER가 유일할 경우 OWNER 권한 수정 불가
     }
 
 }
