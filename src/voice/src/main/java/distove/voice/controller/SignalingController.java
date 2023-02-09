@@ -34,7 +34,7 @@ public class SignalingController extends TextWebSocketHandler {
     @Override
     public void handleTextMessage(WebSocketSession webSocketSession, TextMessage response) throws Exception {
         final JsonObject jsonMessage = gson.fromJson(response.getPayload(), JsonObject.class);
-        log.info("response{}", response);
+//        log.info("response{}", response);
         switch (jsonMessage.get("type").getAsString()) {
             case "joinRoom":
                 JoinRoomRequest joinRoomRequest = mapper.readValue(response.getPayload(), JoinRoomRequest.class);
@@ -51,7 +51,10 @@ public class SignalingController extends TextWebSocketHandler {
                 AddIceCandidateRequest addIceCandidateRequest = mapper.readValue(response.getPayload(), AddIceCandidateRequest.class);
                 signalingService.addIceCandidate(webSocketSession, addIceCandidateRequest.getUserId(), addIceCandidateRequest.getCandidateInfo());
                 break;
+            case "resetAllroom":
+                break;
             default:
+                signalingService.preDestroy();
                 break;
         }
     }
