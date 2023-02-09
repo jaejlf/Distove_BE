@@ -14,9 +14,9 @@
  * limitations under the License.
  *
  */
-var ws = new WebSocket('ws://localhost:8080/voice/signaling');
+// var ws = new WebSocket('ws://localhost:8080/voice/signaling');
 
-// var ws = new WebSocket('wss://distove.onstove.com/voice/signaling');
+var ws = new WebSocket('wss://distove.onstove.com/voice/signaling');
 var participants = {};
 var name;
 
@@ -144,6 +144,7 @@ function leaveRoom() {
     document.getElementById('room').style.display = 'none';
 
     ws.close();
+
 }
 
 function receiveVideo(sender) {
