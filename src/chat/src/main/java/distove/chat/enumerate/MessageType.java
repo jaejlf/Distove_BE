@@ -18,13 +18,12 @@ public enum MessageType {
     IMAGE(Arrays.asList(CREATED, DELETED)),
     FILE(Arrays.asList(CREATED, DELETED)),
     VIDEO(Arrays.asList(CREATED, DELETED)),
-    TYPING(List.of(CREATED)),
     TEXT(Arrays.asList(CREATED, MODIFIED, DELETED));
 
     private final List<MessageStatus> status;
 
     public enum MessageStatus {
-        CREATED, MODIFIED, DELETED;
+        CREATED, MODIFIED, DELETED, TYPING;
     }
 
     public static void checkStatusCanChanged(MessageType type, MessageStatus status) {

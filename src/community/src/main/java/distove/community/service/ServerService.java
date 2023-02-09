@@ -24,8 +24,8 @@ import static distove.community.entity.Category.newCategory;
 import static distove.community.entity.Member.newMember;
 import static distove.community.entity.Server.newServer;
 import static distove.community.enumerate.DefaultRoleName.OWNER;
-import static distove.community.exception.ErrorCode.ROLE_NOT_FOUND_ERROR;
-import static distove.community.exception.ErrorCode.SERVER_NOT_FOUND_ERROR;
+import static distove.community.exception.ErrorCode.ROLE_NOT_FOUND;
+import static distove.community.exception.ErrorCode.SERVER_NOT_FOUND;
 
 @Slf4j
 @Service
@@ -83,7 +83,7 @@ public class ServerService {
     @Transactional
     public Server updateServer(Long serverId, String name, String imgUrl, MultipartFile image) {
         Server server = serverRepository.findById(serverId)
-                .orElseThrow(() -> new DistoveException(SERVER_NOT_FOUND_ERROR));
+                .orElseThrow(() -> new DistoveException(SERVER_NOT_FOUND));
         if (!image.isEmpty()) {
             imgUrl = storageService.upload(image);
         }
@@ -117,7 +117,7 @@ public class ServerService {
     private void setOwnerAndRole(Long userId, Server newServer) {
         memberRoleRepository.saveAll(MemberRole.createDefaultRoles(newServer));
         MemberRole ownerRole = memberRoleRepository.findByRoleNameAndServerId(OWNER.getName(), newServer.getId())
-                .orElseThrow(() -> new DistoveException(ROLE_NOT_FOUND_ERROR));
+                .orElseThrow(() -> new DistoveException(ROLE_NOT_FOUND));
         memberRepository.save(newMember(newServer, userId, ownerRole));
     }
 
