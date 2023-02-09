@@ -39,7 +39,7 @@ public class ReactionService {
                 message.getReactions() : new ArrayList<Reaction>();
         Set<Long> userIds = new HashSet<>(Arrays.asList(userId));
 
-        Boolean isReacted = false;
+        boolean isReacted = false;
         for (Reaction r : reactions) {
             userIds.addAll(r.getUserIds());
             if(r.getEmoji().equals(emoji)){
@@ -58,9 +58,23 @@ public class ReactionService {
             Reaction createdNewReaction = newReaction(reactionRequest.getEmoji(), List.of(userId));
             reactions.add(createdNewReaction);
         }
-        List<UserResponse> users =userClient.getUsers(userIds.toString().replace("[","").replace("]",""));
-        Map<Long,UserResponse> userResponseMap = users.stream().collect(Collectors.toMap(u->u.getId(),u->u));
+        message.updateReaction(reactions);
+        messageRepository.save(message);
 
+        return newReactionMessageResponse(reactionRequest.getMessageId(),getReactionResponses(reactions, userIds));
+    }
+
+    public List<ReactionResponse> getUserInfoOfReactions(List<Reaction> reactions) {
+        Set<Long> userIds = new HashSet<>();
+        for (Reaction r : reactions) {
+            userIds.addAll(r.getUserIds());
+        }
+        return getReactionResponses(reactions, userIds);
+    }
+
+    private List<ReactionResponse> getReactionResponses(List<Reaction> reactions, Set<Long> userIds) {
+        List<UserResponse> users =userClient.getUsers(userIds.toString().replace("[","").replace("]",""));
+        Map<Long,UserResponse> userResponseMap = users.stream().collect(Collectors.toMap(u->u.getId(), u->u));
         List<ReactionResponse> reactionResponses = reactions.stream()
                 .map(reaction -> newReactionResponse(
                         reaction.getEmoji(),
@@ -68,10 +82,11 @@ public class ReactionService {
                                 .map(id -> userResponseMap.get(id))
                                 .collect(Collectors.toList())))
                 .collect(Collectors.toList());
-        message.updateReaction(reactions);
-        messageRepository.save(message);
 
-        return newReactionMessageResponse(reactionRequest.getMessageId(),reactionResponses);
+        return reactionResponses;
+
     }
 
 }
+
+

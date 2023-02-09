@@ -23,7 +23,7 @@ public enum MessageType {
     private final List<MessageStatus> status;
 
     public enum MessageStatus {
-        CREATED, MODIFIED, DELETED, TYPING;
+        CREATED, MODIFIED, DELETED, TYPING, REACTED;
     }
 
     public static void checkStatusCanChanged(MessageType type, MessageStatus status) {
