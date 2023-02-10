@@ -40,6 +40,7 @@ public class MemberService {
     private final UserClient userClient;
 
     public List<Member> getMembersByServerId(Long serverId) {
+        checkServerExist(serverId);
         return memberRepository.findMembersByServerId(serverId);
     }
 
