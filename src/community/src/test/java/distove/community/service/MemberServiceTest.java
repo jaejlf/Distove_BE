@@ -12,7 +12,7 @@ class MemberServiceTest extends CommonServiceTest {
     @Test
     void 동시에_멤버_역할_변경() throws InterruptedException {
         // given
-        Long serverId = 2L;
+        Long serverId = 1L;
         Long roleId = 3L; // '멤버' 권한
 
         // when

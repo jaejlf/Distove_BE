@@ -13,6 +13,7 @@ import distove.community.web.UserClient;
 import distove.community.web.UserResponse;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
+import org.springframework.orm.ObjectOptimisticLockingFailureException;
 import org.springframework.stereotype.Service;
 
 import javax.transaction.Transactional;
@@ -49,13 +50,18 @@ public class MemberService {
 
         List<Member> members = getMembersByServerId(serverId);
         List<RoleResponse.MemberInfo> roleResponses = new ArrayList<>();
+
+        boolean isActive = curMember.getRole().isCanUpdateMemberRole();
+        ;
         for (Member member : members) {
             MemberRole role = member.getRole();
+
+            isActive = getIsActive(serverId, role);
             roleResponses.add(RoleResponse.MemberInfo.builder()
                     .id(member.getUserId())
                     .nickname(userClient.getUser(member.getUserId()).getNickname())
                     .roleName(role.getRoleName())
-                    .isActive(curMember.getRole().isCanUpdateMemberRole())
+                    .isActive(isActive)
                     .build());
         }
         return roleResponses;
@@ -89,10 +95,14 @@ public class MemberService {
                 .orElseThrow(() -> new DistoveException(ROLE_NOT_FOUND));
 
         Member target = checkMemberExist(targetUserId, serverId);
-        if (Objects.equals(target.getRole().getRoleName(), OWNER.getName())) checkOwnerIsUnique(serverId);
+        if (!getIsActive(serverId, target.getRole())) throw new DistoveException(CANNOT_CHANGE_ROLE);
 
-        target.updateRole(memberRole);
-        memberRepository.save(target);
+        try {
+            target.updateRole(memberRole);
+            memberRepository.save(target);
+        } catch (ObjectOptimisticLockingFailureException e) {
+            throw new DistoveException(CANNOT_CHANGE_ROLE);
+        }
     }
 
     public MemberResponse getMemberInfo(Long userId, Long serverId) {
@@ -112,15 +122,18 @@ public class MemberService {
                 .orElseThrow(() -> new DistoveException(MEMBER_NOT_FOUND));
     }
 
-    private void checkOwnerIsUnique(Long serverId) {
+    private boolean checkOwnerIsUnique(Long serverId) {
         List<String> roleNames = memberRepository.findMembersByServerId(serverId)
                 .stream()
                 .map(Member::getRole)
                 .map(MemberRole::getRoleName)
                 .collect(Collectors.toList());
 
-        if (Collections.frequency(roleNames, OWNER.getName()) == 1)
-            throw new DistoveException(CANNOT_CHANGE_ROLE); // OWNER가 유일할 경우 OWNER 권한 수정 불가
+        return Collections.frequency(roleNames, OWNER.getName()) == 1; // OWNER가 유일할 경우 OWNER 권한 수정 불가
+    }
+
+    private boolean getIsActive(Long serverId, MemberRole role) {
+        return !Objects.equals(role.getRoleName(), OWNER.getName()) || !checkOwnerIsUnique(serverId);
     }
 
 }
