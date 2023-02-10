@@ -52,12 +52,10 @@ public class MemberService {
         List<Member> members = getMembersByServerId(serverId);
         List<RoleResponse.MemberInfo> roleResponses = new ArrayList<>();
 
-        boolean isActive = curMember.getRole().isCanUpdateMemberRole();
-        ;
         for (Member member : members) {
             MemberRole role = member.getRole();
 
-            isActive = getIsActive(serverId, role);
+            boolean isActive = getIsActive(serverId, role);
             roleResponses.add(RoleResponse.MemberInfo.builder()
                     .id(member.getUserId())
                     .nickname(userClient.getUser(member.getUserId()).getNickname())
