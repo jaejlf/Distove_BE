@@ -7,6 +7,7 @@ import com.google.gson.JsonObject;
 import distove.voice.dto.request.AddIceCandidateRequest;
 import distove.voice.dto.request.JoinRoomRequest;
 import distove.voice.dto.request.SdpOfferRequest;
+import distove.voice.repository.ParticipantRepository;
 import distove.voice.service.SignalingService;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
@@ -25,6 +26,7 @@ import java.util.concurrent.CopyOnWriteArrayList;
 @RequiredArgsConstructor
 public class SignalingController extends TextWebSocketHandler {
     private final SignalingService signalingService;
+    private final ParticipantRepository participantRepository;
     private static final ObjectMapper mapper = new ObjectMapper();
     private static final Gson gson = new GsonBuilder().create();
     List<WebSocketSession> sessions = new CopyOnWriteArrayList<>();
@@ -32,6 +34,7 @@ public class SignalingController extends TextWebSocketHandler {
     @Override
     public void handleTextMessage(WebSocketSession webSocketSession, TextMessage response) throws Exception {
         final JsonObject jsonMessage = gson.fromJson(response.getPayload(), JsonObject.class);
+//        log.info("response{}", response);
         switch (jsonMessage.get("type").getAsString()) {
             case "joinRoom":
                 JoinRoomRequest joinRoomRequest = mapper.readValue(response.getPayload(), JoinRoomRequest.class);
@@ -48,7 +51,10 @@ public class SignalingController extends TextWebSocketHandler {
                 AddIceCandidateRequest addIceCandidateRequest = mapper.readValue(response.getPayload(), AddIceCandidateRequest.class);
                 signalingService.addIceCandidate(webSocketSession, addIceCandidateRequest.getUserId(), addIceCandidateRequest.getCandidateInfo());
                 break;
+            case "resetAllroom":
+                break;
             default:
+                signalingService.preDestroy();
                 break;
         }
     }
@@ -61,7 +67,7 @@ public class SignalingController extends TextWebSocketHandler {
 
     @Override
     public void afterConnectionClosed(WebSocketSession webSocketSession, CloseStatus status) throws Exception {
-        signalingService.leaveRoom(webSocketSession);
+        sessions.remove(webSocketSession);
     }
 
 }

@@ -114,7 +114,6 @@ class MessageServiceTest extends CommonServiceTest {
 
         //then
         TypedUserResponse expected = TypedUserResponse.builder()
-                .type(TYPING)
                 .content(dummyUser.getNickname())
                 .build();
 

@@ -2,10 +2,7 @@ package distove.chat.service;
 
 import distove.chat.dto.request.FileUploadRequest;
 import distove.chat.dto.request.MessageRequest;
-import distove.chat.dto.response.MessageResponse;
-import distove.chat.dto.response.PagedMessageResponse;
-import distove.chat.dto.response.ReplyInfoResponse;
-import distove.chat.dto.response.TypedUserResponse;
+import distove.chat.dto.response.*;
 import distove.chat.entity.Connection;
 import distove.chat.entity.Message;
 import distove.chat.enumerate.MessageType;
@@ -45,6 +42,7 @@ public class MessageService {
     private final StorageService storageService;
     private final MessageRepository messageRepository;
     private final ConnectionRepository connectionRepository;
+    private final ReactionService reactionService;
     private final UserClient userClient;
 
     public MessageResponse publishMessage(Long userId, Long channelId, MessageRequest request) {
@@ -67,7 +65,8 @@ public class MessageService {
         }
 
         UserResponse writer = userClient.getUser(userId);
-        return MessageResponse.ofDefault(message, writer, userId);
+        List<ReactionResponse> reactions = message.getReactions()!=null?reactionService.getUserInfoOfReactions(message.getReactions()):null;
+        return MessageResponse.ofDefault(message, writer, userId,reactions);
     }
 
     public MessageResponse publishFile(Long userId, Long channelId, MessageType type, FileUploadRequest request) {
@@ -80,7 +79,8 @@ public class MessageService {
                 userId);
 
         UserResponse writer = userClient.getUser(userId);
-        return MessageResponse.ofDefault(message, writer, userId);
+        List<ReactionResponse> reactions = message.getReactions()!=null?reactionService.getUserInfoOfReactions(message.getReactions()):null;
+        return MessageResponse.ofDefault(message, writer, userId, reactions);
     }
 
     public TypedUserResponse publishTypedUser(Long userId) {
@@ -98,10 +98,12 @@ public class MessageService {
         List<MessageResponse> messageResponses = new ArrayList<>();
         for (Message message : messagePage.getContent()) {
             UserResponse writer = userClient.getUser(message.getUserId());
+            List<ReactionResponse> reactions = message.getReactions()!=null?reactionService.getUserInfoOfReactions(message.getReactions()):null;
+
             if (message.getReplyName() == null) {
-                messageResponses.add(MessageResponse.ofDefault(message, writer, userId));
+                messageResponses.add(MessageResponse.ofDefault(message, writer, userId,reactions));
             } else {
-                messageResponses.add(MessageResponse.ofParent(message, writer, userId, getReplyInfo(message)));
+                messageResponses.add(MessageResponse.ofParent(message, writer, userId, getReplyInfo(message),reactions));
             }
         }
         Collections.reverse(messageResponses);
@@ -120,14 +122,16 @@ public class MessageService {
                 writer.getNickname(),
                 writer.getProfileImgUrl()
         );
-        return MessageResponse.ofParent(parent, writer, userId, replyInfoResponse);
+        List<ReactionResponse> reactions = parent.getReactions()!=null?reactionService.getUserInfoOfReactions(parent.getReactions()):null;
+
+        return MessageResponse.ofParent(parent, writer, userId, replyInfoResponse,reactions);
     }
 
     public List<MessageResponse> getParentByChannelId(Long userId, Long channelId) {
         checkChannelExist(channelId);
         return messageRepository.findAllByChannelIdAndReplyNameIsNotNull(channelId)
                 .stream()
-                .map(x -> MessageResponse.ofParent(x, userClient.getUser(x.getUserId()), userId, getReplyInfo(x)))
+                .map(x -> MessageResponse.ofParent(x, userClient.getUser(x.getUserId()), userId, getReplyInfo(x),x.getReactions()!=null?reactionService.getUserInfoOfReactions(x.getReactions()):null))
                 .collect(Collectors.toList());
     }
 
@@ -136,9 +140,10 @@ public class MessageService {
         Page<Message> replyPage = messageRepository.findAllByParentIdOrderByCreatedAtDesc(parentId, pageable);
 
         int totalPage = replyPage.getTotalPages();
+
         List<MessageResponse> messageResponses = replyPage.getContent()
                 .stream()
-                .map(x -> MessageResponse.ofDefault(x, userClient.getUser(x.getUserId()), userId))
+                .map(x -> MessageResponse.ofDefault(x, userClient.getUser(x.getUserId()), userId,x.getReactions()!=null?reactionService.getUserInfoOfReactions(x.getReactions()):null))
                 .collect(Collectors.toList());
 
         Collections.reverse(messageResponses);
