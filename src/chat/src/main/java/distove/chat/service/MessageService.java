@@ -26,6 +26,7 @@ import java.util.List;
 import java.util.Objects;
 import java.util.stream.Collectors;
 
+import static distove.chat.entity.Member.*;
 import static distove.chat.entity.Message.newMessage;
 import static distove.chat.entity.Message.newReply;
 import static distove.chat.enumerate.MessageType.MessageStatus.*;
@@ -157,6 +158,20 @@ public class MessageService {
         messageRepository.deleteAllByChannelId(channelId);
     }
 
+    public void clearAll(List<Long> channelIds) {
+        for (Long channelId : channelIds) {
+            messageRepository.deleteAllByChannelId(channelId);
+        }
+    }
+
+    public void unsubscribeChannel(Long userId, Long channelId) {
+        Connection connection = checkChannelExist(channelId);
+        List<Member> members = connection.getMembers();
+        members.replaceAll(x -> Objects.equals(x.getUserId(), userId) ? newMember(userId) : x);
+        connection.updateMembers(members);
+        connectionRepository.save(connection);
+    }
+
     private Message createMessage(Long channelId, String parentId, MessageType type, String content, Long userId) {
         Message message;
         if (parentId != null) {
@@ -220,7 +235,7 @@ public class MessageService {
     private void saveWelcomeMessage(Long userId, Long channelId) {
         Connection connection = checkChannelExist(channelId);
         List<Member> members = connection.getMembers();
-        
+
         // connect 기록이 존재하는 유저인지 확인
         if (members.stream()
                 .map(Member::getUserId)
@@ -232,7 +247,7 @@ public class MessageService {
     }
 
     private void addUserToConnection(Long userId, Connection connection, List<Member> members) {
-        members.add(Member.newMember(userId));
+        members.add(newMember(userId));
         connection.updateMembers(members);
         connectionRepository.save(connection);
     }
@@ -240,12 +255,6 @@ public class MessageService {
     private Connection checkChannelExist(Long channelId) {
         return connectionRepository.findByChannelId(channelId)
                 .orElseThrow(() -> new DistoveException(CHANNEL_NOT_FOUND));
-    }
-
-    public void clearAll(List<Long> channelIds) {
-        for (Long channelId : channelIds) {
-            messageRepository.deleteAllByChannelId(channelId);
-        }
     }
 
 }

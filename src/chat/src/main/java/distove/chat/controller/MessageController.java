@@ -56,4 +56,11 @@ public class MessageController {
         return ResultResponse.success(HttpStatus.OK, "메시지 리스트 조회", result);
     }
 
+    @PatchMapping("/unsubscribe/{channelId}")
+    public ResponseEntity<Object> unsubscribeChannel(@RequestHeader("userId") Long userId,
+                                                     @PathVariable Long channelId) {
+        messageService.unsubscribeChannel(userId, channelId);
+        return ResultResponse.success(HttpStatus.OK, "채널 구독 해제", null);
+    }
+
 }
