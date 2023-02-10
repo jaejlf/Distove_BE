@@ -12,18 +12,23 @@ import distove.community.repository.ServerRepository;
 import distove.community.web.UserClient;
 import distove.community.web.UserResponse;
 import lombok.RequiredArgsConstructor;
+import lombok.extern.slf4j.Slf4j;
+import org.springframework.orm.ObjectOptimisticLockingFailureException;
 import org.springframework.stereotype.Service;
 
 import javax.transaction.Transactional;
 import java.util.ArrayList;
+import java.util.Collections;
 import java.util.List;
 import java.util.Objects;
+import java.util.stream.Collectors;
 
 import static distove.community.entity.Member.newMember;
 import static distove.community.enumerate.DefaultRoleName.MEMBER;
 import static distove.community.enumerate.DefaultRoleName.OWNER;
 import static distove.community.exception.ErrorCode.*;
 
+@Slf4j
 @Service
 @RequiredArgsConstructor
 @Transactional
@@ -35,24 +40,29 @@ public class MemberService {
     private final UserClient userClient;
 
     public List<Member> getMembersByServerId(Long serverId) {
+        checkServerExist(serverId);
         return memberRepository.findMembersByServerId(serverId);
     }
 
     public List<RoleResponse.MemberInfo> getMemberWithRolesByServerId(Long userId, Long serverId) {
         checkServerExist(serverId);
-
         Member curMember = memberRepository.findByUserIdAndServerId(userId, serverId)
                 .orElseThrow(() -> new DistoveException(MEMBER_NOT_FOUND));
 
         List<Member> members = getMembersByServerId(serverId);
         List<RoleResponse.MemberInfo> roleResponses = new ArrayList<>();
+
+        boolean isActive = curMember.getRole().isCanUpdateMemberRole();
+        ;
         for (Member member : members) {
             MemberRole role = member.getRole();
+
+            isActive = getIsActive(serverId, role);
             roleResponses.add(RoleResponse.MemberInfo.builder()
                     .id(member.getUserId())
                     .nickname(userClient.getUser(member.getUserId()).getNickname())
                     .roleName(role.getRoleName())
-                    .isActive(getIsActive(curMember, member))
+                    .isActive(isActive)
                     .build());
         }
         return roleResponses;
@@ -66,7 +76,6 @@ public class MemberService {
             roleResponses.add(RoleResponse.Detail.builder()
                     .roleId(role.getId())
                     .roleName(role.getRoleName())
-                    .isActive(!Objects.equals(role.getRoleName(), OWNER.getName()))
                     .build());
         }
         return roleResponses;
@@ -86,11 +95,15 @@ public class MemberService {
         MemberRole memberRole = memberRoleRepository.findById(roleId)
                 .orElseThrow(() -> new DistoveException(ROLE_NOT_FOUND));
 
-        if (Objects.equals(memberRole.getRoleName(), OWNER.getName())) throw new DistoveException(NO_AUTH);
-
         Member target = checkMemberExist(targetUserId, serverId);
-        target.updateRole(memberRole);
-        memberRepository.save(target);
+        if (!getIsActive(serverId, target.getRole())) throw new DistoveException(CANNOT_CHANGE_ROLE);
+
+        try {
+            target.updateRole(memberRole);
+            memberRepository.save(target);
+        } catch (ObjectOptimisticLockingFailureException e) {
+            throw new DistoveException(CANNOT_CHANGE_ROLE);
+        }
     }
 
     public MemberResponse getMemberInfo(Long userId, Long serverId) {
@@ -110,11 +123,18 @@ public class MemberService {
                 .orElseThrow(() -> new DistoveException(MEMBER_NOT_FOUND));
     }
 
-    private static boolean getIsActive(Member curMember, Member target) {
-        boolean isActive = false;
-        if (curMember.getRole().isCanUpdateMemberRole())
-            isActive = !Objects.equals(target.getRole().getRoleName(), OWNER.getName());
-        return isActive;
+    private boolean checkOwnerIsUnique(Long serverId) {
+        List<String> roleNames = memberRepository.findMembersByServerId(serverId)
+                .stream()
+                .map(Member::getRole)
+                .map(MemberRole::getRoleName)
+                .collect(Collectors.toList());
+
+        return Collections.frequency(roleNames, OWNER.getName()) == 1; // OWNER가 유일할 경우 OWNER 권한 수정 불가
+    }
+
+    private boolean getIsActive(Long serverId, MemberRole role) {
+        return !Objects.equals(role.getRoleName(), OWNER.getName()) || !checkOwnerIsUnique(serverId);
     }
 
 }

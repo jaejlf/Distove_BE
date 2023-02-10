@@ -24,6 +24,9 @@ public class Member {
     @JoinColumn(name = "role_id")
     private MemberRole role;
 
+    @Version
+    private Long version;
+
     public static Member newMember(Server server, Long userId, MemberRole role) {
         return Member.builder()
                 .server(server)
