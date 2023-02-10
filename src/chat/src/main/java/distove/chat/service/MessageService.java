@@ -4,6 +4,7 @@ import distove.chat.dto.request.FileUploadRequest;
 import distove.chat.dto.request.MessageRequest;
 import distove.chat.dto.response.*;
 import distove.chat.entity.Connection;
+import distove.chat.entity.Member;
 import distove.chat.entity.Message;
 import distove.chat.enumerate.MessageType;
 import distove.chat.exception.DistoveException;
@@ -65,8 +66,8 @@ public class MessageService {
         }
 
         UserResponse writer = userClient.getUser(userId);
-        List<ReactionResponse> reactions = message.getReactions()!=null?reactionService.getUserInfoOfReactions(message.getReactions()):null;
-        return MessageResponse.ofDefault(message, writer, userId,reactions);
+        List<ReactionResponse> reactions = message.getReactions() != null ? reactionService.getUserInfoOfReactions(message.getReactions()) : null;
+        return MessageResponse.ofDefault(message, writer, userId, reactions);
     }
 
     public MessageResponse publishFile(Long userId, Long channelId, MessageType type, FileUploadRequest request) {
@@ -79,7 +80,7 @@ public class MessageService {
                 userId);
 
         UserResponse writer = userClient.getUser(userId);
-        List<ReactionResponse> reactions = message.getReactions()!=null?reactionService.getUserInfoOfReactions(message.getReactions()):null;
+        List<ReactionResponse> reactions = message.getReactions() != null ? reactionService.getUserInfoOfReactions(message.getReactions()) : null;
         return MessageResponse.ofDefault(message, writer, userId, reactions);
     }
 
@@ -98,12 +99,12 @@ public class MessageService {
         List<MessageResponse> messageResponses = new ArrayList<>();
         for (Message message : messagePage.getContent()) {
             UserResponse writer = userClient.getUser(message.getUserId());
-            List<ReactionResponse> reactions = message.getReactions()!=null?reactionService.getUserInfoOfReactions(message.getReactions()):null;
+            List<ReactionResponse> reactions = message.getReactions() != null ? reactionService.getUserInfoOfReactions(message.getReactions()) : null;
 
             if (message.getReplyName() == null) {
-                messageResponses.add(MessageResponse.ofDefault(message, writer, userId,reactions));
+                messageResponses.add(MessageResponse.ofDefault(message, writer, userId, reactions));
             } else {
-                messageResponses.add(MessageResponse.ofParent(message, writer, userId, getReplyInfo(message),reactions));
+                messageResponses.add(MessageResponse.ofParent(message, writer, userId, getReplyInfo(message), reactions));
             }
         }
         Collections.reverse(messageResponses);
@@ -122,16 +123,16 @@ public class MessageService {
                 writer.getNickname(),
                 writer.getProfileImgUrl()
         );
-        List<ReactionResponse> reactions = parent.getReactions()!=null?reactionService.getUserInfoOfReactions(parent.getReactions()):null;
+        List<ReactionResponse> reactions = parent.getReactions() != null ? reactionService.getUserInfoOfReactions(parent.getReactions()) : null;
 
-        return MessageResponse.ofParent(parent, writer, userId, replyInfoResponse,reactions);
+        return MessageResponse.ofParent(parent, writer, userId, replyInfoResponse, reactions);
     }
 
     public List<MessageResponse> getParentByChannelId(Long userId, Long channelId) {
         checkChannelExist(channelId);
         return messageRepository.findAllByChannelIdAndReplyNameIsNotNull(channelId)
                 .stream()
-                .map(x -> MessageResponse.ofParent(x, userClient.getUser(x.getUserId()), userId, getReplyInfo(x),x.getReactions()!=null?reactionService.getUserInfoOfReactions(x.getReactions()):null))
+                .map(x -> MessageResponse.ofParent(x, userClient.getUser(x.getUserId()), userId, getReplyInfo(x), x.getReactions() != null ? reactionService.getUserInfoOfReactions(x.getReactions()) : null))
                 .collect(Collectors.toList());
     }
 
@@ -143,7 +144,7 @@ public class MessageService {
 
         List<MessageResponse> messageResponses = replyPage.getContent()
                 .stream()
-                .map(x -> MessageResponse.ofDefault(x, userClient.getUser(x.getUserId()), userId,x.getReactions()!=null?reactionService.getUserInfoOfReactions(x.getReactions()):null))
+                .map(x -> MessageResponse.ofDefault(x, userClient.getUser(x.getUserId()), userId, x.getReactions() != null ? reactionService.getUserInfoOfReactions(x.getReactions()) : null))
                 .collect(Collectors.toList());
 
         Collections.reverse(messageResponses);
@@ -218,17 +219,21 @@ public class MessageService {
 
     private void saveWelcomeMessage(Long userId, Long channelId) {
         Connection connection = checkChannelExist(channelId);
-        List<Long> connectedMemberIds = connection.getConnectedMemberIds();
-        if (connectedMemberIds.contains(userId)) return;
+        List<Member> members = connection.getMembers();
+        
+        // connect 기록이 존재하는 유저인지 확인
+        if (members.stream()
+                .map(Member::getUserId)
+                .collect(Collectors.toList()).contains(userId)) return;
 
-        addUserToConnection(userId, connection, connectedMemberIds);
+        addUserToConnection(userId, connection, members);
         UserResponse writer = userClient.getUser(userId);
         messageRepository.save(newMessage(channelId, userId, WELCOME, CREATED, writer.getNickname()));
     }
 
-    private void addUserToConnection(Long userId, Connection connection, List<Long> connectedMemberIds) {
-        connectedMemberIds.add(userId);
-        connection.updateConnectedMemberIds(connectedMemberIds);
+    private void addUserToConnection(Long userId, Connection connection, List<Member> members) {
+        members.add(Member.newMember(userId));
+        connection.updateMembers(members);
         connectionRepository.save(connection);
     }
 

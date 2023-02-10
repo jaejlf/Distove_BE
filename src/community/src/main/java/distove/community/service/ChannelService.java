@@ -49,7 +49,7 @@ public class ChannelService {
                 channelTypeId,
                 category
         ));
-        if (newChannel.getChannelTypeId() == 1) chatClient.createConnection(userId, newChannel.getId());
+        if (newChannel.getChannelTypeId() == 1) chatClient.createConnection(userId, serverId, newChannel.getId());
 
         return newChannel;
     }

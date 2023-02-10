@@ -1,6 +1,7 @@
 package distove.chat.service;
 
 import distove.chat.entity.Connection;
+import distove.chat.entity.Member;
 import distove.chat.enumerate.MessageType.MessageStatus;
 import distove.chat.repository.ConnectionRepository;
 import distove.chat.repository.MessageRepository;
@@ -14,6 +15,7 @@ import java.util.ArrayList;
 import java.util.List;
 
 import static distove.chat.entity.Connection.newConnection;
+import static distove.chat.entity.Member.*;
 import static distove.chat.entity.Message.newMessage;
 import static distove.chat.enumerate.MessageType.WELCOME;
 
@@ -26,13 +28,13 @@ public class ConnectionService {
     private final ConnectionRepository connectionRepository;
     private final MessageRepository messageRepository;
 
-    public void createConnection(Long userId, Long channelId) {
-        List<Long> connectedMemberIds = new ArrayList<>();
-        connectedMemberIds.add(userId);
+    public void createConnection(Long userId, Long serverId, Long channelId) {
+        List<Member> members = new ArrayList<>();
+        members.add(newMember(userId));
 
         if (connectionRepository.findByChannelId(channelId).isPresent()) return;
 
-        Connection connection = newConnection(channelId, connectedMemberIds);
+        Connection connection = newConnection(serverId, channelId, members);
         connectionRepository.save(connection);
 
         UserResponse writer = userClient.getUser(userId);
