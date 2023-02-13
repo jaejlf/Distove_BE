@@ -65,8 +65,8 @@ public class MessageService {
         }
 
         UserResponse writer = userClient.getUser(userId);
-        List<ReactionResponse> reactions = message.getReactions()!=null?reactionService.getUserInfoOfReactions(message.getReactions()):null;
-        return MessageResponse.ofDefault(message, writer, userId,reactions);
+        List<ReactionResponse> reactions = message.getReactions() != null ? reactionService.getUserInfoOfReactions(message.getReactions()) : null;
+        return MessageResponse.ofDefault(message, writer, userId, reactions);
     }
 
     public MessageResponse publishFile(Long userId, Long channelId, MessageType type, FileUploadRequest request) {
@@ -79,7 +79,7 @@ public class MessageService {
                 userId);
 
         UserResponse writer = userClient.getUser(userId);
-        List<ReactionResponse> reactions = message.getReactions()!=null?reactionService.getUserInfoOfReactions(message.getReactions()):null;
+        List<ReactionResponse> reactions = message.getReactions() != null ? reactionService.getUserInfoOfReactions(message.getReactions()) : null;
         return MessageResponse.ofDefault(message, writer, userId, reactions);
     }
 
@@ -98,12 +98,12 @@ public class MessageService {
         List<MessageResponse> messageResponses = new ArrayList<>();
         for (Message message : messagePage.getContent()) {
             UserResponse writer = userClient.getUser(message.getUserId());
-            List<ReactionResponse> reactions = message.getReactions()!=null?reactionService.getUserInfoOfReactions(message.getReactions()):null;
+            List<ReactionResponse> reactions = message.getReactions() != null ? reactionService.getUserInfoOfReactions(message.getReactions()) : null;
 
             if (message.getReplyName() == null) {
-                messageResponses.add(MessageResponse.ofDefault(message, writer, userId,reactions));
+                messageResponses.add(MessageResponse.ofDefault(message, writer, userId, reactions));
             } else {
-                messageResponses.add(MessageResponse.ofParent(message, writer, userId, getReplyInfo(message),reactions));
+                messageResponses.add(MessageResponse.ofParent(message, writer, userId, getReplyInfo(message), reactions));
             }
         }
         Collections.reverse(messageResponses);
@@ -115,23 +115,23 @@ public class MessageService {
         parent.addReplyInfo(request.getReplyName(), userId);
         messageRepository.save(parent);
 
-        UserResponse writer = userClient.getUser(userId);
+        UserResponse writer = userClient.getUser(parent.getUserId());
+        UserResponse stUser = userClient.getUser(userId);
         ReplyInfoResponse replyInfoResponse = ReplyInfoResponse.of(
                 request.getReplyName(),
-                writer.getId(),
-                writer.getNickname(),
-                writer.getProfileImgUrl()
+                stUser.getId(),
+                stUser.getNickname(),
+                stUser.getProfileImgUrl()
         );
-        List<ReactionResponse> reactions = parent.getReactions()!=null?reactionService.getUserInfoOfReactions(parent.getReactions()):null;
-
-        return MessageResponse.ofParent(parent, writer, userId, replyInfoResponse,reactions);
+        List<ReactionResponse> reactions = parent.getReactions() != null ? reactionService.getUserInfoOfReactions(parent.getReactions()) : null;
+        return MessageResponse.ofParent(parent, writer, userId, replyInfoResponse, reactions);
     }
 
     public List<MessageResponse> getParentByChannelId(Long userId, Long channelId) {
         checkChannelExist(channelId);
         return messageRepository.findAllByChannelIdAndReplyNameIsNotNull(channelId)
                 .stream()
-                .map(x -> MessageResponse.ofParent(x, userClient.getUser(x.getUserId()), userId, getReplyInfo(x),x.getReactions()!=null?reactionService.getUserInfoOfReactions(x.getReactions()):null))
+                .map(x -> MessageResponse.ofParent(x, userClient.getUser(x.getUserId()), userId, getReplyInfo(x), x.getReactions() != null ? reactionService.getUserInfoOfReactions(x.getReactions()) : null))
                 .collect(Collectors.toList());
     }
 
@@ -143,7 +143,7 @@ public class MessageService {
 
         List<MessageResponse> messageResponses = replyPage.getContent()
                 .stream()
-                .map(x -> MessageResponse.ofDefault(x, userClient.getUser(x.getUserId()), userId,x.getReactions()!=null?reactionService.getUserInfoOfReactions(x.getReactions()):null))
+                .map(x -> MessageResponse.ofDefault(x, userClient.getUser(x.getUserId()), userId, x.getReactions() != null ? reactionService.getUserInfoOfReactions(x.getReactions()) : null))
                 .collect(Collectors.toList());
 
         Collections.reverse(messageResponses);
