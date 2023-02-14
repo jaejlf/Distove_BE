@@ -26,7 +26,8 @@ import java.util.List;
 import java.util.Objects;
 import java.util.stream.Collectors;
 
-import static distove.chat.entity.Member.*;
+import static distove.chat.dto.response.PagedMessageResponse.*;
+import static distove.chat.entity.Member.newMember;
 import static distove.chat.entity.Message.newMessage;
 import static distove.chat.entity.Message.newReply;
 import static distove.chat.enumerate.MessageType.MessageStatus.*;
@@ -91,25 +92,23 @@ public class MessageService {
     }
 
     public PagedMessageResponse getMessagesByChannelId(Long userId, Long channelId, int page) {
-        saveWelcomeMessage(userId, channelId);
+        Connection connection = checkChannelExist(channelId);
+        List<Member> members = connection.getMembers();
+        Member member = members.stream()
+                .filter(x -> x.getUserId().equals(userId)).findFirst()
+                .orElse(null);
+
+        if (member == null) member = saveWelcomeMessage(userId, channelId, connection, members);
+
+        UnreadInfo unread = getUnreadInfo(channelId, member);
 
         Pageable pageable = PageRequest.of(page - 1, pageSize);
-        Page<Message> messagePage = messageRepository.findAllByChannelIdAndParentIdIsNullOrderByCreatedAtDesc(channelId, pageable);
+        Page<Message> messagePage = messageRepository.findAllParentByChannelId(channelId, pageable);
 
         int totalPage = messagePage.getTotalPages();
-        List<MessageResponse> messageResponses = new ArrayList<>();
-        for (Message message : messagePage.getContent()) {
-            UserResponse writer = userClient.getUser(message.getUserId());
-            List<ReactionResponse> reactions = message.getReactions() != null ? reactionService.getUserInfoOfReactions(message.getReactions()) : null;
+        List<MessageResponse> messageResponses = getMessageResponses(userId, messagePage);
 
-            if (message.getReplyName() == null) {
-                messageResponses.add(MessageResponse.ofDefault(message, writer, userId, reactions));
-            } else {
-                messageResponses.add(MessageResponse.ofParent(message, writer, userId, getReplyInfo(message), reactions));
-            }
-        }
-        Collections.reverse(messageResponses);
-        return PagedMessageResponse.ofDefault(totalPage, messageResponses);
+        return ofDefault(totalPage, unread, messageResponses);
     }
 
     public MessageResponse createReply(Long userId, MessageRequest request) {
@@ -139,7 +138,7 @@ public class MessageService {
 
     public PagedMessageResponse getChildrenByParentId(Long userId, String parentId, int page) {
         Pageable pageable = PageRequest.of(page - 1, pageSize);
-        Page<Message> replyPage = messageRepository.findAllByParentIdOrderByCreatedAtDesc(parentId, pageable);
+        Page<Message> replyPage = messageRepository.findAllByChildByParentId(parentId, pageable);
 
         int totalPage = replyPage.getTotalPages();
 
@@ -151,7 +150,7 @@ public class MessageService {
         Collections.reverse(messageResponses);
 
         ReplyInfoResponse replyInfo = getReplyInfo(getMessage(parentId));
-        return PagedMessageResponse.ofChild(totalPage, replyInfo, messageResponses);
+        return ofChild(totalPage, replyInfo, messageResponses);
     }
 
     public void clear(Long channelId) {
@@ -165,6 +164,7 @@ public class MessageService {
     }
 
     public void unsubscribeChannel(Long userId, Long channelId) {
+        // TODO : unread 존재하면 X
         Connection connection = checkChannelExist(channelId);
         List<Member> members = connection.getMembers();
         members.replaceAll(x -> Objects.equals(x.getUserId(), userId) ? newMember(userId) : x);
@@ -232,29 +232,49 @@ public class MessageService {
         messageRepository.deleteAllByParentId(message.getId());
     }
 
-    private void saveWelcomeMessage(Long userId, Long channelId) {
-        Connection connection = checkChannelExist(channelId);
-        List<Member> members = connection.getMembers();
-
-        // connect 기록이 존재하는 유저인지 확인
-        if (members.stream()
-                .map(Member::getUserId)
-                .collect(Collectors.toList()).contains(userId)) return;
-
-        addUserToConnection(userId, connection, members);
+    private Member saveWelcomeMessage(Long userId, Long channelId, Connection connection, List<Member> members) {
+        Member member = addUserToConnection(userId, connection, members);
         UserResponse writer = userClient.getUser(userId);
         messageRepository.save(newMessage(channelId, userId, WELCOME, CREATED, writer.getNickname()));
+        return member;
     }
 
-    private void addUserToConnection(Long userId, Connection connection, List<Member> members) {
-        members.add(newMember(userId));
+    private Member addUserToConnection(Long userId, Connection connection, List<Member> members) {
+        Member member = newMember(userId);
+        members.add(member);
         connection.updateMembers(members);
         connectionRepository.save(connection);
+        return member;
     }
 
     private Connection checkChannelExist(Long channelId) {
         return connectionRepository.findByChannelId(channelId)
                 .orElseThrow(() -> new DistoveException(CHANNEL_NOT_FOUND));
+    }
+
+    private UnreadInfo getUnreadInfo(Long channelId, Member member) {
+        List<Message> unreadMessages = messageRepository.findUnreadMessage(channelId, member.getLatestConnectedAt());
+        int unreadCount = unreadMessages.size();
+
+        UnreadInfo unread = null;
+        if (unreadCount > 0) unread = UnreadInfo.of(member.getLatestConnectedAt(), unreadCount, unreadMessages.get(0).getId());
+        return unread;
+    }
+
+    private List<MessageResponse> getMessageResponses(Long userId, Page<Message> messagePage) {
+        List<MessageResponse> messageResponses = new ArrayList<>();
+        for (Message message : messagePage.getContent()) {
+            UserResponse writer = userClient.getUser(message.getUserId());
+            List<ReactionResponse> reactions = message.getReactions() != null ? reactionService.getUserInfoOfReactions(message.getReactions()) : null;
+
+            if (message.getReplyName() == null) {
+                messageResponses.add(MessageResponse.ofDefault(message, writer, userId, reactions));
+            } else {
+                messageResponses.add(MessageResponse.ofParent(message, writer, userId, getReplyInfo(message), reactions));
+            }
+        }
+        Collections.reverse(messageResponses);
+        return messageResponses;
     }
 
 }
