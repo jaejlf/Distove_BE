@@ -15,10 +15,9 @@ public class EventController {
     private final ConnectionService connectionService;
 
     @PostMapping("/connection/server/{serverId}")
-    public void createConnection(@RequestHeader("userId") Long userId,
-                                 @PathVariable Long serverId,
+    public void createConnection(@PathVariable Long serverId,
                                  @RequestParam Long channelId) {
-        connectionService.createConnection(userId, serverId, channelId);
+        connectionService.createConnection(serverId, channelId);
     }
 
     @DeleteMapping("/clear/{channelId}")

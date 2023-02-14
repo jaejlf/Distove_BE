@@ -63,4 +63,11 @@ public class MessageController {
         return ResultResponse.success(HttpStatus.OK, "채널 구독 해제", null);
     }
 
+    @PatchMapping("/read/all/{channelId}")
+    public ResponseEntity<Object> readAllUnreadMessages(@RequestHeader("userId") Long userId,
+                                                        @PathVariable Long channelId) {
+        messageService.readAllUnreadMessages(userId, channelId);
+        return ResultResponse.success(HttpStatus.OK, "안읽메 모두 읽음", null);
+    }
+
 }

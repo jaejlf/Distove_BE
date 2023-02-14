@@ -98,17 +98,18 @@ public class MessageService {
                 .filter(x -> x.getUserId().equals(userId)).findFirst()
                 .orElse(null);
 
-        if (member == null) member = saveWelcomeMessage(userId, channelId, connection, members);
-
-        UnreadInfo unread = getUnreadInfo(channelId, member);
+        // 최초 조회 시, WELCOME 메시지 발행
+        if (member == null) {
+            saveWelcomeMessage(userId, channelId, connection, members);
+            member = addUserToConnection(userId, connection, members);
+        }
 
         Pageable pageable = PageRequest.of(page - 1, pageSize);
         Page<Message> messagePage = messageRepository.findAllParentByChannelId(channelId, pageable);
-
-        int totalPage = messagePage.getTotalPages();
-        List<MessageResponse> messageResponses = getMessageResponses(userId, messagePage);
-
-        return ofDefault(totalPage, unread, messageResponses);
+        return PagedMessageResponse.ofDefault(
+                messagePage.getTotalPages(),
+                getUnreadInfo(channelId, member),
+                getMessageResponses(userId, messagePage));
     }
 
     public MessageResponse createReply(Long userId, MessageRequest request) {
@@ -150,7 +151,7 @@ public class MessageService {
         Collections.reverse(messageResponses);
 
         ReplyInfoResponse replyInfo = getReplyInfo(getMessage(parentId));
-        return ofChild(totalPage, replyInfo, messageResponses);
+        return PagedMessageResponse.ofChild(totalPage, replyInfo, messageResponses);
     }
 
     public void clear(Long channelId) {
@@ -164,12 +165,23 @@ public class MessageService {
     }
 
     public void unsubscribeChannel(Long userId, Long channelId) {
-        // TODO : unread 존재하면 X
         Connection connection = checkChannelExist(channelId);
         List<Member> members = connection.getMembers();
-        members.replaceAll(x -> Objects.equals(x.getUserId(), userId) ? newMember(userId) : x);
-        connection.updateMembers(members);
-        connectionRepository.save(connection);
+        Member member = members.stream()
+                .filter(x -> x.getUserId().equals(userId)).findFirst()
+                .orElseThrow(() -> new DistoveException(USER_NOT_FOUND));
+
+        if (getUnreadInfo(channelId, member) == null) updateLatestConnectedAt(userId, connection, members, member);
+    }
+
+    public void readAllUnreadMessages(Long userId, Long channelId) {
+        Connection connection = checkChannelExist(channelId);
+        List<Member> members = connection.getMembers();
+        Member member = members.stream()
+                .filter(x -> x.getUserId().equals(userId)).findFirst()
+                .orElseThrow(() -> new DistoveException(USER_NOT_FOUND));
+
+        updateLatestConnectedAt(userId, connection, members, member);
     }
 
     private Message createMessage(Long channelId, String parentId, MessageType type, String content, Long userId) {
@@ -232,11 +244,9 @@ public class MessageService {
         messageRepository.deleteAllByParentId(message.getId());
     }
 
-    private Member saveWelcomeMessage(Long userId, Long channelId, Connection connection, List<Member> members) {
-        Member member = addUserToConnection(userId, connection, members);
+    private void saveWelcomeMessage(Long userId, Long channelId, Connection connection, List<Member> members) {
         UserResponse writer = userClient.getUser(userId);
         messageRepository.save(newMessage(channelId, userId, WELCOME, CREATED, writer.getNickname()));
-        return member;
     }
 
     private Member addUserToConnection(Long userId, Connection connection, List<Member> members) {
@@ -257,7 +267,8 @@ public class MessageService {
         int unreadCount = unreadMessages.size();
 
         UnreadInfo unread = null;
-        if (unreadCount > 0) unread = UnreadInfo.of(member.getLatestConnectedAt(), unreadCount, unreadMessages.get(0).getId());
+        if (unreadCount > 0)
+            unread = UnreadInfo.of(member.getLatestConnectedAt(), unreadCount, unreadMessages.get(0).getId());
         return unread;
     }
 
@@ -275,6 +286,12 @@ public class MessageService {
         }
         Collections.reverse(messageResponses);
         return messageResponses;
+    }
+
+    private void updateLatestConnectedAt(Long userId, Connection connection, List<Member> members, Member member) {
+        members.replaceAll(x -> Objects.equals(x.getUserId(), userId) ? newMember(userId) : x);
+        connection.updateMembers(members);
+        connectionRepository.save(connection);
     }
 
 }
