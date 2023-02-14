@@ -23,4 +23,6 @@ public interface ParticipantRepository {
     void save(Long userId, Participant participant);
 
     List<Participant> findAll();
+
+    void deleteAllParticipant();
 }

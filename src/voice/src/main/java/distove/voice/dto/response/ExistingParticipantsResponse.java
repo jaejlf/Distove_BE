@@ -11,10 +11,10 @@ import java.util.List;
 @Builder
 public class ExistingParticipantsResponse {
     private final String type = MessageType.EXISTING_PARTICIPANTS.getType();
-    private final List<UserResponse> users;
+    private final List<UserVideoResponse> users;
 
 
-    public static ExistingParticipantsResponse newExistingParticipantsResponse(List<UserResponse> users) {
+    public static ExistingParticipantsResponse newExistingParticipantsResponse(List<UserVideoResponse> users) {
         return ExistingParticipantsResponse.builder()
                 .users(users).build();
     }
