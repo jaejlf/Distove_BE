@@ -7,6 +7,7 @@ import com.google.gson.JsonObject;
 import distove.voice.dto.request.AddIceCandidateRequest;
 import distove.voice.dto.request.JoinRoomRequest;
 import distove.voice.dto.request.SdpOfferRequest;
+import distove.voice.dto.request.UpdateVideoInfoRequest;
 import distove.voice.repository.ParticipantRepository;
 import distove.voice.service.SignalingService;
 import lombok.RequiredArgsConstructor;
@@ -34,11 +35,10 @@ public class SignalingController extends TextWebSocketHandler {
     @Override
     public void handleTextMessage(WebSocketSession webSocketSession, TextMessage response) throws Exception {
         final JsonObject jsonMessage = gson.fromJson(response.getPayload(), JsonObject.class);
-//        log.info("response{}", response);
         switch (jsonMessage.get("type").getAsString()) {
             case "joinRoom":
                 JoinRoomRequest joinRoomRequest = mapper.readValue(response.getPayload(), JoinRoomRequest.class);
-                signalingService.joinRoom(joinRoomRequest.getUserId(), joinRoomRequest.getChannelId(), webSocketSession);
+                signalingService.joinRoom(joinRoomRequest.getUserId(), joinRoomRequest.getChannelId(), webSocketSession,joinRoomRequest.getIsCameraOn(),joinRoomRequest.getIsMicOn());
                 break;
             case "sdpOffer":
                 SdpOfferRequest sdpOfferRequest = mapper.readValue(response.getPayload(), SdpOfferRequest.class);
@@ -51,10 +51,14 @@ public class SignalingController extends TextWebSocketHandler {
                 AddIceCandidateRequest addIceCandidateRequest = mapper.readValue(response.getPayload(), AddIceCandidateRequest.class);
                 signalingService.addIceCandidate(webSocketSession, addIceCandidateRequest.getUserId(), addIceCandidateRequest.getCandidateInfo());
                 break;
-            case "resetAllroom":
+            case "updateVideoInfo":
+                UpdateVideoInfoRequest updateVideoInfoRequest = mapper.readValue(response.getPayload(), UpdateVideoInfoRequest.class);
+                signalingService.updateVideoInfoRequest(webSocketSession,updateVideoInfoRequest.getIsCameraOn(),updateVideoInfoRequest.getIsMicOn());
+                break;
+            case "resetAllRoom":
+                signalingService.preDestroy();
                 break;
             default:
-                signalingService.preDestroy();
                 break;
         }
     }

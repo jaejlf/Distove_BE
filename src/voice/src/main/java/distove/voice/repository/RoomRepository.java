@@ -15,4 +15,5 @@ public interface RoomRepository {
     void deleteByChannelId(Long channelId);
 
     List<Room> findAll();
+    void deleteAllRoom();
 }
