@@ -192,6 +192,7 @@ public class MessageService {
         } else {
             message = messageRepository.save(
                     newMessage(channelId, userId, type, CREATED, content));
+            // TODO : 보내면 되나 ?
         }
         return message;
     }
