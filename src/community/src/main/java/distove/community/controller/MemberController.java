@@ -35,14 +35,10 @@ public class MemberController {
         return ResultResponse.success(HttpStatus.OK, "현재 멤버 정보 조회", result);
     }
 
-    @GetMapping("/server/{serverId}/member/list")
-    public ResponseEntity<Object> getMembersByServerId(@PathVariable("serverId") Long serverId) {
-        List<UserResponse> users = new ArrayList<>();
-        List<Member> members = memberService.getMembersByServerId(serverId);
-        for (Member member : members) {
-            users.add(userClient.getUser(member.getUserId()));
-        }
-        return ResultResponse.success(HttpStatus.OK, "서버 내 멤버 리스트 조회", users);
+    @GetMapping("/server/{serverId}/users")
+    public List<UserResponse> getUsersByServerId(@PathVariable("serverId") Long serverId) {
+        List<UserResponse> users = memberService.getUsersByServerId(serverId);
+        return users;
     }
 
     @GetMapping("/member/roles/{serverId}")
