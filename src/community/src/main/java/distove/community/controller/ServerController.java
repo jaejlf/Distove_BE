@@ -3,6 +3,7 @@ package distove.community.controller;
 import distove.community.config.AuthorizedRole;
 import distove.community.config.RequestUser;
 import distove.community.dto.response.CategoryResponse;
+import distove.community.dto.response.InvitationResponse;
 import distove.community.dto.response.ResultResponse;
 import distove.community.entity.Server;
 import distove.community.service.ServerService;
@@ -60,4 +61,24 @@ public class ServerController {
         return ResultResponse.success(HttpStatus.OK, "서버 삭제 성공", null);
     }
 
+    @GetMapping("/server/invitation/{serverId}")
+    public ResponseEntity<Object> createInvitation(@RequestUser Long userId,
+                                                   @PathVariable ("serverId") Long serverId){
+        String inviteCode = serverService.createInvitation(userId, serverId);
+        return ResultResponse.success(HttpStatus.OK, "초대 코드 생성 성공", inviteCode);
+    }
+
+    @GetMapping("/server/invitations/{serverId}")
+    public ResponseEntity<Object> listInvitations(@RequestUser Long userId,
+                                                  @PathVariable ("serverId") Long serverId) {
+        List<InvitationResponse> invitations = serverService.getInvitations(userId, serverId);
+        return ResultResponse.success(HttpStatus.OK, "초대 리스트 조회 성공", invitations);
+    }
+
+    @DeleteMapping("/server/invitation/{inviteCode}")
+    public ResponseEntity<Object> deleteInvitation(@RequestUser Long userId,
+                                                   @PathVariable ("inviteCode") String inviteCode) {
+        serverService.deleteInvitation(userId, inviteCode);
+        return ResultResponse.success(HttpStatus.OK, "초대 코드 삭제 성공", inviteCode);
+    }
 }
