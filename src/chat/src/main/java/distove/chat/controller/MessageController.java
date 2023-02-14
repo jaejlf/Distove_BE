@@ -56,4 +56,18 @@ public class MessageController {
         return ResultResponse.success(HttpStatus.OK, "메시지 리스트 조회", result);
     }
 
+    @PatchMapping("/unsubscribe/{channelId}")
+    public ResponseEntity<Object> unsubscribeChannel(@RequestHeader("userId") Long userId,
+                                                     @PathVariable Long channelId) {
+        messageService.unsubscribeChannel(userId, channelId);
+        return ResultResponse.success(HttpStatus.OK, "채널 구독 해제", null);
+    }
+
+    @PatchMapping("/read/all/{channelId}")
+    public ResponseEntity<Object> readAllUnreadMessages(@RequestHeader("userId") Long userId,
+                                                        @PathVariable Long channelId) {
+        messageService.readAllUnreadMessages(userId, channelId);
+        return ResultResponse.success(HttpStatus.OK, "안읽메 모두 읽음", null);
+    }
+
 }

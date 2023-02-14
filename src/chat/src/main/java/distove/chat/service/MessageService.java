@@ -4,6 +4,7 @@ import distove.chat.dto.request.FileUploadRequest;
 import distove.chat.dto.request.MessageRequest;
 import distove.chat.dto.response.*;
 import distove.chat.entity.Connection;
+import distove.chat.entity.Member;
 import distove.chat.entity.Message;
 import distove.chat.enumerate.MessageType;
 import distove.chat.exception.DistoveException;
@@ -25,6 +26,8 @@ import java.util.List;
 import java.util.Objects;
 import java.util.stream.Collectors;
 
+import static distove.chat.dto.response.PagedMessageResponse.*;
+import static distove.chat.entity.Member.newMember;
 import static distove.chat.entity.Message.newMessage;
 import static distove.chat.entity.Message.newReply;
 import static distove.chat.enumerate.MessageType.MessageStatus.*;
@@ -40,6 +43,7 @@ public class MessageService {
     private int pageSize;
 
     private final StorageService storageService;
+    private final NotificationService notificationService;
     private final MessageRepository messageRepository;
     private final ConnectionRepository connectionRepository;
     private final ReactionService reactionService;
@@ -89,25 +93,25 @@ public class MessageService {
     }
 
     public PagedMessageResponse getMessagesByChannelId(Long userId, Long channelId, int page) {
-        saveWelcomeMessage(userId, channelId);
+        Connection connection = checkChannelExist(channelId);
+        List<Member> members = connection.getMembers();
+        Member member = members.stream()
+                .filter(x -> x.getUserId().equals(userId)).findFirst()
+                .orElse(null);
+
+        // 최초 조회 시, WELCOME 메시지 발행
+        if (member == null) {
+            saveWelcomeMessage(userId, channelId, connection, members);
+            member = addUserToConnection(userId, connection, members);
+        }
 
         Pageable pageable = PageRequest.of(page - 1, pageSize);
-        Page<Message> messagePage = messageRepository.findAllByChannelIdAndParentIdIsNullOrderByCreatedAtDesc(channelId, pageable);
-
-        int totalPage = messagePage.getTotalPages();
-        List<MessageResponse> messageResponses = new ArrayList<>();
-        for (Message message : messagePage.getContent()) {
-            UserResponse writer = userClient.getUser(message.getUserId());
-            List<ReactionResponse> reactions = message.getReactions() != null ? reactionService.getUserInfoOfReactions(message.getReactions()) : null;
-
-            if (message.getReplyName() == null) {
-                messageResponses.add(MessageResponse.ofDefault(message, writer, userId, reactions));
-            } else {
-                messageResponses.add(MessageResponse.ofParent(message, writer, userId, getReplyInfo(message), reactions));
-            }
-        }
-        Collections.reverse(messageResponses);
-        return PagedMessageResponse.ofDefault(totalPage, messageResponses);
+        Page<Message> messagePage = messageRepository.findAllParentByChannelId(channelId, pageable);
+        notificationService.publishAllNotification(userId, connection.getServerId()); // 알림 PUSH
+        return PagedMessageResponse.ofDefault(
+                messagePage.getTotalPages(),
+                getUnreadInfo(channelId, member),
+                getMessageResponses(userId, messagePage));
     }
 
     public MessageResponse createReply(Long userId, MessageRequest request) {
@@ -115,15 +119,15 @@ public class MessageService {
         parent.addReplyInfo(request.getReplyName(), userId);
         messageRepository.save(parent);
 
-        UserResponse writer = userClient.getUser(parent.getUserId());
-        UserResponse stUser = userClient.getUser(userId);
+        UserResponse writer = userClient.getUser(userId);
         ReplyInfoResponse replyInfoResponse = ReplyInfoResponse.of(
                 request.getReplyName(),
-                stUser.getId(),
-                stUser.getNickname(),
-                stUser.getProfileImgUrl()
+                writer.getId(),
+                writer.getNickname(),
+                writer.getProfileImgUrl()
         );
         List<ReactionResponse> reactions = parent.getReactions() != null ? reactionService.getUserInfoOfReactions(parent.getReactions()) : null;
+
         return MessageResponse.ofParent(parent, writer, userId, replyInfoResponse, reactions);
     }
 
@@ -137,7 +141,7 @@ public class MessageService {
 
     public PagedMessageResponse getChildrenByParentId(Long userId, String parentId, int page) {
         Pageable pageable = PageRequest.of(page - 1, pageSize);
-        Page<Message> replyPage = messageRepository.findAllByParentIdOrderByCreatedAtDesc(parentId, pageable);
+        Page<Message> replyPage = messageRepository.findAllByChildByParentId(parentId, pageable);
 
         int totalPage = replyPage.getTotalPages();
 
@@ -156,6 +160,32 @@ public class MessageService {
         messageRepository.deleteAllByChannelId(channelId);
     }
 
+    public void clearAll(List<Long> channelIds) {
+        for (Long channelId : channelIds) {
+            messageRepository.deleteAllByChannelId(channelId);
+        }
+    }
+
+    public void unsubscribeChannel(Long userId, Long channelId) {
+        Connection connection = checkChannelExist(channelId);
+        List<Member> members = connection.getMembers();
+        Member member = members.stream()
+                .filter(x -> x.getUserId().equals(userId)).findFirst()
+                .orElseThrow(() -> new DistoveException(USER_NOT_FOUND));
+
+        if (getUnreadInfo(channelId, member) == null) updateLatestConnectedAt(userId, connection, members, member);
+    }
+
+    public void readAllUnreadMessages(Long userId, Long channelId) {
+        Connection connection = checkChannelExist(channelId);
+        List<Member> members = connection.getMembers();
+        Member member = members.stream()
+                .filter(x -> x.getUserId().equals(userId)).findFirst()
+                .orElseThrow(() -> new DistoveException(USER_NOT_FOUND));
+
+        updateLatestConnectedAt(userId, connection, members, member);
+    }
+
     private Message createMessage(Long channelId, String parentId, MessageType type, String content, Long userId) {
         Message message;
         if (parentId != null) {
@@ -164,6 +194,7 @@ public class MessageService {
         } else {
             message = messageRepository.save(
                     newMessage(channelId, userId, type, CREATED, content));
+            notificationService.publishNotification(channelId);
         }
         return message;
     }
@@ -216,20 +247,17 @@ public class MessageService {
         messageRepository.deleteAllByParentId(message.getId());
     }
 
-    private void saveWelcomeMessage(Long userId, Long channelId) {
-        Connection connection = checkChannelExist(channelId);
-        List<Long> connectedMemberIds = connection.getConnectedMemberIds();
-        if (connectedMemberIds.contains(userId)) return;
-
-        addUserToConnection(userId, connection, connectedMemberIds);
+    private void saveWelcomeMessage(Long userId, Long channelId, Connection connection, List<Member> members) {
         UserResponse writer = userClient.getUser(userId);
         messageRepository.save(newMessage(channelId, userId, WELCOME, CREATED, writer.getNickname()));
     }
 
-    private void addUserToConnection(Long userId, Connection connection, List<Long> connectedMemberIds) {
-        connectedMemberIds.add(userId);
-        connection.updateConnectedMemberIds(connectedMemberIds);
+    private Member addUserToConnection(Long userId, Connection connection, List<Member> members) {
+        Member member = newMember(userId);
+        members.add(member);
+        connection.updateMembers(members);
         connectionRepository.save(connection);
+        return member;
     }
 
     private Connection checkChannelExist(Long channelId) {
@@ -237,10 +265,36 @@ public class MessageService {
                 .orElseThrow(() -> new DistoveException(CHANNEL_NOT_FOUND));
     }
 
-    public void clearAll(List<Long> channelIds) {
-        for (Long channelId : channelIds) {
-            messageRepository.deleteAllByChannelId(channelId);
+    private UnreadInfo getUnreadInfo(Long channelId, Member member) {
+        List<Message> unreadMessages = messageRepository.findUnreadMessage(channelId, member.getLatestConnectedAt());
+        int unreadCount = unreadMessages.size();
+
+        UnreadInfo unread = null;
+        if (unreadCount > 0)
+            unread = UnreadInfo.of(member.getLatestConnectedAt(), unreadCount, unreadMessages.get(0).getId());
+        return unread;
+    }
+
+    private List<MessageResponse> getMessageResponses(Long userId, Page<Message> messagePage) {
+        List<MessageResponse> messageResponses = new ArrayList<>();
+        for (Message message : messagePage.getContent()) {
+            UserResponse writer = userClient.getUser(message.getUserId());
+            List<ReactionResponse> reactions = message.getReactions() != null ? reactionService.getUserInfoOfReactions(message.getReactions()) : null;
+
+            if (message.getReplyName() == null) {
+                messageResponses.add(MessageResponse.ofDefault(message, writer, userId, reactions));
+            } else {
+                messageResponses.add(MessageResponse.ofParent(message, writer, userId, getReplyInfo(message), reactions));
+            }
         }
+        Collections.reverse(messageResponses);
+        return messageResponses;
+    }
+
+    private void updateLatestConnectedAt(Long userId, Connection connection, List<Member> members, Member member) {
+        members.replaceAll(x -> Objects.equals(x.getUserId(), userId) ? newMember(userId) : x);
+        connection.updateMembers(members);
+        connectionRepository.save(connection);
     }
 
 }

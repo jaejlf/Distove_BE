@@ -31,7 +31,7 @@ public class CommonServiceTest {
     @BeforeEach
     public void setUp() {
         dummyUser = new UserResponse(1L, "더미더미", "www.xxx");
-        connectionRepository.save(newConnection(1L, new ArrayList<>()));
+        connectionRepository.save(newConnection(1L, 1L, new ArrayList<>()));
     }
 
     @AfterEach
