@@ -43,6 +43,7 @@ public class MessageService {
     private int pageSize;
 
     private final StorageService storageService;
+    private final NotificationService notificationService;
     private final MessageRepository messageRepository;
     private final ConnectionRepository connectionRepository;
     private final ReactionService reactionService;
@@ -106,6 +107,7 @@ public class MessageService {
 
         Pageable pageable = PageRequest.of(page - 1, pageSize);
         Page<Message> messagePage = messageRepository.findAllParentByChannelId(channelId, pageable);
+        notificationService.publishAllNotification(userId, connection.getServerId()); // 알림 PUSH
         return PagedMessageResponse.ofDefault(
                 messagePage.getTotalPages(),
                 getUnreadInfo(channelId, member),
@@ -192,7 +194,7 @@ public class MessageService {
         } else {
             message = messageRepository.save(
                     newMessage(channelId, userId, type, CREATED, content));
-            // TODO : 보내면 되나 ?
+            notificationService.publishNotification(channelId);
         }
         return message;
     }

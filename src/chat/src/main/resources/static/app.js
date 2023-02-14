@@ -17,9 +17,12 @@ function connect() {
     stompClient.connect({}, function (frame) {
         setConnected(true);
         console.log('Connected: ' + frame);
-        stompClient.subscribe($("#sub").val(), function (greeting) {
-        });
+        stompClient.subscribe($("#sub").val(), {} , { userId : '1' });
     });
+}
+
+function unsubscribe() {
+    stompClient.unsubscribe($("#sub").val());
 }
 
 function disconnect() {
@@ -98,6 +101,9 @@ $(function () {
     });
     $("#connect").click(function () {
         connect();
+    });
+    $("#unsubscribe").click(function () {
+        unsubscribe();
     });
     $("#disconnect").click(function () {
         disconnect();
