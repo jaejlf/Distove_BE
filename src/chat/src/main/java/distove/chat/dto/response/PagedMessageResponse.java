@@ -12,24 +12,27 @@ import java.util.List;
 @JsonInclude(JsonInclude.Include.NON_NULL)
 public class PagedMessageResponse {
 
-    private int totalPage;
     private UnreadInfo unread;
     private ReplyInfoResponse replyInfo;
+    private String previousCursorId;
+    private String nextCursorId;
     private List<MessageResponse> messages;
 
-    public static PagedMessageResponse ofDefault(int totalPage, UnreadInfo unread, List<MessageResponse> messageResponses) {
+    public static PagedMessageResponse ofDefault(UnreadInfo unread, List<MessageResponse> messages) {
         return PagedMessageResponse.builder()
-                .totalPage(totalPage)
                 .unread(unread)
-                .messages(messageResponses)
+//                .previousCursorId(previousCursorId)
+//                .nextCursorId(nextCursorId)
+                .messages(messages)
                 .build();
     }
 
-    public static PagedMessageResponse ofChild(int totalPage, ReplyInfoResponse replyInfo, List<MessageResponse> messageResponses) {
+    public static PagedMessageResponse ofChild(ReplyInfoResponse replyInfo, List<MessageResponse> messages) {
         return PagedMessageResponse.builder()
-                .totalPage(totalPage)
                 .replyInfo(replyInfo)
-                .messages(messageResponses)
+               // .hasPrevious(hasPrevious)
+               // .hasNext(hasNext)
+                .messages(messages)
                 .build();
     }
 

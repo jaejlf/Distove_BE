@@ -26,7 +26,7 @@ import java.util.List;
 import java.util.Objects;
 import java.util.stream.Collectors;
 
-import static distove.chat.dto.response.PagedMessageResponse.*;
+import static distove.chat.dto.response.PagedMessageResponse.UnreadInfo;
 import static distove.chat.entity.Member.newMember;
 import static distove.chat.entity.Message.newMessage;
 import static distove.chat.entity.Message.newReply;
@@ -92,7 +92,7 @@ public class MessageService {
         return TypedUserResponse.of(typedUser.getNickname());
     }
 
-    public PagedMessageResponse getMessagesByChannelId(Long userId, Long channelId, int page) {
+    public PagedMessageResponse getMessagesByChannelId(Long userId, Long channelId, Integer scroll, String cursorId) {
         Connection connection = checkChannelExist(channelId);
         List<Member> members = connection.getMembers();
         Member member = members.stream()
@@ -105,13 +105,33 @@ public class MessageService {
             member = addUserToConnection(userId, connection, members);
         }
 
-        Pageable pageable = PageRequest.of(page - 1, pageSize);
-        Page<Message> messagePage = messageRepository.findAllParentByChannelId(channelId, pageable);
-        notificationService.publishAllNotification(userId, connection.getServerId()); // 알림 PUSH
+        notificationService.publishAllNotification(userId, connection.getServerId()); // 안읽메 알림 PUSH
+
+        List<Message> messages;
+        switch (scroll != null ? scroll : -1) {
+            case -1:
+                messages = messageRepository.findAllParentByChannelId(channelId, pageSize);
+                log.info("초기값.");
+                break;
+            case 0:
+                messages = messageRepository.findAllParentByChannelIdPrevious(channelId, getMessage(cursorId).getCreatedAt(), pageSize);
+                log.info("이전.");
+                break;
+            case 1:
+                messages = messageRepository.findAllParentByChannelIdNext(channelId, getMessage(cursorId).getCreatedAt(), pageSize);
+                log.info("다음.");
+                break;
+            default:
+                throw new DistoveException(SCROLL_ERROR);
+        }
+
+        log.info("앞커서 : " + messages.get(messages.size() - 1).getContent() + ", 다음 커서 : " +  messages.get(0).getContent());
+        Message previous = messageRepository.findPreviousByCursor(channelId, messages.get(messages.size() - 1).getCreatedAt());
+        Message next = messageRepository.findNextByCursor(channelId, messages.get(0).getCreatedAt());
+        log.info("previous = " + previous.getContent() + ", next = " + next.getContent());
         return PagedMessageResponse.ofDefault(
-                messagePage.getTotalPages(),
                 getUnreadInfo(channelId, member),
-                getMessageResponses(userId, messagePage));
+                convertMessagesToDto(userId, messages));
     }
 
     public MessageResponse createReply(Long userId, MessageRequest request) {
@@ -143,8 +163,6 @@ public class MessageService {
         Pageable pageable = PageRequest.of(page - 1, pageSize);
         Page<Message> replyPage = messageRepository.findAllByChildByParentId(parentId, pageable);
 
-        int totalPage = replyPage.getTotalPages();
-
         List<MessageResponse> messageResponses = replyPage.getContent()
                 .stream()
                 .map(x -> MessageResponse.ofDefault(x, userClient.getUser(x.getUserId()), userId, x.getReactions() != null ? reactionService.getUserInfoOfReactions(x.getReactions()) : null))
@@ -153,7 +171,7 @@ public class MessageService {
         Collections.reverse(messageResponses);
 
         ReplyInfoResponse replyInfo = getReplyInfo(getMessage(parentId));
-        return PagedMessageResponse.ofChild(totalPage, replyInfo, messageResponses);
+        return PagedMessageResponse.ofChild(replyInfo, messageResponses);
     }
 
     public void clear(Long channelId) {
@@ -275,9 +293,9 @@ public class MessageService {
         return unread;
     }
 
-    private List<MessageResponse> getMessageResponses(Long userId, Page<Message> messagePage) {
+    private List<MessageResponse> convertMessagesToDto(Long userId, List<Message> messagePage) {
         List<MessageResponse> messageResponses = new ArrayList<>();
-        for (Message message : messagePage.getContent()) {
+        for (Message message : messagePage) {
             UserResponse writer = userClient.getUser(message.getUserId());
             List<ReactionResponse> reactions = message.getReactions() != null ? reactionService.getUserInfoOfReactions(message.getReactions()) : null;
 
