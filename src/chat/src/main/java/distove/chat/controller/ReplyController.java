@@ -66,10 +66,9 @@ public class ReplyController {
     }
 
     @GetMapping("/children")
-    public ResponseEntity<Object> getChildrenByParentId(@RequestHeader("userId") Long userId,
-                                                        @RequestParam String parentId,
-                                                        @RequestParam int page) {
-        PagedMessageResponse result = messageService.getChildrenByParentId(userId, parentId, page);
+    public ResponseEntity<Object> getRepliesByParentId(@RequestHeader("userId") Long userId,
+                                                       @RequestParam String parentId) {
+        PagedMessageResponse result = messageService.getRepliesByParentId(userId, parentId);
         return ResultResponse.success(HttpStatus.OK, "부모 메시지의 Reply 리스트 조회", result);
     }
 

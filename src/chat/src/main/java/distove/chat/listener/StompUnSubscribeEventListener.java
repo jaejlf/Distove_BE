@@ -1,4 +1,4 @@
-package distove.chat.ttt;
+package distove.chat.listener;
 
 import distove.chat.service.MessageService;
 import lombok.RequiredArgsConstructor;

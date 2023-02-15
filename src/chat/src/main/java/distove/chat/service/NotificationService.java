@@ -2,7 +2,6 @@ package distove.chat.service;
 
 import distove.chat.entity.Connection;
 import distove.chat.entity.Member;
-import distove.chat.entity.Message;
 import distove.chat.exception.DistoveException;
 import distove.chat.repository.ConnectionRepository;
 import distove.chat.repository.MessageRepository;
@@ -36,8 +35,8 @@ public class NotificationService {
                     .filter(x -> x.getUserId().equals(userId)).findFirst()
                     .orElseThrow(() -> new DistoveException(USER_NOT_FOUND));
 
-            List<Message> unreadMessages = messageRepository.findUnreadMessage(connection.getChannelId(), member.getLatestConnectedAt());
-            if (unreadMessages.size() > 0) channelIds.add(connection.getChannelId());
+            int unreadCount = messageRepository.countUnreadMessage(connection.getChannelId(), member.getLatestConnectedAt());
+            if (unreadCount > 0) channelIds.add(connection.getChannelId());
         }
 
         Map<String, List<Long>> map = new HashMap<>();

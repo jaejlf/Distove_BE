@@ -51,8 +51,9 @@ public class MessageController {
     @GetMapping("/list/{channelId}")
     public ResponseEntity<Object> getMessagesByChannelId(@RequestHeader("userId") Long userId,
                                                          @PathVariable Long channelId,
-                                                         @RequestParam int page) {
-        PagedMessageResponse result = messageService.getMessagesByChannelId(userId, channelId, page);
+                                                         @RequestParam(required = false) Integer scroll,
+                                                         @RequestParam(required = false) String cursorId) {
+        PagedMessageResponse result = messageService.getMessagesByChannelId(userId, channelId, scroll, cursorId);
         return ResultResponse.success(HttpStatus.OK, "메시지 리스트 조회", result);
     }
 
