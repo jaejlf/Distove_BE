@@ -1,22 +1,18 @@
 package distove.chat.repository;
 
 import distove.chat.entity.Message;
-import org.springframework.data.domain.Page;
-import org.springframework.data.domain.Pageable;
 import org.springframework.data.mongodb.repository.Aggregation;
 import org.springframework.data.mongodb.repository.Query;
 
 import java.time.LocalDateTime;
 import java.util.List;
+import java.util.Optional;
 
 public interface CustomMessageRepository {
 
-    @Query(value = "{ 'parentId' : ?0 }", sort = "{ 'createdAt' :  -1 }")
-    Page<Message> findAllByChildByParentId(String parentId, Pageable pageable);
-
-    @Query(value = "{ 'channelId' : ?0, 'createdAt' : { '$gt' : ?1 } }")
-    List<Message> findUnreadMessage(Long channelId, LocalDateTime latestConnectedAt);
-
+    /*
+    Parent
+    */
     @Aggregation(pipeline = {
             "{ '$match': { " +
                     "'channelId' : ?0," +
@@ -52,7 +48,7 @@ public interface CustomMessageRepository {
             "{ '$sort' : { 'createdAt' : 1 } }",
             "{ '$limit' : 1 }",
             "{ '$sort' : { 'createdAt' : -1 } }"})
-    Message findNextByCursor(Long channelId, LocalDateTime cursorCreatedAt);
+    Optional<Message> findNextByCursor(Long channelId, LocalDateTime cursorCreatedAt);
 
     @Aggregation(pipeline = {
             "{ '$match': { " +
@@ -61,6 +57,28 @@ public interface CustomMessageRepository {
                     "'createdAt' : { $lt :  ?1} } }",
             "{ '$sort' : { 'createdAt' : -1 } }",
             "{ '$limit' : 1 }"})
-    Message findPreviousByCursor(Long channelId, LocalDateTime cursorCreatedAt);
+    Optional<Message> findPreviousByCursor(Long channelId, LocalDateTime cursorCreatedAt);
+
+    /*
+    Reply
+    */
+    @Aggregation(pipeline = {
+            "{ '$match': { 'parentId' : ?0 } }",
+            "{ '$sort' : { 'createdAt' : -1 } }"})
+    List<Message> findAllRepliesByParentId(String parentId);
+
+    /*
+    Unread
+    */
+    @Query(value = "{ 'channelId' : ?0, 'createdAt' : { '$gt' : ?1 } }", sort = "{ 'createdAt' : -1 }", count = true)
+    int countUnreadMessage(Long channelId, LocalDateTime latestConnectedAt);
+
+    @Aggregation(pipeline = {
+            "{ '$match': { " +
+                    "'channelId' : ?0," +
+                    "'createdAt' : { $gt :  ?1} } }",
+            "{ '$sort' : { 'createdAt' : -1 } }",
+            "{ '$limit' : 1 }"})
+    Message findFirstUnreadMessage(Long channelId, LocalDateTime latestConnectedAt);
 
 }
