@@ -94,8 +94,7 @@ public class MessageService {
                 .orElse(null);
 
         if (member == null) member = saveWelcomeMessage(userId, channelId, connection, members);
-
-        notificationService.publishAllNotification(userId, connection.getServerId()); // 안읽메 알림 PUSH
+        if (scroll == null) notificationService.publishAllNotification(userId, connection.getServerId()); // 안읽메 알림 PUSH
 
         List<Message> messages = getMessagesByCursor(channelId, scroll, cursorId);
         Map<String, String> cursorIdInfo = getCursorIdInfo(channelId, messages);

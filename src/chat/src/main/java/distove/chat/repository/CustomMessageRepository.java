@@ -70,12 +70,13 @@ public interface CustomMessageRepository {
     /*
     Unread
     */
-    @Query(value = "{ 'channelId' : ?0, 'createdAt' : { '$gt' : ?1 } }", sort = "{ 'createdAt' : -1 }", count = true)
+    @Query(value = "{ 'channelId' : ?0, 'createdAt' : { '$gt' : ?1 }, 'parentId' : null }", sort = "{ 'createdAt' : -1 }", count = true)
     int countUnreadMessage(Long channelId, LocalDateTime latestConnectedAt);
 
     @Aggregation(pipeline = {
             "{ '$match': { " +
                     "'channelId' : ?0," +
+                    "'parentId' : null," +
                     "'createdAt' : { $gt :  ?1} } }",
             "{ '$sort' : { 'createdAt' : -1 } }",
             "{ '$limit' : 1 }"})
