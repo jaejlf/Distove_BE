@@ -134,14 +134,13 @@ class MessageServiceTest extends CommonServiceTest {
             // given
             Long userId = 1L;
             Long channelId = 1L;
-            int page = 1;
             Message message = messageRepository.save(
                     newMessage(channelId, userId, TEXT, CREATED, "{{MESSAGE CONTENT}}"));
 
             given(userClient.getUser(any())).willReturn(dummyUser);
 
             // when
-            PagedMessageResponse result = messageService.getMessagesByChannelId(userId, channelId, page);
+            PagedMessageResponse result = messageService.getMessagesByChannelId(userId, channelId, null, null);
 
             // then
             MessageResponse expected = MessageResponse.builder()
@@ -166,12 +165,11 @@ class MessageServiceTest extends CommonServiceTest {
             // given
             Long userId = 1L;
             Long channelId = 99L;
-            int page = 1;
 
             given(userClient.getUser(any())).willReturn(dummyUser);
 
             // when & then
-            assertThatThrownBy(() -> messageService.getMessagesByChannelId(userId, channelId, page))
+            assertThatThrownBy(() -> messageService.getMessagesByChannelId(userId, channelId, null, null))
                     .isInstanceOf(DistoveException.class)
                     .hasMessageContaining("존재하지 않는 채널입니다.");
         }
