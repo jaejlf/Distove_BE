@@ -15,6 +15,9 @@ import distove.chat.web.UserResponse;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.beans.factory.annotation.Value;
+import org.springframework.data.mongodb.core.MongoTemplate;
+import org.springframework.data.mongodb.core.query.Criteria;
+import org.springframework.data.mongodb.core.query.Query;
 import org.springframework.stereotype.Service;
 
 import java.util.*;
@@ -42,6 +45,7 @@ public class MessageService {
     private final ConnectionRepository connectionRepository;
     private final ReactionService reactionService;
     private final UserClient userClient;
+    private final MongoTemplate mongoTemplate;
 
     public MessageResponse publishMessage(Long userId, Long channelId, MessageRequest request) {
         checkStatusCanChanged(request.getType(), request.getStatus());
@@ -64,7 +68,7 @@ public class MessageService {
 
         UserResponse writer = userClient.getUser(userId);
         List<ReactionResponse> reactions = message.getReactions() != null ? reactionService.getUserInfoOfReactions(message.getReactions()) : null;
-        return MessageResponse.ofDefault(message, writer, userId, reactions);
+        return MessageResponse.ofDefault(message, writer, userId+, reactions);
     }
 
     public MessageResponse publishFile(Long userId, Long channelId, MessageType type, FileUploadRequest request) {
@@ -315,4 +319,13 @@ public class MessageService {
         return cursorIdInfo;
     }
 
+    public List<MessageResponse> findMessages(String searchType, Long channelId, String content, Long userId) {
+        UserResponse writer = userClient.getUser(userId);
+        Query query = new Query(Criteria.where("channelId").is(channelId).and("content").regex(content));
+        List<Message> messages = mongoTemplate.find(query, Message.class);
+        if (searchType == null) {
+            return messages.stream().map(message -> MessageResponse.ofSearching(message, writer)).collect(Collectors.toList());
+
+        }
+    }
 }

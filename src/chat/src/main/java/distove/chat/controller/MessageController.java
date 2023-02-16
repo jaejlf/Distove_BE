@@ -6,8 +6,11 @@ import distove.chat.dto.response.MessageResponse;
 import distove.chat.dto.response.PagedMessageResponse;
 import distove.chat.dto.response.ResultResponse;
 import distove.chat.dto.response.TypedUserResponse;
+import distove.chat.entity.Message;
 import distove.chat.enumerate.MessageType;
 import distove.chat.service.MessageService;
+import distove.chat.web.UserClient;
+import lombok.Getter;
 import lombok.RequiredArgsConstructor;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
@@ -17,6 +20,8 @@ import org.springframework.messaging.handler.annotation.MessageMapping;
 import org.springframework.messaging.handler.annotation.Payload;
 import org.springframework.messaging.simp.SimpMessagingTemplate;
 import org.springframework.web.bind.annotation.*;
+
+import java.util.List;
 
 @RequiredArgsConstructor
 @RestController
@@ -69,6 +74,15 @@ public class MessageController {
                                                         @PathVariable Long channelId) {
         messageService.readAllUnreadMessages(userId, channelId);
         return ResultResponse.success(HttpStatus.OK, "안읽메 모두 읽음", null);
+    }
+
+    @GetMapping("finding/{channelId}")
+    private ResponseEntity<Object> findMessages(@RequestHeader("userId") Long userId,
+                                                         @PathVariable Long channelId,
+                                                         @RequestParam String content,
+                                                         @RequestParam (required = false) String searchType) {
+        List<MessageResponse> messages = messageService.findMessages(searchType, channelId, content);
+        return ResultResponse.success(HttpStatus.OK, "메시지 검색", messages);
     }
 
 }
