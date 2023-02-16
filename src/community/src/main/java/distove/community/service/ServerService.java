@@ -13,19 +13,22 @@ import org.springframework.stereotype.Service;
 import org.springframework.web.multipart.MultipartFile;
 
 import javax.transaction.Transactional;
+import java.time.Duration;
+import java.time.LocalDateTime;
 import java.util.ArrayList;
 import java.util.List;
 import java.util.Map;
+import java.util.UUID;
 import java.util.stream.Collectors;
 
 import static distove.community.dto.response.CategoryResponse.newCategoryResponse;
 import static distove.community.dto.response.ChannelResponse.newChannelResponse;
 import static distove.community.entity.Category.newCategory;
+import static distove.community.entity.Invitation.newInvitation;
 import static distove.community.entity.Member.newMember;
 import static distove.community.entity.Server.newServer;
 import static distove.community.enumerate.DefaultRoleName.OWNER;
-import static distove.community.exception.ErrorCode.ROLE_NOT_FOUND;
-import static distove.community.exception.ErrorCode.SERVER_NOT_FOUND;
+import static distove.community.exception.ErrorCode.*;
 
 @Slf4j
 @Service
@@ -39,8 +42,10 @@ public class ServerService {
     private final MemberRoleRepository memberRoleRepository;
     private final CategoryRepository categoryRepository;
     private final ChannelRepository channelRepository;
+    private final InvitationRepository invitationRepository;
     private final StorageService storageService;
     private final ChannelService channelService;
+    private final MemberService memberService;
 
     private static final String defaultCategoryName = null;
     private static final String defaultChatCategoryName = "채팅 채널";
@@ -113,7 +118,6 @@ public class ServerService {
         serverRepository.deleteById(serverId);
     }
 
-
     private void setOwnerAndRole(Long userId, Server newServer) {
         memberRoleRepository.saveAll(MemberRole.createDefaultRoles(newServer));
         MemberRole ownerRole = memberRoleRepository.findByRoleNameAndServerId(OWNER.getName(), newServer.getId())
@@ -121,4 +125,37 @@ public class ServerService {
         memberRepository.save(newMember(newServer, userId, ownerRole));
     }
 
+    public String createInvitation(Long memberId, Long serverId) {
+        String inviteCode = UUID.randomUUID().toString().substring(0,8);
+        Member member = memberRepository.findByUserIdAndServerId(memberId,serverId).orElseThrow(()-> new DistoveException(MEMBER_NOT_FOUND));
+        Server server = serverRepository.findById(serverId).orElseThrow(() -> new DistoveException(SERVER_NOT_FOUND));
+        Invitation invitation = newInvitation(inviteCode, server, member);
+        invitationRepository.save(invitation);
+
+        return inviteCode;
+    }
+
+    public void validateInviteCode(Long userId, String inviteCode) {
+        Invitation invitation = invitationRepository.findInvitationByInviteCode(inviteCode)
+                .orElseThrow(() -> new DistoveException(INVITE_CODE_NOT_FOUND));
+
+        LocalDateTime now = LocalDateTime.now();
+        Duration duration = Duration.between(now, invitation.getExpiresAt());
+
+        if (duration.getSeconds() < 0) {
+            throw new DistoveException(INVITE_CODE_EXPIRED);
+        }
+
+        if (invitation.getUses() > 0) {
+            invitation.decreaseInviteCodeUsage(invitation.getUses());
+            invitationRepository.save(invitation);
+        } else {
+
+            invitationRepository.save(invitation);
+            throw new DistoveException(INVITE_CODE_USES_EXCEEDED);
+        }
+
+        memberService.joinServer(userId, invitation.getServer().getId());
+
+    }
 }

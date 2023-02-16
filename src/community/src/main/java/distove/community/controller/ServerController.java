@@ -60,4 +60,17 @@ public class ServerController {
         return ResultResponse.success(HttpStatus.OK, "서버 삭제 성공", null);
     }
 
+    @GetMapping("/server/invitation/{serverId}")
+    public ResponseEntity<Object> createInvitation(@RequestUser Long memberId,
+                                                   @PathVariable ("serverId") Long serverId){
+        String inviteCode = serverService.createInvitation(memberId, serverId);
+        return ResultResponse.success(HttpStatus.OK, "초대 코드 생성 성공", inviteCode);
+    }
+
+    @PostMapping("server/invitation/{inviteCode}")
+    public ResponseEntity<Object> validateInviteCode(@RequestUser Long userId,
+                                                     @PathVariable ("inviteCode") String inviteCode){
+        serverService.validateInviteCode(userId, inviteCode);
+        return ResultResponse.success(HttpStatus.OK, "초대 코드 확인 성공", null);
+    }
 }
