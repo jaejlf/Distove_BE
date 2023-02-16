@@ -3,7 +3,6 @@ package distove.chat.service;
 import distove.chat.entity.EventFail;
 import distove.chat.event.DelChannelEvent;
 import distove.chat.event.DelChannelListEvent;
-import distove.chat.event.NewChannelEvent;
 import distove.chat.exception.DistoveException;
 import distove.chat.repository.EventFailRepository;
 import lombok.RequiredArgsConstructor;
@@ -24,11 +23,6 @@ public class EventService {
     private final MessageService messageService;
     private final EventFailRepository eventFailRepository;
 
-    public void requestNewChannel(Long userId, Long channelId) {
-        getEventQ(NewChannelEvent.class)
-                .add(NewChannelEvent.of(userId, channelId));
-    }
-
     public void requestDelChannel(Long channelId) {
         getEventQ(DelChannelEvent.class)
                 .add(new DelChannelEvent(channelId));
@@ -37,11 +31,6 @@ public class EventService {
     public void requestDelChannelList(List<Long> channelIds) {
         getEventQ(DelChannelListEvent.class)
                 .add(new DelChannelListEvent(channelIds));
-    }
-
-    public void runNewChannel(NewChannelEvent event) {
-        log.info(">>>>> CONSUME 'NEW CHANNEL' TOPIC");
-        connectionService.createConnection(event.getUserId(), event.getChannelId());
     }
 
     public void runDelChannel(DelChannelEvent event) {

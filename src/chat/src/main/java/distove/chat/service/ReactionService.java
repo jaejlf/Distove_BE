@@ -36,32 +36,32 @@ public class ReactionService {
         Message message = messageRepository.findById(reactionRequest.getMessageId())
                 .orElseThrow(() -> new DistoveException(MESSAGE_NOT_FOUND));
         List<Reaction> reactions = message.getReactions() != null ?
-                message.getReactions() : new ArrayList<Reaction>();
-        Set<Long> userIds = new HashSet<>(Arrays.asList(userId));
+                message.getReactions() : new ArrayList<>();
+        Set<Long> userIds = new HashSet<>(Collections.singletonList(userId));
 
         boolean isReacted = false;
         for (Reaction r : reactions) {
             userIds.addAll(r.getUserIds());
-            if(r.getEmoji().equals(emoji)){
+            if (r.getEmoji().equals(emoji)) {
                 isReacted = true;
-                if(r.getUserIds().removeIf(id -> id.equals(userId))){ // 만약 원래 내가 눌렀던 이모지면 삭제
-                    if(r.getUserIds().isEmpty()){ // 다 지웠는데 비었다면 현재 객체 삭제하기
+                if (r.getUserIds().removeIf(id -> id.equals(userId))) { // 만약 원래 내가 눌렀던 이모지면 삭제
+                    if (r.getUserIds().isEmpty()) { // 다 지웠는데 비었다면 현재 객체 삭제하기
                         reactions.remove(r);
                         break;
                     }
-                } else {// 원래 내가 눌렀던 emoji가 아니라면 내 id 추가
+                } else { // 원래 내가 눌렀던 emoji가 아니라면 내 id 추가
                     r.getUserIds().add(userId);
                 }
             }
         }
-        if(!isReacted){
+        if (!isReacted) {
             Reaction createdNewReaction = newReaction(reactionRequest.getEmoji(), List.of(userId));
             reactions.add(createdNewReaction);
         }
         message.updateReaction(reactions);
         messageRepository.save(message);
 
-        return newReactionMessageResponse(reactionRequest.getMessageId(),getReactionResponses(reactions, userIds));
+        return newReactionMessageResponse(reactionRequest.getMessageId(), getReactionResponses(reactions, userIds));
     }
 
     public List<ReactionResponse> getUserInfoOfReactions(List<Reaction> reactions) {
@@ -73,17 +73,15 @@ public class ReactionService {
     }
 
     private List<ReactionResponse> getReactionResponses(List<Reaction> reactions, Set<Long> userIds) {
-        List<UserResponse> users =userClient.getUsers(userIds.toString().replace("[","").replace("]",""));
-        Map<Long,UserResponse> userResponseMap = users.stream().collect(Collectors.toMap(u->u.getId(), u->u));
-        List<ReactionResponse> reactionResponses = reactions.stream()
+        List<UserResponse> users = userClient.getUsers(userIds.toString().replace("[", "").replace("]", ""));
+        Map<Long, UserResponse> userResponseMap = users.stream().collect(Collectors.toMap(UserResponse::getId, u -> u));
+        return reactions.stream()
                 .map(reaction -> newReactionResponse(
                         reaction.getEmoji(),
                         reaction.getUserIds().stream()
-                                .map(id -> userResponseMap.get(id))
+                                .map(userResponseMap::get)
                                 .collect(Collectors.toList())))
                 .collect(Collectors.toList());
-
-        return reactionResponses;
 
     }
 

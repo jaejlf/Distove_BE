@@ -1,7 +1,6 @@
 package distove.community.controller;
 
 import distove.community.config.AuthorizedRole;
-import distove.community.config.RequestUser;
 import distove.community.dto.request.ChannelCreateRequest;
 import distove.community.dto.request.ChannelUpdateRequest;
 import distove.community.dto.response.ChannelResponse;
@@ -26,10 +25,9 @@ public class ChannelController {
 
     @AuthorizedRole(name = CAN_MANAGE_CHANNEL)
     @PostMapping("/channel")
-    public ResponseEntity<Object> createNewChannel(@RequestUser Long userId,
-                                                   @RequestParam Long serverId,
+    public ResponseEntity<Object> createNewChannel(@RequestParam Long serverId,
                                                    @RequestBody ChannelCreateRequest channelCreateRequest) {
-        Channel newChannel = channelService.createNewChannel(userId, serverId, channelCreateRequest.getName(), channelCreateRequest.getCategoryId(), channelCreateRequest.getChannelTypeId());
+        Channel newChannel = channelService.createNewChannel(serverId, channelCreateRequest.getName(), channelCreateRequest.getCategoryId(), channelCreateRequest.getChannelTypeId());
         return ResultResponse.success(HttpStatus.OK, "채널 생성 성공",
                 newChannelResponse(newChannel.getId(), newChannel.getName(), newChannel.getChannelTypeId()));
     }
