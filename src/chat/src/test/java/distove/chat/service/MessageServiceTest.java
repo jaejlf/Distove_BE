@@ -1,6 +1,5 @@
 package distove.chat.service;
 
-import distove.chat.common.CommonServiceTest;
 import distove.chat.dto.request.MessageRequest;
 import distove.chat.dto.response.MessageResponse;
 import distove.chat.dto.response.PagedMessageResponse;
@@ -8,15 +7,17 @@ import distove.chat.dto.response.ReplyInfoResponse;
 import distove.chat.dto.response.TypedUserResponse;
 import distove.chat.entity.Message;
 import distove.chat.exception.DistoveException;
+import org.assertj.core.api.Assertions;
 import org.junit.jupiter.api.DisplayName;
 import org.junit.jupiter.api.Nested;
 import org.junit.jupiter.api.Test;
 import org.springframework.beans.factory.annotation.Autowired;
 
 import static distove.chat.entity.Message.newMessage;
-import static distove.chat.enumerate.MessageType.*;
+import static distove.chat.enumerate.MessageType.IMAGE;
 import static distove.chat.enumerate.MessageType.MessageStatus.*;
-import static org.assertj.core.api.AssertionsForClassTypes.assertThat;
+import static distove.chat.enumerate.MessageType.TEXT;
+import static org.assertj.core.api.Assertions.assertThat;
 import static org.assertj.core.api.AssertionsForClassTypes.assertThatThrownBy;
 import static org.junit.jupiter.api.Assertions.assertAll;
 import static org.mockito.ArgumentMatchers.any;
@@ -55,7 +56,7 @@ class MessageServiceTest extends CommonServiceTest {
                     .hasAuthorized(true)
                     .build();
 
-            assertThat(messageRepository.findAll().size()).isEqualTo(1);
+            Assertions.assertThat(messageRepository.findAll()).hasSize(1);
             assertAll(
                     () -> assertThat(result.getType()).isEqualTo(expected.getType()),
                     () -> assertThat(result.getStatus()).isEqualTo(expected.getStatus()),

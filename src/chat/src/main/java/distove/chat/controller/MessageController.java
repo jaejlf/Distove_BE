@@ -12,6 +12,7 @@ import distove.chat.service.MessageService;
 import distove.chat.web.UserClient;
 import lombok.Getter;
 import lombok.RequiredArgsConstructor;
+import org.springframework.beans.factory.annotation.Value;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.messaging.handler.annotation.DestinationVariable;
@@ -30,12 +31,15 @@ public class MessageController {
     private final SimpMessagingTemplate simpMessagingTemplate;
     private final MessageService messageService;
 
+    @Value("${sub.destination}")
+    private String destination;
+
     @MessageMapping("/chat/{channelId}")
     public void publishMessage(@Header("userId") Long userId,
                                @DestinationVariable Long channelId,
                                @Payload MessageRequest request) {
         MessageResponse result = messageService.publishMessage(userId, channelId, request);
-        simpMessagingTemplate.convertAndSend("/sub/" + channelId, result);
+        simpMessagingTemplate.convertAndSend(destination + channelId, result);
     }
 
     @PostMapping("/file/{channelId}")
@@ -44,13 +48,13 @@ public class MessageController {
                             @RequestParam MessageType type,
                             @ModelAttribute FileUploadRequest request) {
         MessageResponse result = messageService.publishFile(userId, channelId, type, request);
-        simpMessagingTemplate.convertAndSend("/sub/" + channelId, result);
+        simpMessagingTemplate.convertAndSend(destination + channelId, result);
     }
 
     @MessageMapping("/typing/{channelId}")
     public void publishTypedUser(@Header("userId") Long userId, @DestinationVariable Long channelId) {
         TypedUserResponse result = messageService.publishTypedUser(userId);
-        simpMessagingTemplate.convertAndSend("/sub/" + channelId, result);
+        simpMessagingTemplate.convertAndSend(destination + channelId, result);
     }
 
     @GetMapping("/list/{channelId}")
