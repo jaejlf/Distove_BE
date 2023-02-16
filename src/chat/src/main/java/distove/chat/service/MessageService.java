@@ -68,7 +68,7 @@ public class MessageService {
 
         UserResponse writer = userClient.getUser(userId);
         List<ReactionResponse> reactions = message.getReactions() != null ? reactionService.getUserInfoOfReactions(message.getReactions()) : null;
-        return MessageResponse.ofDefault(message, writer, userId+, reactions);
+        return MessageResponse.ofDefault(message, writer, userId, reactions);
     }
 
     public MessageResponse publishFile(Long userId, Long channelId, MessageType type, FileUploadRequest request) {
@@ -323,7 +323,7 @@ public class MessageService {
         List<Message> messages = mongoTemplate.find(query, Message.class);
         if (searchType == null) {
             return messages.stream().map(message -> MessageResponse.ofSearching(message, writer)).collect(Collectors.toList());
-
         }
+        return messages.stream().map(message -> MessageResponse.ofSearching(message, writer)).collect(Collectors.toList());
     }
 }

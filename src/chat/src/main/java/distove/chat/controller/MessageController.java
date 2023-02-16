@@ -85,7 +85,7 @@ public class MessageController {
                                                          @PathVariable Long channelId,
                                                          @RequestParam String content,
                                                          @RequestParam (required = false) String searchType) {
-        List<MessageResponse> messages = messageService.findMessages(searchType, channelId, content);
+        List<MessageResponse> messages = messageService.findMessages(searchType, channelId, content, userId);
         return ResultResponse.success(HttpStatus.OK, "메시지 검색", messages);
     }
 
