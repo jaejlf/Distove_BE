@@ -1,6 +1,9 @@
 package distove.community.entity;
 
-import lombok.*;
+import lombok.AllArgsConstructor;
+import lombok.Builder;
+import lombok.Getter;
+import lombok.NoArgsConstructor;
 
 import javax.persistence.*;
 import java.time.LocalDateTime;
@@ -21,31 +24,32 @@ public class Invitation {
     @JoinColumn(name = "serverId")
     private Server server;
 
-    @ManyToOne
-    @JoinColumn(name = "memberId")
-    private Member member;
+    private Long userId;
 
-    private int uses;
+    private int countUsage;
 
     private LocalDateTime expiresAt;
 
     private boolean isExpired;
 
-
-    public static Invitation newInvitation(String inviteCode, Server server, Member member){
+    public static Invitation newInvitation(String inviteCode, Server server, Long userId) {
         LocalDateTime now = LocalDateTime.now();
-        LocalDateTime expiresAt = now.plusDays(7);
+        LocalDateTime expiresAt = now.plusDays(1);
         return Invitation.builder()
                 .inviteCode(inviteCode)
                 .server(server)
-                .member(member)
-                .uses(10)
+                .userId(userId)
+                .countUsage(3)
                 .expiresAt(expiresAt)
                 .isExpired(false)
                 .build();
     }
 
-    public void decreaseInviteCodeUsage(int uses) {
-        this.uses = uses - 1;
+    public void decreaseInviteCodeUsage(int usage) {
+        this.countUsage = usage - 1;
+    }
+
+    public void isExpired() {
+        this.isExpired = true;
     }
 }

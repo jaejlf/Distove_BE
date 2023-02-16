@@ -24,4 +24,10 @@ public class GlobalExceptionHandler {
         return ResultResponse.fail(e.getHttpStatus(), e.getCode(), e.getMessage());
     }
 
+    @ExceptionHandler(InvitationException.class)
+    public ResponseEntity<Object> invitationExceptionHandler(InvitationException e) {
+        log.error("[" + e.getClass().getSimpleName() + "] " + e.getMessage());
+        return ResultResponse.fail(e.getHttpStatus(), e.getCode(), e.getMessage());
+    }
+
 }

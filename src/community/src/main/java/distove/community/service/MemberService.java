@@ -2,10 +2,13 @@ package distove.community.service;
 
 import distove.community.dto.response.MemberResponse;
 import distove.community.dto.response.RoleResponse;
+import distove.community.entity.Invitation;
 import distove.community.entity.Member;
 import distove.community.entity.MemberRole;
 import distove.community.entity.Server;
 import distove.community.exception.DistoveException;
+import distove.community.exception.InvitationException;
+import distove.community.repository.InvitationRepository;
 import distove.community.repository.MemberRepository;
 import distove.community.repository.MemberRoleRepository;
 import distove.community.repository.ServerRepository;
@@ -14,9 +17,12 @@ import distove.community.web.UserResponse;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.orm.ObjectOptimisticLockingFailureException;
+import org.springframework.orm.jpa.LocalContainerEntityManagerFactoryBean;
 import org.springframework.stereotype.Service;
+import org.springframework.transaction.annotation.Transactional;
 
-import javax.transaction.Transactional;
+import java.time.Duration;
+import java.time.LocalDateTime;
 import java.util.ArrayList;
 import java.util.Collections;
 import java.util.List;
@@ -37,7 +43,9 @@ public class MemberService {
     private final MemberRepository memberRepository;
     private final ServerRepository serverRepository;
     private final MemberRoleRepository memberRoleRepository;
+    private final InvitationRepository invitationRepository;
     private final UserClient userClient;
+    private final LocalContainerEntityManagerFactoryBean entityManagerFactory;
 
     public List<Member> getMembersByServerId(Long serverId) {
         checkServerExist(serverId);
@@ -135,4 +143,30 @@ public class MemberService {
         return !Objects.equals(role.getRoleName(), OWNER.getName()) || !checkOwnerIsUnique(serverId);
     }
 
+    @Transactional(noRollbackFor = InvitationException.class)
+    public Long validateInviteCode(Long userId, String inviteCode) {
+
+        log.info(INVITE_CODE_USAGE_EXCEEDED.getCode());
+        Invitation invitation = invitationRepository.findByInviteCode(inviteCode)
+                .orElseThrow(() -> new DistoveException(INVITE_CODE_NOT_FOUND));
+
+        LocalDateTime now = LocalDateTime.now();
+        Duration duration = Duration.between(now, invitation.getExpiresAt());
+
+        if (duration.getSeconds() < 0) {
+            invitation.isExpired();
+            throw new InvitationException(INVITE_CODE_EXPIRED);
+        }
+
+        if (invitation.getCountUsage() > 0) {
+            invitation.decreaseInviteCodeUsage(invitation.getCountUsage());
+        } else {
+            invitation.isExpired();
+            throw new InvitationException(INVITE_CODE_USAGE_EXCEEDED);
+        }
+
+        joinServer(userId, invitation.getServer().getId());
+
+        return invitation.getServer().getId();
+    }
 }

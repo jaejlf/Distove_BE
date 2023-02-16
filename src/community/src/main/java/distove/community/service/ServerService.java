@@ -2,11 +2,13 @@ package distove.community.service;
 
 
 import distove.community.dto.response.CategoryResponse;
+import distove.community.dto.response.InvitationResponse;
 import distove.community.entity.*;
 import distove.community.enumerate.ChannelType;
 import distove.community.exception.DistoveException;
 import distove.community.repository.*;
 import distove.community.web.ChatClient;
+import distove.community.web.UserClient;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.stereotype.Service;
@@ -37,6 +39,7 @@ import static distove.community.exception.ErrorCode.*;
 public class ServerService {
 
     private final ChatClient chatClient;
+    private final UserClient userClient;
     private final ServerRepository serverRepository;
     private final MemberRepository memberRepository;
     private final MemberRoleRepository memberRoleRepository;
@@ -62,7 +65,7 @@ public class ServerService {
                         category -> newCategoryResponse(category.getId(), category.getName(), new ArrayList<>())
                 ));
         for (Channel channel : channels) {
-            categoryHashMap.get(channel.getCategory().getId()).getChannels().add(newChannelResponse(channel.getId(),channel.getName(), channel.getChannelTypeId()));
+            categoryHashMap.get(channel.getCategory().getId()).getChannels().add(newChannelResponse(channel.getId(), channel.getName(), channel.getChannelTypeId()));
         }
         return new ArrayList<>(categoryHashMap.values());
     }
@@ -110,7 +113,7 @@ public class ServerService {
     public void deleteServerById(Long serverId) {
 
         List<Category> categories = categoryRepository.findCategoriesByServerId(serverId);
-        List<Channel> channels = channelRepository.findChannelsByCategoryInAndChannelTypeIdEquals(categories,ChannelType.CHAT.getCode());
+        List<Channel> channels = channelRepository.findChannelsByCategoryInAndChannelTypeIdEquals(categories, ChannelType.CHAT.getCode());
 //        chatClient.clearAllByList(channels);
         channelRepository.deleteAllByCategoryIn(categories);
         memberRepository.deleteAllByServerId(serverId);
@@ -125,37 +128,31 @@ public class ServerService {
         memberRepository.save(newMember(newServer, userId, ownerRole));
     }
 
-    public String createInvitation(Long memberId, Long serverId) {
-        String inviteCode = UUID.randomUUID().toString().substring(0,8);
-        Member member = memberRepository.findByUserIdAndServerId(memberId,serverId).orElseThrow(()-> new DistoveException(MEMBER_NOT_FOUND));
+    public String createInvitation(Long userId, Long serverId) {
+        String inviteCode = UUID.randomUUID().toString().substring(0, 8);
         Server server = serverRepository.findById(serverId).orElseThrow(() -> new DistoveException(SERVER_NOT_FOUND));
-        Invitation invitation = newInvitation(inviteCode, server, member);
+        Invitation invitation = newInvitation(inviteCode, server, userId);
         invitationRepository.save(invitation);
-
         return inviteCode;
     }
 
-    public void validateInviteCode(Long userId, String inviteCode) {
-        Invitation invitation = invitationRepository.findInvitationByInviteCode(inviteCode)
+    public void deleteInvitation(Long userId, String inviteCode) {
+        Invitation invitation = invitationRepository.findByUserIdAndInviteCode(userId, inviteCode)
                 .orElseThrow(() -> new DistoveException(INVITE_CODE_NOT_FOUND));
+        invitationRepository.deleteById(invitation.getId());
+    }
 
-        LocalDateTime now = LocalDateTime.now();
-        Duration duration = Duration.between(now, invitation.getExpiresAt());
-
-        if (duration.getSeconds() < 0) {
-            throw new DistoveException(INVITE_CODE_EXPIRED);
+    public List<InvitationResponse> getInvitations(Long userId, Long serverId) {
+        Server server = serverRepository.findById(serverId).orElseThrow(() -> new DistoveException(SERVER_NOT_FOUND));
+        List<Invitation> invitations = invitationRepository.findAllByServer(server);
+        List<InvitationResponse> invitationList = new ArrayList<>();
+        for (Invitation invitation : invitations) {
+            if (userId.equals(invitation.getUserId())) {
+                invitationList.add(InvitationResponse.of(invitation, userClient, true));
+            } else {
+                invitationList.add(InvitationResponse.of(invitation, userClient, false));
+            }
         }
-
-        if (invitation.getUses() > 0) {
-            invitation.decreaseInviteCodeUsage(invitation.getUses());
-            invitationRepository.save(invitation);
-        } else {
-
-            invitationRepository.save(invitation);
-            throw new DistoveException(INVITE_CODE_USES_EXCEEDED);
-        }
-
-        memberService.joinServer(userId, invitation.getServer().getId());
-
+        return invitationList;
     }
 }
