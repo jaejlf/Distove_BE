@@ -153,17 +153,13 @@ public class MessageService {
                 .filter(x -> x.getUserId().equals(userId)).findFirst()
                 .orElseThrow(() -> new DistoveException(USER_NOT_FOUND));
 
-        if (getUnreadInfo(channelId, member) == null) updateLatestConnectedAt(userId, connection, members, member);
+        if (getUnreadInfo(channelId, member) == null) updateLatestConnectedAt(userId, connection, members);
     }
 
     public void readAllUnreadMessages(Long userId, Long channelId) {
         Connection connection = checkChannelExist(channelId);
         List<Member> members = connection.getMembers();
-        Member member = members.stream()
-                .filter(x -> x.getUserId().equals(userId)).findFirst()
-                .orElseThrow(() -> new DistoveException(USER_NOT_FOUND));
-
-        updateLatestConnectedAt(userId, connection, members, member);
+        updateLatestConnectedAt(userId, connection, members);
     }
 
     private Message createMessage(Long channelId, String parentId, MessageType type, String content, Long userId) {
@@ -276,7 +272,7 @@ public class MessageService {
         return messageResponses;
     }
 
-    private void updateLatestConnectedAt(Long userId, Connection connection, List<Member> members, Member member) {
+    private void updateLatestConnectedAt(Long userId, Connection connection, List<Member> members) {
         members.replaceAll(x -> Objects.equals(x.getUserId(), userId) ? newMember(userId) : x);
         connection.updateMembers(members);
         connectionRepository.save(connection);
@@ -303,7 +299,9 @@ public class MessageService {
 
     private Map<String, String> getCursorIdInfo(Long channelId, List<Message> messages) {
         Map<String, String> cursorIdInfo = new HashMap<>();
-        String previousCursorId = null, nextCursorId = null;
+        String previousCursorId = null;
+        String nextCursorId = null;
+
         if (!messages.isEmpty()) {
             Message previousCursor = messageRepository.findPreviousByCursor(channelId, messages.get(messages.size() - 1).getCreatedAt()).orElse(null);
             Message nextCursor = messageRepository.findNextByCursor(channelId, messages.get(0).getCreatedAt()).orElse(null);
