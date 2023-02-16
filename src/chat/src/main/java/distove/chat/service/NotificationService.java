@@ -7,6 +7,7 @@ import distove.chat.repository.ConnectionRepository;
 import distove.chat.repository.MessageRepository;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
+import org.springframework.beans.factory.annotation.Value;
 import org.springframework.messaging.simp.SimpMessagingTemplate;
 import org.springframework.stereotype.Service;
 
@@ -15,6 +16,7 @@ import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
 
+import static distove.chat.exception.ErrorCode.CHANNEL_NOT_FOUND;
 import static distove.chat.exception.ErrorCode.USER_NOT_FOUND;
 
 @Slf4j
@@ -25,6 +27,9 @@ public class NotificationService {
     private final SimpMessagingTemplate simpMessagingTemplate;
     private final ConnectionRepository connectionRepository;
     private final MessageRepository messageRepository;
+
+    @Value("${sub.destination}")
+    private String destination;
 
     public void publishAllNotification(Long userId, Long serverId) {
         List<Long> channelIds = new ArrayList<>();
@@ -41,14 +46,16 @@ public class NotificationService {
 
         Map<String, List<Long>> map = new HashMap<>();
         map.put("channelIds", channelIds);
-        simpMessagingTemplate.convertAndSend("/sub/server/" + serverId, map);
+        simpMessagingTemplate.convertAndSend(destination + "server/" + serverId, map);
     }
 
     public void publishNotification(Long channelId) {
-        Long serverId = connectionRepository.findByChannelId(channelId).get().getServerId();
+        Long serverId = connectionRepository.findByChannelId(channelId)
+                .orElseThrow(() -> new DistoveException(CHANNEL_NOT_FOUND)).getServerId();
+
         Map<String, Long> map = new HashMap<>();
         map.put("channelId", channelId);
-        simpMessagingTemplate.convertAndSend("/sub/server/" + serverId, map);
+        simpMessagingTemplate.convertAndSend(destination + "server/" + serverId, map);
     }
 
 }

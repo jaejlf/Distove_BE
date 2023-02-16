@@ -1,11 +1,13 @@
-package distove.chat.common;
+package distove.chat.service;
 
 import distove.chat.repository.ConnectionRepository;
 import distove.chat.repository.MessageRepository;
 import distove.chat.web.UserClient;
 import distove.chat.web.UserResponse;
+import org.assertj.core.api.Assertions;
 import org.junit.jupiter.api.AfterEach;
 import org.junit.jupiter.api.BeforeEach;
+import org.junit.jupiter.api.Test;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.boot.test.context.SpringBootTest;
 import org.springframework.boot.test.mock.mockito.MockBean;
@@ -15,7 +17,7 @@ import java.util.ArrayList;
 import static distove.chat.entity.Connection.newConnection;
 
 @SpringBootTest
-public class CommonServiceTest {
+class CommonServiceTest {
 
     @MockBean
     public UserClient userClient;
@@ -38,6 +40,11 @@ public class CommonServiceTest {
     public void clear() {
         messageRepository.deleteAll();
         connectionRepository.deleteAll();
+    }
+
+    @Test
+    void common() {
+        Assertions.assertThat(connectionRepository.findAll()).hasSize(1);
     }
 
 }

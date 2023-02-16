@@ -10,6 +10,7 @@ import distove.chat.enumerate.MessageType;
 import distove.chat.service.MessageService;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
+import org.springframework.beans.factory.annotation.Value;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.messaging.handler.annotation.DestinationVariable;
@@ -29,18 +30,21 @@ public class ReplyController {
     private final SimpMessagingTemplate simpMessagingTemplate;
     private final MessageService messageService;
 
+    @Value("${sub.destination}")
+    private String destination;
+
     @MessageMapping("/reply/{channelId}")
     public void publishMessage(@Header("userId") Long userId,
                                @DestinationVariable Long channelId,
                                @Payload MessageRequest request) {
         if (request.getReplyName() != null) {
             simpMessagingTemplate.convertAndSend(
-                    "/sub/" + channelId,
+                    destination + channelId,
                     messageService.createReply(userId, request));
         }
 
         MessageResponse result = messageService.publishMessage(userId, channelId, request);
-        simpMessagingTemplate.convertAndSend("/sub/" + request.getParentId(), result);
+        simpMessagingTemplate.convertAndSend(destination + request.getParentId(), result);
     }
 
     @PostMapping("/reply/file/{channelId}")
@@ -49,13 +53,13 @@ public class ReplyController {
                             @RequestParam MessageType type,
                             @ModelAttribute FileUploadRequest request) {
         MessageResponse result = messageService.publishFile(userId, channelId, type, request);
-        simpMessagingTemplate.convertAndSend("/sub/" + request.getParentId(), result);
+        simpMessagingTemplate.convertAndSend(destination + request.getParentId(), result);
     }
 
     @MessageMapping("/reply/typing/{parentId}")
     public void publishTypedUser(@Header("userId") Long userId, @DestinationVariable String parentId) {
         TypedUserResponse result = messageService.publishTypedUser(userId);
-        simpMessagingTemplate.convertAndSend("/sub/" + parentId, result);
+        simpMessagingTemplate.convertAndSend(destination + parentId, result);
     }
 
     @GetMapping("/replies/{channelId}")
