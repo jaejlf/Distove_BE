@@ -78,7 +78,7 @@ public interface CustomMessageRepository {
                     "'channelId' : ?0," +
                     "'parentId' : null," +
                     "'createdAt' : { $gt :  ?1} } }",
-            "{ '$sort' : { 'createdAt' : -1 } }",
+            "{ '$sort' : { 'createdAt' : 1 } }",
             "{ '$limit' : 1 }"})
     Message findFirstUnreadMessage(Long channelId, LocalDateTime latestConnectedAt);
 
