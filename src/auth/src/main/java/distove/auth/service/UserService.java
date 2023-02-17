@@ -95,6 +95,18 @@ public class UserService {
         return users;
     }
 
+    public List<Long> getUserIdsByNicknames(List<String> nicknames) {
+        List<Long> userIds = new ArrayList<>();
+
+        for (String nickname : nicknames) {
+            Long userId = userRepository.findByNickname(nickname)
+                    .orElseThrow(() -> new DistoveException(ACCOUNT_NOT_FOUND));
+            userIds.add(userId);
+        }
+
+        return userIds;
+    }
+
     public UserResponse updateNickname(String token, UpdateNicknameRequest request) {
         User user = userRepository.findById(jwtTokenProvider.getUserId(token))
                 .orElseThrow(() -> new DistoveException(ACCOUNT_NOT_FOUND));
@@ -124,21 +136,15 @@ public class UserService {
 
     public LoginResponse reissue(HttpServletRequest request) {
         String token = getRefreshToken(request);
-        log.info(token);
+
         if (jwtTokenProvider.getTypeOfToken(token).equals("RT")) {
-            User user = userRepository.findById(jwtTokenProvider.getUserId(token))
+            User user = userRepository.findByRefreshToken(token)
                     .orElseThrow(() -> new DistoveException(ACCOUNT_NOT_FOUND));
 
-            return LoginResponse.of(jwtTokenProvider.createToken(getUserIdFromDatabase(token), "AT"), UserResponse.of(user.getId(), user.getNickname(), user.getProfileImgUrl()));
+            return LoginResponse.of(jwtTokenProvider.createToken(user.getId(),"AT"), UserResponse.of(user.getId(), user.getNickname(), user.getProfileImgUrl()));
         }
 
         throw new DistoveException(NOT_REFRESH_TOKEN);
-    }
-
-    public Long getUserIdFromDatabase(String token) {
-        User user = userRepository.findById(jwtTokenProvider.getUserId(token))
-                .orElseThrow(() -> new DistoveException(ACCOUNT_NOT_FOUND));
-        return user.getId();
     }
 
     public String createCookie(LoginRequest request) {
