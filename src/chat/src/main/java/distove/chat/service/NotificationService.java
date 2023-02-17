@@ -17,7 +17,6 @@ import java.util.List;
 import java.util.Map;
 
 import static distove.chat.exception.ErrorCode.CHANNEL_NOT_FOUND;
-import static distove.chat.exception.ErrorCode.USER_NOT_FOUND;
 
 @Slf4j
 @RequiredArgsConstructor
@@ -38,10 +37,12 @@ public class NotificationService {
             List<Member> members = connection.getMembers();
             Member member = members.stream()
                     .filter(x -> x.getUserId().equals(userId)).findFirst()
-                    .orElseThrow(() -> new DistoveException(USER_NOT_FOUND));
+                    .orElse(null);
 
-            int unreadCount = messageRepository.countUnreadMessage(connection.getChannelId(), member.getLatestConnectedAt());
-            if (unreadCount > 0) channelIds.add(connection.getChannelId());
+            if (member != null) {
+                int unreadCount = messageRepository.countUnreadMessage(connection.getChannelId(), member.getLatestConnectedAt());
+                if (unreadCount > 0) channelIds.add(connection.getChannelId());
+            }
         }
 
         Map<String, List<Long>> map = new HashMap<>();
