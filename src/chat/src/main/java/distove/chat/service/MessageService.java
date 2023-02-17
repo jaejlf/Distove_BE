@@ -329,7 +329,6 @@ public class MessageService {
     }
 
     public List<Message> findMessagesByFilter(Long channelId, Long senderId, String content) {
-        messageRepository.
         Criteria criteria = new Criteria();
 
         if (channelId != null) {
