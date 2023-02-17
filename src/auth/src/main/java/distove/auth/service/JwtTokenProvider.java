@@ -69,7 +69,7 @@ public class JwtTokenProvider {
     }
 
     public Long getUserId(String token) throws DistoveException {
-        Jws<Claims> jws= validToken(token);
+        Jws<Claims> jws = validToken(token);
         return Long.valueOf(String.valueOf(jws.getBody().get("userId")));
     }
 

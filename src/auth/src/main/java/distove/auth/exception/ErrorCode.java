@@ -11,7 +11,7 @@ public enum ErrorCode {
     DUPLICATE_EMAIL(HttpStatus.CONFLICT, "A0001", "이미 존재하는 이메일입니다."),
 
     // 로그인
-    ACCOUNT_NOT_FOUND(HttpStatus.BAD_REQUEST, "A0002", "계정이 존재하지 않습니다."),
+    ACCOUNT_NOT_FOUND(HttpStatus.BAD_REQUEST, "A0002", "정보를 찾을 수 없습니다."),
     INVALID_PASSWORD(HttpStatus.BAD_REQUEST, "A0003", "패스워드가 다릅니다."),
 
     //JWT
