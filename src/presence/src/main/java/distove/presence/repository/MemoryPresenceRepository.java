@@ -14,8 +14,9 @@ public class MemoryPresenceRepository implements PresenceRepository{
     public static final Map<Long, PresenceTime> presences = new LinkedHashMap<>();
 
     @Override
-    public Optional<Presence> findPresenceByUserId(Long userId) {
-        return Optional.ofNullable(presences.get(userId).getPresence());
+    public Optional<PresenceTime> findPresenceByUserId(Long userId) {
+        Optional<PresenceTime> presence= Optional.ofNullable(presences.get(userId));
+        return presence;
     }
 
     @Override
@@ -35,6 +36,7 @@ public class MemoryPresenceRepository implements PresenceRepository{
 
     @Override
     public Presence save(Long userId,PresenceTime presenceTime){
-        return presences.put(userId,presenceTime).getPresence();
+        presences.put(userId,presenceTime);
+        return presenceTime.getPresence();
     }
 }

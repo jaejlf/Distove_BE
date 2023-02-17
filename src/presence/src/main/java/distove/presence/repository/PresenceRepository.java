@@ -8,7 +8,7 @@ import java.util.Optional;
 
 public interface PresenceRepository {
 
-    Optional<Presence> findPresenceByUserId(Long userId);
+    Optional<PresenceTime> findPresenceByUserId(Long userId);
     void removePresenceByUserId(Long userId);
     Map<Long, PresenceTime> findAll();
     Boolean isUserOnline(Long userId);
