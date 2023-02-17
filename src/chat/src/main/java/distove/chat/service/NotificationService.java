@@ -45,7 +45,8 @@ public class NotificationService {
             }
         }
 
-        Map<String, List<Long>> map = new HashMap<>();
+        Map<String, Object> map = new HashMap<>();
+        map.put("serverId", serverId);
         map.put("channelIds", channelIds);
         simpMessagingTemplate.convertAndSend(destination + "server/" + serverId, map);
     }
@@ -54,7 +55,8 @@ public class NotificationService {
         Long serverId = connectionRepository.findByChannelId(channelId)
                 .orElseThrow(() -> new DistoveException(CHANNEL_NOT_FOUND)).getServerId();
 
-        Map<String, Long> map = new HashMap<>();
+        Map<String, Object> map = new HashMap<>();
+        map.put("serverId", serverId);
         map.put("channelId", channelId);
         simpMessagingTemplate.convertAndSend(destination + "server/" + serverId, map);
     }
