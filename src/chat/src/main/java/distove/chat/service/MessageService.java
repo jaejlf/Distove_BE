@@ -317,14 +317,10 @@ public class MessageService {
         return cursorIdInfo;
     }
 
-    public List<MessageResponse> findMessages(String searchType, Long channelId, String content, Long userId) {
+    public List<MessageResponse> findMessages(Long channelId, String content, Long userId) {
         UserResponse writer = userClient.getUser(userId);
         List<Message> messages = findMessagesByFilter(channelId, userId, content);
 
-        //TODO 파일 타입 생각하기!
-        if (searchType == null) {
-            return messages.stream().map(message -> MessageResponse.ofSearching(message, writer)).collect(Collectors.toList());
-        }
         return messages.stream().map(message -> MessageResponse.ofSearching(message, writer)).collect(Collectors.toList());
     }
 
