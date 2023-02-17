@@ -126,8 +126,9 @@ public class UserService {
 
     }
 
-    public LoginResponse reissue(String token, HttpServletRequest request) {
-
+    public LoginResponse reissue(HttpServletRequest request) {
+        String token = getRefreshToken(request);
+        log.info(token);
         if (jwtTokenProvider.getTypeOfToken(token).equals("RT")) {
             User user = userRepository.findById(jwtTokenProvider.getUserId(token))
                     .orElseThrow(() -> new DistoveException(ACCOUNT_NOT_FOUND));
@@ -169,8 +170,8 @@ public class UserService {
                 .build().toString();
     }
 
-    public String createCookieFromReissue(String refreshToken) {
-
+    public String createCookieFromReissue(HttpServletRequest request) {
+        String refreshToken = getRefreshToken(request);
         return ResponseCookie.from("refreshToken", refreshToken)
                 .maxAge(60 * 60 * 24 * 30)
                 .path("/")

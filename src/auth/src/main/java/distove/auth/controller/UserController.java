@@ -76,9 +76,9 @@ public class UserController {
     }
 
     @GetMapping("/reissue")
-    public ResponseEntity<Object> reissue(@RequestHeader("token") String token, HttpServletResponse response, HttpServletRequest request) {
-        LoginResponse loginResponse = userService.reissue(token, request);
-        response.addHeader("Set-Cookie", userService.createCookieFromReissue(token));
+    public ResponseEntity<Object> reissue(HttpServletResponse response, HttpServletRequest request) {
+        LoginResponse loginResponse = userService.reissue(request);
+        response.addHeader("Set-Cookie", userService.createCookieFromReissue(request));
         return ResultResponse.success(
                 HttpStatus.CREATED,
                 "액세스 토큰 재발급",

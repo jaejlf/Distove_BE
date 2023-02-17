@@ -41,7 +41,7 @@ public class JwtTokenProvider {
         claims.put("userId", userId);
 
         Date now = new Date();
-        
+
         if (type.equals("AT")) {
             headers.put("type", "AT");
             return Jwts.builder()
