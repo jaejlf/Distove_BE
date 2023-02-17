@@ -41,7 +41,7 @@ public class JwtTokenProvider {
         claims.put("userId", userId);
 
         Date now = new Date();
-
+        
         if (type.equals("AT")) {
             headers.put("type", "AT");
             return Jwts.builder()
@@ -61,22 +61,6 @@ public class JwtTokenProvider {
                     .signWith(key, SignatureAlgorithm.HS256)
                     .compact();
         }
-    }
-
-
-    public ResponseCookie createTokenCookie(String refreshToken) {
-        return ResponseCookie.from("refreshToken", refreshToken)
-                .maxAge(60 * 60 * 24 * 30)
-                .path("/")
-                .httpOnly(true)
-                .secure(true)
-                .sameSite("None")
-                .domain("distove.onstove.com")
-                .build();
-    }
-
-    public RefreshToken refreshTokenToEntity(String token, Long userId) {
-        return new RefreshToken(token, userId);
     }
 
     public boolean validToken(String token) {
