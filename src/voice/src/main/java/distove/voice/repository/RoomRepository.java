@@ -10,11 +10,10 @@ import java.util.Optional;
 public interface RoomRepository {
     Optional<Room> findRoomByChannelId(Long channelId);
 
-    Optional<Room> findRoomById(String id);
-
     Room save(Room room);
 
-    void deleteById(String id);
+    void deleteByChannelId(Long channelId);
 
     List<Room> findAll();
+    void deleteAllRoom();
 }

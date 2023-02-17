@@ -1,5 +1,6 @@
 package distove.chat.controller;
 
+import distove.chat.service.ConnectionService;
 import distove.chat.service.EventService;
 import lombok.RequiredArgsConstructor;
 import org.springframework.web.bind.annotation.*;
@@ -11,11 +12,12 @@ import java.util.List;
 public class EventController {
 
     private final EventService eventService;
+    private final ConnectionService connectionService;
 
-    @PostMapping("/connection/{channelId}")
-    public void createConnection(@RequestHeader("userId") Long userId,
-                                 @PathVariable Long channelId) {
-        eventService.requestNewChannel(userId, channelId);
+    @PostMapping("/connection/server/{serverId}")
+    public void createConnection(@PathVariable Long serverId,
+                                 @RequestParam Long channelId) {
+        connectionService.createConnection(serverId, channelId);
     }
 
     @DeleteMapping("/clear/{channelId}")

@@ -27,6 +27,8 @@ public class MemberAuthInterceptor implements HandlerInterceptor {
 
     @Override
     public boolean preHandle(HttpServletRequest request, HttpServletResponse response, Object handler) {
+        if(request.getMethod().equals("OPTIONS")) return true;
+
         log.info("-----> AuthCheckInterceptor 진입");
 
         log.info("인증 구현 전까지 무조건 pass <-----");

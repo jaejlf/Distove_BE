@@ -14,18 +14,20 @@ public class Connection {
 
     @Id
     private String id;
+    private Long serverId;
     private Long channelId;
-    private List<Long> connectedMemberIds;
+    private List<Member> members;
 
-    public static Connection newConnection(Long channelId, List<Long> connectedMemberIds) {
+    public static Connection newConnection(Long serverId, Long channelId, List<Member> members) {
         return Connection.builder()
+                .serverId(serverId)
                 .channelId(channelId)
-                .connectedMemberIds(connectedMemberIds)
+                .members(members)
                 .build();
     }
 
-    public void updateConnectedMemberIds(List<Long> connectedMemberIds) {
-        this.connectedMemberIds = connectedMemberIds;
+    public void updateMembers(List<Member> members) {
+        this.members = members;
     }
 
 }

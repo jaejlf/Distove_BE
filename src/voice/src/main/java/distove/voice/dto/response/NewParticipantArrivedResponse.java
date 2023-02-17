@@ -9,9 +9,9 @@ import lombok.Builder;
 @JsonAutoDetect(fieldVisibility = JsonAutoDetect.Visibility.ANY)
 public class NewParticipantArrivedResponse {
     private final String type = MessageType.NEW_PARTICIPANT_ARRIVED.getType();
-    private final UserResponse user;
+    private final UserVideoResponse user;
 
-    public static NewParticipantArrivedResponse newNewParticipantArrivedResponse(UserResponse user) {
+    public static NewParticipantArrivedResponse newNewParticipantArrivedResponse(UserVideoResponse user) {
         return NewParticipantArrivedResponse.builder()
                 .user(user)
                 .build();

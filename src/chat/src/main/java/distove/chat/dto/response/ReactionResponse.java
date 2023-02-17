@@ -1,6 +1,5 @@
 package distove.chat.dto.response;
 
-import distove.chat.entity.Emoji;
 import distove.chat.web.UserResponse;
 import lombok.Builder;
 import lombok.Getter;

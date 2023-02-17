@@ -19,7 +19,8 @@ public enum ErrorCode {
     ROLE_NOT_FOUND(HttpStatus.NOT_FOUND, "C0006","존재하지 않는 역할입니다."),
     MEMBER_NOT_FOUND(HttpStatus.NOT_FOUND, "C0007","존재하지 않는 멤버입니다."),
     MEMBER_ALREADY_EXIST(HttpStatus.BAD_REQUEST, "C0008","이미 서버에 참여 중인 멤버입니다."),
-    NO_AUTH(HttpStatus.BAD_REQUEST, "C0009","수정 권한이 없습니다.");
+    NO_AUTH(HttpStatus.BAD_REQUEST, "C0009","수정 권한이 없습니다."),
+    CANNOT_CHANGE_ROLE(HttpStatus.BAD_REQUEST, "C0010","'소유자'가 유일하여 변경할 수 없습니다.");;
 
     private final HttpStatus httpStatus;
     private final String code;

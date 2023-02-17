@@ -9,7 +9,6 @@ import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.beans.factory.annotation.Value;
-import org.springframework.http.ResponseCookie;
 import org.springframework.stereotype.Service;
 
 import java.security.Key;
@@ -61,17 +60,7 @@ public class JwtTokenProvider {
                     .signWith(key, SignatureAlgorithm.HS256)
                     .compact();
         }
-    }
 
-    public ResponseCookie createCookieFromToken(String refreshToken) {
-        return ResponseCookie.from("refreshToken", refreshToken)
-                .maxAge(60 * 60 * 24 * 30)
-                .path("/")
-                .httpOnly(true)
-                .secure(true)
-                .sameSite("None")
-                .domain("distove.onstove.com")
-                .build();
     }
 
     public String getTypeOfToken(String token) {

@@ -19,7 +19,6 @@ public class RoleResponse {
     public static class Detail {
         private Long roleId;
         private String roleName;
-        private boolean isActive;
     }
 
 }
