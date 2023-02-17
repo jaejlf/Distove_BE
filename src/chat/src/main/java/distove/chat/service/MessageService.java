@@ -15,6 +15,9 @@ import distove.chat.web.UserResponse;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.beans.factory.annotation.Value;
+import org.springframework.data.mongodb.core.MongoTemplate;
+import org.springframework.data.mongodb.core.query.Criteria;
+import org.springframework.data.mongodb.core.query.Query;
 import org.springframework.stereotype.Service;
 
 import java.util.*;
@@ -42,6 +45,7 @@ public class MessageService {
     private final ConnectionRepository connectionRepository;
     private final ReactionService reactionService;
     private final UserClient userClient;
+    private final MongoTemplate mongoTemplate;
 
     public MessageResponse publishMessage(Long userId, Long channelId, MessageRequest request) {
         checkStatusCanChanged(request.getType(), request.getStatus());
@@ -313,4 +317,34 @@ public class MessageService {
         return cursorIdInfo;
     }
 
+    public List<MessageResponse> findMessages(String searchType, Long channelId, String content, Long userId) {
+        UserResponse writer = userClient.getUser(userId);
+        List<Message> messages = findMessagesByFilter(channelId, userId, content);
+
+        //TODO 파일 타입 생각하기!
+        if (searchType == null) {
+            return messages.stream().map(message -> MessageResponse.ofSearching(message, writer)).collect(Collectors.toList());
+        }
+        return messages.stream().map(message -> MessageResponse.ofSearching(message, writer)).collect(Collectors.toList());
+    }
+
+    public List<Message> findMessagesByFilter(Long channelId, Long senderId, String content) {
+        Criteria criteria = new Criteria();
+
+        if (channelId != null) {
+            criteria.and("channelId").is(channelId);
+        }
+
+        if (senderId != null) {
+            criteria.and("userId").is(senderId);
+        }
+
+        if (content != null) {
+            criteria.and("content").regex(".*" + content + ".*");
+        }
+
+        Query query = new Query(criteria);
+        return mongoTemplate.find(query, Message.class);
+
+    }
 }
