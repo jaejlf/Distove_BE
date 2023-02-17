@@ -11,7 +11,7 @@ import org.springframework.web.bind.annotation.*;
 
 import java.util.List;
 
-@Controller
+@RestController
 @RequiredArgsConstructor
 public class PresenceController {
 
@@ -24,16 +24,4 @@ public class PresenceController {
         return ResultResponse.success(HttpStatus.OK, "멤버 활동상태 조회 성공", presenceResponses);
     }
 
-//    @PutMapping("/subscribe/server/{serverId}")
-//    public ResponseEntity<Object> subscribeServerPresence(@RequestHeader("userId") Long userId,
-//                                                          @PathVariable("serverId") Long serverId) {
-//        presenceService.subscribeServerPresence(userId,serverId);
-//        return ResultResponse.success(HttpStatus.OK, "구독", presenceResponses);
-//    }
-//    @PutMapping("/unsubscribe/server/{serverId}")
-//    public ResponseEntity<Object> unsubscribeServerPresence(@RequestHeader("userId") Long userId,
-//                                                          @PathVariable("serverId") Long serverId) {
-//        presenceService.unsubscribeServerPresence(userId,serverId);
-//        return ResultResponse.success(HttpStatus.OK, "un구독", presenceResponses);
-//    }
 }
