@@ -70,7 +70,8 @@ public class UserService {
     }
 
     public UserResponse logout(String token) {
-        User user = userRepository.findByRefreshToken(token)
+        Long userId = jwtTokenProvider.getUserId(token);
+        User user = userRepository.findById(userId)
                 .orElseThrow(() -> new DistoveException(ACCOUNT_NOT_FOUND));
 
         user.updateRefreshToken(null);
