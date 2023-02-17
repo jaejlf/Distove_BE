@@ -1,6 +1,7 @@
 package distove.presence.service;
 
 import distove.presence.dto.Presence;
+import distove.presence.dto.PresenceTime;
 import distove.presence.dto.response.PresenceResponse;
 import distove.presence.dto.response.PresenceUpdateResponse;
 import distove.presence.enumerate.PresenceType;
@@ -15,8 +16,7 @@ import org.springframework.scheduling.annotation.Scheduled;
 import org.springframework.stereotype.Service;
 
 import java.sql.Timestamp;
-import java.util.ArrayList;
-import java.util.List;
+import java.util.*;
 
 import static distove.presence.dto.PresenceTime.newPresenceTime;
 
@@ -35,13 +35,12 @@ public class PresenceService {
         List<PresenceResponse> presenceResponses = new ArrayList<>();
 
         for (UserResponse user : userResponses) {
+            Presence presence=null;
+            if(userConnectionRepository.isUserConnected(user.getId())){
+                presence= presenceRepository.findPresenceByUserId(user.getId()).orElseGet(() -> newPresenceTime(PresenceType.AWAY.getPresence())).getPresence();
+            }
 
-            Presence presence = userConnectionRepository.isUserConnected(user.getId())
-                    ? presenceRepository.findPresenceByUserId(user.getId())
-                    .orElseGet(() -> PresenceType.AWAY.getPresence())
-                    : PresenceType.OFFLINE.getPresence();
-            log.info("{}",presence);
-            presenceResponses.add(PresenceResponse.of(user.getId(), user.getNickname(), user.getProfileImgUrl(), presence));
+            presenceResponses.add(PresenceResponse.of(user.getId(), user.getNickname(), user.getProfileImgUrl(), presence!=null?presence:PresenceType.OFFLINE.getPresence()));
         }
 
         return presenceResponses;
@@ -51,28 +50,38 @@ public class PresenceService {
 
         if (presenceRepository.isUserOnline(userId)) {
             presenceRepository.removePresenceByUserId(userId);
+
+        } else {
+            List<Long> serverIds = communityClient.getServerIdsByUserId(userId);
+            for (Long serverId : serverIds) {
+                simpMessagingTemplate.convertAndSend("/sub/" + serverId, PresenceUpdateResponse.of(userId, PresenceType.ONLINE.getPresence()));
+            }
         }
+
+
         presenceRepository.save(userId, newPresenceTime(PresenceType.ONLINE.getPresence()));
+
     }
 
-//    public void subscribeServerPresence(Long userId,Long serverId){
-//        userConnectionRepository.addUserConnection(userId);
-//    }
 
-    @Scheduled(cron = "0/60 * * * * ?") // 1분
+    @Scheduled(cron = "0/20 * * * * ?") // 1분
     public void setInactiveUsersToAway() {
         Timestamp currentTime = new Timestamp(System.currentTimeMillis());
-        log.info("is Scheduler running {}",currentTime);
-
-        presenceRepository.findAll().forEach((userId,presenceTime)->{
-            if(currentTime.getTime()>(presenceTime.getActiveAt().getTime()+600000)){
+        Map<Long, PresenceTime> presenceTimeMap = presenceRepository.findAll();
+        List<Long> awayUserIds = new ArrayList<>();
+        for (Long userId : presenceTimeMap.keySet()) {
+            if (currentTime.getTime() > (presenceTimeMap.get(userId).getActiveAt().getTime() + 30000)) {
                 List<Long> serverIds = communityClient.getServerIdsByUserId(userId);
                 for (Long serverId : serverIds) {
-                    simpMessagingTemplate.convertAndSend( "/sub/" + serverId, PresenceUpdateResponse.of(userId,PresenceType.AWAY.getPresence()));
+                    simpMessagingTemplate.convertAndSend("/sub/" + serverId, PresenceUpdateResponse.of(userId, PresenceType.AWAY.getPresence()));
                 }
-                presenceRepository.removePresenceByUserId(userId);
+                awayUserIds.add(userId);
             }
-        });
-    }
+        }
+        for (Long awayUserId : awayUserIds) {
+            presenceRepository.removePresenceByUserId(awayUserId);
+        }
 
+
+    }
 }

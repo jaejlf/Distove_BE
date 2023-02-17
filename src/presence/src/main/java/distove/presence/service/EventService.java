@@ -21,7 +21,7 @@ public class EventService {
         getEventQ(UpdateUserPresenceEvent.class).add(UpdateUserPresenceEvent.of(userId));
     }
 
-    public void runUpdateUserPresenceEvent(UpdateUserPresenceEvent updateUserPresenceEvent){
+    public void runUpdateUserPresence(UpdateUserPresenceEvent updateUserPresenceEvent){
         presenceService.updateUserPresence(updateUserPresenceEvent.getUserId());
     }
 
