@@ -19,6 +19,8 @@ import org.springframework.messaging.handler.annotation.Payload;
 import org.springframework.messaging.simp.SimpMessagingTemplate;
 import org.springframework.web.bind.annotation.*;
 
+import java.util.List;
+
 @RequiredArgsConstructor
 @RestController
 public class MessageController {
@@ -73,6 +75,16 @@ public class MessageController {
                                                         @PathVariable Long channelId) {
         messageService.readAllUnreadMessages(userId, channelId);
         return ResultResponse.success(HttpStatus.OK, "안읽메 모두 읽음", null);
+    }
+
+    @GetMapping("finding/{channelId}")
+    private ResponseEntity<Object> findMessages(@RequestHeader("userId") Long userId,
+                                                         @PathVariable Long channelId,
+                                                         @RequestParam (required = false) String content,
+                                                         @RequestParam (required = false) Long senderId,
+                                                         @RequestParam (required = false) String searchType) {
+        List<MessageResponse> messages = messageService.findMessages(searchType, channelId, content, senderId);
+        return ResultResponse.success(HttpStatus.OK, "메시지 검색", messages);
     }
 
 }
