@@ -100,11 +100,10 @@ public class UserService {
         List<Long> userIds = new ArrayList<>();
 
         for (String nickname : nicknames) {
-            Long userId = userRepository.findByNickname(nickname)
+            User user = userRepository.findByNickname(nickname)
                     .orElseThrow(() -> new DistoveException(ACCOUNT_NOT_FOUND));
-            userIds.add(userId);
-        }
-
+            userIds.add(user.getId());
+        };
         return userIds;
     }
 
