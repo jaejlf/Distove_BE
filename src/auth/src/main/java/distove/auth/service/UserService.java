@@ -5,7 +5,7 @@ import distove.auth.dto.request.JoinRequest;
 import distove.auth.dto.request.LoginRequest;
 import distove.auth.dto.request.UpdateNicknameRequest;
 import distove.auth.dto.request.UpdateProfileImgRequest;
-import distove.auth.dto.response.TokenResponse;
+import distove.auth.dto.response.LoginResponse;
 import distove.auth.dto.response.UserResponse;
 import distove.auth.entity.User;
 import distove.auth.exception.DistoveException;
@@ -13,9 +13,12 @@ import distove.auth.repoisitory.UserRepository;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.beans.factory.annotation.Value;
+import org.springframework.http.ResponseCookie;
 import org.springframework.security.crypto.bcrypt.BCryptPasswordEncoder;
 import org.springframework.stereotype.Service;
 
+import javax.servlet.http.Cookie;
+import javax.servlet.http.HttpServletRequest;
 import java.util.ArrayList;
 import java.util.List;
 
@@ -52,7 +55,7 @@ public class UserService {
         return UserResponse.of(user.getId(), user.getNickname(), user.getProfileImgUrl());
     }
 
-    public TokenResponse login(LoginRequest request) {
+    public LoginResponse login(LoginRequest request) {
         User user = userRepository.findByEmail(request.getEmail())
                 .orElseThrow(() -> new DistoveException(ACCOUNT_NOT_FOUND));
 
@@ -61,13 +64,10 @@ public class UserService {
         }
 
         String accessToken = jwtTokenProvider.createToken(user.getId(), "AT");
-        String refreshToken = jwtTokenProvider.createToken(user.getId(), "RT");
 
-        String cookie = jwtTokenProvider.createTokenCookie(refreshToken).toString();
-        user.updateRefreshToken(refreshToken);
-        userRepository.save(user);
+        UserResponse loginInfo = UserResponse.of(user.getId(), user.getNickname(), user.getProfileImgUrl());
 
-        return TokenResponse.of(accessToken, cookie);
+        return LoginResponse.of(accessToken, loginInfo);
     }
 
     public UserResponse logout(String token) {
@@ -126,10 +126,14 @@ public class UserService {
 
     }
 
-    public TokenResponse reissue(String token) {
+    public LoginResponse reissue(HttpServletRequest request) {
+        String token = getRefreshToken(request);
+        log.info(token);
         if (jwtTokenProvider.getTypeOfToken(token).equals("RT")) {
-            String cookie = jwtTokenProvider.createTokenCookie(token).toString();
-            return TokenResponse.of(jwtTokenProvider.createToken(getUserIdFromDatabase(token), "AT"), cookie);
+            User user = userRepository.findById(jwtTokenProvider.getUserId(token))
+                    .orElseThrow(() -> new DistoveException(ACCOUNT_NOT_FOUND));
+
+            return LoginResponse.of(jwtTokenProvider.createToken(getUserIdFromDatabase(token), "AT"), UserResponse.of(user.getId(), user.getNickname(), user.getProfileImgUrl()));
         }
 
         throw new DistoveException(NOT_REFRESH_TOKEN);
@@ -142,4 +146,51 @@ public class UserService {
         return user.getId();
     }
 
+    public String createCookie(LoginRequest request) {
+        User user = userRepository.findByEmail(request.getEmail())
+                .orElseThrow(() -> new DistoveException(ACCOUNT_NOT_FOUND));
+
+        return createCookie(user);
+    }
+
+
+    private String createCookie(User user) {
+        String refreshToken = jwtTokenProvider.createToken(user.getId(), "RT");
+
+        user.updateRefreshToken(refreshToken);
+        userRepository.save(user);
+
+        return ResponseCookie.from("refreshToken", refreshToken)
+                .maxAge(60 * 60 * 24 * 30)
+                .path("/")
+                .httpOnly(true)
+                .secure(true)
+                .sameSite("None")
+                .domain("distove.onstove.com")
+                .build().toString();
+    }
+
+    public String createCookieFromReissue(HttpServletRequest request) {
+        String refreshToken = getRefreshToken(request);
+        return ResponseCookie.from("refreshToken", refreshToken)
+                .maxAge(60 * 60 * 24 * 30)
+                .path("/")
+                .httpOnly(true)
+                .secure(true)
+                .sameSite("None")
+                .domain("distove.onstove.com")
+                .build().toString();
+    }
+    private String getRefreshToken(HttpServletRequest request) {
+        Cookie[] cookies = request.getCookies();
+        if (cookies != null) {
+            for (Cookie cookie : cookies) {
+                if (cookie.getName().equals("refreshToken")) {
+                    return cookie.getValue();
+                }
+            }
+        }
+
+        throw new DistoveException(NOT_REFRESH_TOKEN);
+    }
 }

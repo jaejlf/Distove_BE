@@ -63,7 +63,8 @@ public interface CustomMessageRepository {
     Reply
     */
     @Aggregation(pipeline = {
-            "{ '$match': { 'parentId' : ?0 } }",
+            "{ '$match': " +
+                    "{ 'parentId' : ?0 } }",
             "{ '$sort' : { 'createdAt' : -1 } }"})
     List<Message> findAllRepliesByParentId(String parentId);
 
@@ -74,12 +75,12 @@ public interface CustomMessageRepository {
     int countUnreadMessage(Long channelId, LocalDateTime latestConnectedAt);
 
     @Aggregation(pipeline = {
-            "{ '$match': { " +
-                    "'channelId' : ?0," +
+            "{ '$match': { 'channelId' : ?0, " +
                     "'parentId' : null," +
                     "'createdAt' : { $gt :  ?1} } }",
             "{ '$sort' : { 'createdAt' : 1 } }",
             "{ '$limit' : 1 }"})
     Message findFirstUnreadMessage(Long channelId, LocalDateTime latestConnectedAt);
+
 
 }

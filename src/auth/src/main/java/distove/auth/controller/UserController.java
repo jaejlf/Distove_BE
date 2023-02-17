@@ -5,7 +5,7 @@ import distove.auth.dto.request.LoginRequest;
 import distove.auth.dto.request.UpdateNicknameRequest;
 import distove.auth.dto.request.UpdateProfileImgRequest;
 import distove.auth.dto.response.ResultResponse;
-import distove.auth.dto.response.TokenResponse;
+import distove.auth.dto.response.LoginResponse;
 import distove.auth.dto.response.UserResponse;
 import distove.auth.service.UserService;
 import lombok.AllArgsConstructor;
@@ -14,6 +14,7 @@ import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
 
+import javax.servlet.http.HttpServletRequest;
 import javax.servlet.http.HttpServletResponse;
 import javax.validation.Valid;
 
@@ -35,12 +36,12 @@ public class UserController {
 
     @PostMapping("/login")
     public ResponseEntity<Object> login(@RequestBody LoginRequest request, HttpServletResponse response) {
-        TokenResponse tokenResponse = userService.login(request);
-        response.addHeader("Set-Cookie", tokenResponse.getCookie());
+        LoginResponse loginResponse = userService.login(request);
+        response.addHeader("Set-Cookie", userService.createCookie(request));
         return ResultResponse.success(
                 HttpStatus.CREATED,
-                "회원가입",
-                tokenResponse.getAccessToken()
+                "로그인",
+                loginResponse
         );
     }
 
@@ -75,13 +76,13 @@ public class UserController {
     }
 
     @GetMapping("/reissue")
-    public ResponseEntity<Object> reissue(@RequestHeader("token") String token, HttpServletResponse response) {
-        TokenResponse tokenResponse = userService.reissue(token);
-        response.addHeader("Set-Cookie", tokenResponse.getCookie());
+    public ResponseEntity<Object> reissue(HttpServletResponse response, HttpServletRequest request) {
+        LoginResponse loginResponse = userService.reissue(request);
+        response.addHeader("Set-Cookie", userService.createCookieFromReissue(request));
         return ResultResponse.success(
                 HttpStatus.CREATED,
-                "회원가입",
-                tokenResponse.getAccessToken()
+                "액세스 토큰 재발급",
+                loginResponse
         );
     }
 }
