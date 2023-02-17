@@ -319,11 +319,33 @@ public class MessageService {
 
     public List<MessageResponse> findMessages(String searchType, Long channelId, String content, Long userId) {
         UserResponse writer = userClient.getUser(userId);
-        Query query = new Query(Criteria.where("channelId").is(channelId).and("content").regex(content));
-        List<Message> messages = mongoTemplate.find(query, Message.class);
+        List<Message> messages = findMessagesByFilter(channelId, userId, content);
+
+        //TODO 파일 타입 생각하기!
         if (searchType == null) {
             return messages.stream().map(message -> MessageResponse.ofSearching(message, writer)).collect(Collectors.toList());
         }
         return messages.stream().map(message -> MessageResponse.ofSearching(message, writer)).collect(Collectors.toList());
+    }
+
+    public List<Message> findMessagesByFilter(Long channelId, Long senderId, String content) {
+        messageRepository.
+        Criteria criteria = new Criteria();
+
+        if (channelId != null) {
+            criteria.and("channelId").is(channelId);
+        }
+
+        if (senderId != null) {
+            criteria.and("userId").is(senderId);
+        }
+
+        if (content != null) {
+            criteria.and("content").regex(".*" + content + ".*");
+        }
+
+        Query query = new Query(criteria);
+        return mongoTemplate.find(query, Message.class);
+
     }
 }

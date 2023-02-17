@@ -6,11 +6,8 @@ import distove.chat.dto.response.MessageResponse;
 import distove.chat.dto.response.PagedMessageResponse;
 import distove.chat.dto.response.ResultResponse;
 import distove.chat.dto.response.TypedUserResponse;
-import distove.chat.entity.Message;
 import distove.chat.enumerate.MessageType;
 import distove.chat.service.MessageService;
-import distove.chat.web.UserClient;
-import lombok.Getter;
 import lombok.RequiredArgsConstructor;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.http.HttpStatus;
@@ -83,9 +80,10 @@ public class MessageController {
     @GetMapping("finding/{channelId}")
     private ResponseEntity<Object> findMessages(@RequestHeader("userId") Long userId,
                                                          @PathVariable Long channelId,
-                                                         @RequestParam String content,
+                                                         @RequestParam (required = false) String content,
+                                                         @RequestParam (required = false) Long senderId,
                                                          @RequestParam (required = false) String searchType) {
-        List<MessageResponse> messages = messageService.findMessages(searchType, channelId, content, userId);
+        List<MessageResponse> messages = messageService.findMessages(searchType, channelId, content, senderId);
         return ResultResponse.success(HttpStatus.OK, "메시지 검색", messages);
     }
 
