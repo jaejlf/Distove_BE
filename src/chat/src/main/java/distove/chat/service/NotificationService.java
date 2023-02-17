@@ -36,10 +36,11 @@ public class NotificationService {
         List<Connection> connections = connectionRepository.findAllByServerId(serverId);
         for (Connection connection : connections) {
             List<Member> members = connection.getMembers();
+            log.info("here1");
             Member member = members.stream()
                     .filter(x -> x.getUserId().equals(userId)).findFirst()
                     .orElseThrow(() -> new DistoveException(USER_NOT_FOUND));
-
+            log.info("here2");
             int unreadCount = messageRepository.countUnreadMessage(connection.getChannelId(), member.getLatestConnectedAt());
             if (unreadCount > 0) channelIds.add(connection.getChannelId());
         }
