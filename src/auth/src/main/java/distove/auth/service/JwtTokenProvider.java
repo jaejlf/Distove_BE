@@ -1,15 +1,14 @@
 package distove.auth.service;
 
-import distove.auth.entity.RefreshToken;
 import distove.auth.exception.DistoveException;
 import io.jsonwebtoken.*;
 import io.jsonwebtoken.io.Decoders;
 import io.jsonwebtoken.security.Keys;
+import io.jsonwebtoken.security.SignatureException;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.beans.factory.annotation.Value;
-import org.springframework.http.ResponseCookie;
 import org.springframework.stereotype.Service;
 
 import java.security.Key;
@@ -61,49 +60,29 @@ public class JwtTokenProvider {
                     .signWith(key, SignatureAlgorithm.HS256)
                     .compact();
         }
-    }
 
-    public boolean validToken(String token) {
-        try {
-            Jwts.parserBuilder()
-                    .setSigningKey(key)
-                    .build()
-                    .parseClaimsJws(token);
-            return true;
-        } catch (UnsupportedJwtException e) {
-            throw new DistoveException(JWT_INVALID);
-        } catch (ExpiredJwtException e) {
-            throw new DistoveException(JWT_EXPIRED);
-        }
     }
 
     public String getTypeOfToken(String token) {
+        Jws<Claims> jws = validToken(token);
+        return String.valueOf(jws.getHeader().get("type"));
+    }
+
+    public Long getUserId(String token) throws DistoveException {
+        Jws<Claims> jws = validToken(token);
+        return Long.valueOf(String.valueOf(jws.getBody().get("userId")));
+    }
+
+    public Jws<Claims> validToken(String token) throws DistoveException {
         try {
             return Jwts.parserBuilder()
                     .setSigningKey(key)
                     .build()
-                    .parseClaimsJws(token).getHeader().get("type").toString();
-
-        } catch (UnsupportedJwtException e) {
+                    .parseClaimsJws(token);
+        } catch (SignatureException e) {
             throw new DistoveException(JWT_INVALID);
         } catch (ExpiredJwtException e) {
             throw new DistoveException(JWT_EXPIRED);
-        }
-    }
-
-    public Long getUserId(String token) throws DistoveException {
-        try {
-            return Long.valueOf(String.valueOf(Jwts
-                    .parserBuilder()
-                    .setSigningKey(key)
-                    .build()
-                    .parseClaimsJws(token)
-                    .getBody()
-                    .get("userId")));
-        } catch (ExpiredJwtException e) {
-            throw new DistoveException(JWT_EXPIRED);
-        } catch (Exception e) {
-            throw new DistoveException(JWT_INVALID);
         }
     }
 }
