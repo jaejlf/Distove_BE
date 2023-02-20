@@ -1,5 +1,6 @@
 package distove.auth.controller;
 
+import distove.auth.config.RequestUser;
 import distove.auth.dto.request.JoinRequest;
 import distove.auth.dto.request.LoginRequest;
 import distove.auth.dto.request.UpdateNicknameRequest;
@@ -46,8 +47,8 @@ public class UserController {
     }
 
     @PostMapping("/logout")
-    public ResponseEntity<Object> logout(@RequestHeader("token") String token) {
-        UserResponse result = userService.logout(token);
+    public ResponseEntity<Object> logout(@RequestUser Long userId) {
+        UserResponse result = userService.logout(userId);
         return ResultResponse.success(
                 HttpStatus.OK,
                 "로그아웃 성공",
@@ -56,8 +57,8 @@ public class UserController {
     }
 
     @PutMapping("/nickname")
-    public ResponseEntity<Object> updateUser(@RequestHeader("token") String token, @RequestBody UpdateNicknameRequest request) {
-        UserResponse result = userService.updateNickname(token, request);
+    public ResponseEntity<Object> updateUser(@RequestUser Long userId, @RequestBody UpdateNicknameRequest request) {
+        UserResponse result = userService.updateNickname(userId, request);
         return ResultResponse.success(
                 HttpStatus.OK,
                 "닉네임 수정 성공",
@@ -66,8 +67,8 @@ public class UserController {
     }
 
     @PutMapping("/profileimg")
-    public ResponseEntity<Object> updateProfileImg(@RequestHeader("token") String token, @ModelAttribute UpdateProfileImgRequest request) {
-        UserResponse result = userService.updateProfileImg(token, request);
+    public ResponseEntity<Object> updateProfileImg(@RequestUser Long userId, @ModelAttribute UpdateProfileImgRequest request) {
+        UserResponse result = userService.updateProfileImg(userId, request);
         return ResultResponse.success(
                 HttpStatus.OK,
                 "프로필 사진 수정 성공",
