@@ -29,6 +29,7 @@ public class ServerController {
         return ResultResponse.success(HttpStatus.OK, "서버 리스트 조회(By user)", servers);
     }
 
+
     @GetMapping("/server/{serverId}")
     public ResponseEntity<Object> getCategoriesWithChannelsByServerId(@PathVariable("serverId") Long serverId) {
         List<CategoryResponse> categories = serverService.getCategoriesWithChannelsByServerId(serverId);
