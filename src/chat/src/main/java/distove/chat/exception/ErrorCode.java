@@ -8,6 +8,9 @@ import org.springframework.http.HttpStatus;
 @RequiredArgsConstructor
 public enum ErrorCode {
 
+    JWT_INVALID(HttpStatus.FORBIDDEN, "A0004", "토큰이 유효하지 않습니다."),
+    JWT_EXPIRED(HttpStatus.UNAUTHORIZED, "A0005", "토큰이 만료되었습니다."),
+
     EVENT_HANDLE_ERROR(HttpStatus.INTERNAL_SERVER_ERROR, "S0000", "이벤트 처리에 실패했습니다."),
     MESSAGE_NOT_FOUND(HttpStatus.NOT_FOUND, "S0001", "존재하지 않는 메시지입니다."),
     MESSAGE_TYPE_ERROR(HttpStatus.BAD_REQUEST, "S0002", "잘못된 메시지 타입입니다."),

@@ -28,9 +28,10 @@ import static distove.auth.exception.ErrorCode.*;
 @Service
 @RequiredArgsConstructor
 public class UserService {
+    
     private final UserRepository userRepository;
     private final BCryptPasswordEncoder bCryptPasswordEncoder;
-    private final JwtTokenProvider jwtTokenProvider;
+    private final JwtProvider jwtProvider;
     private final StorageService storageService;
 
     @Value("${default.img.address}")
@@ -61,14 +62,13 @@ public class UserService {
             throw new DistoveException(INVALID_PASSWORD);
         }
 
-        String accessToken = jwtTokenProvider.createToken(user.getId(), "AT");
+        String accessToken = jwtProvider.createToken(user.getId(), "AT");
         UserResponse loginInfo = UserResponse.of(user.getId(), user.getNickname(), user.getProfileImgUrl());
 
         return LoginResponse.of(accessToken, loginInfo);
     }
 
-    public UserResponse logout(String token) {
-        Long userId = jwtTokenProvider.getUserId(token);
+    public UserResponse logout(Long userId) {
         User user = userRepository.findById(userId)
                 .orElseThrow(() -> new DistoveException(ACCOUNT_NOT_FOUND));
 
@@ -94,6 +94,15 @@ public class UserService {
         return users;
     }
 
+    public UserResponse updateNickname(Long userId, UpdateNicknameRequest request) {
+        User user = userRepository.findById(userId)
+                .orElseThrow(() -> new DistoveException(ACCOUNT_NOT_FOUND));
+
+        user.updateNickname(request.getNickname());
+        userRepository.save(user);
+        return UserResponse.of(user.getId(), user.getNickname(), user.getProfileImgUrl());
+    }
+
     public List<Long> getUserIdsByNicknames(List<String> nicknames) {
         List<Long> userIds = new ArrayList<>();
 
@@ -105,17 +114,8 @@ public class UserService {
         return userIds;
     }
 
-    public UserResponse updateNickname(String token, UpdateNicknameRequest request) {
-        User user = userRepository.findById(jwtTokenProvider.getUserId(token))
-                .orElseThrow(() -> new DistoveException(ACCOUNT_NOT_FOUND));
-
-        user.updateNickname(request.getNickname());
-        userRepository.save(user);
-        return UserResponse.of(user.getId(), user.getNickname(), user.getProfileImgUrl());
-    }
-
-    public UserResponse updateProfileImg(String token, UpdateProfileImgRequest request) {
-        User user = userRepository.findById(jwtTokenProvider.getUserId(token))
+    public UserResponse updateProfileImg(Long userId, UpdateProfileImgRequest request) {
+        User user = userRepository.findById(userId)
                 .orElseThrow(() -> new DistoveException(ACCOUNT_NOT_FOUND));
 
         String profileImgUrl = getProfileImgUrl(request);
@@ -146,15 +146,14 @@ public class UserService {
 
     public LoginResponse reissue(HttpServletRequest request) {
         String token = getRefreshToken(request);
-
-        if (jwtTokenProvider.getTypeOfToken(token).equals("RT")) {
+        if (jwtProvider.getTypeOfToken(token).equals("RT")) {
             User user = userRepository.findByRefreshToken(token)
                     .orElseThrow(() -> new DistoveException(ACCOUNT_NOT_FOUND));
 
-            return LoginResponse.of(jwtTokenProvider.createToken(user.getId(),"AT"), UserResponse.of(user.getId(), user.getNickname(), user.getProfileImgUrl()));
+            return LoginResponse.of(jwtProvider.createToken(user.getId(),"AT"), UserResponse.of(user.getId(), user.getNickname(), user.getProfileImgUrl()));
         }
 
-        throw new DistoveException(NOT_REFRESH_TOKEN);
+        throw new DistoveException(JWT_INVALID);
     }
 
     public String createCookie(LoginRequest request) {
@@ -164,9 +163,8 @@ public class UserService {
         return createCookie(user);
     }
 
-
     private String createCookie(User user) {
-        String refreshToken = jwtTokenProvider.createToken(user.getId(), "RT");
+        String refreshToken = jwtProvider.createToken(user.getId(), "RT");
 
         user.updateRefreshToken(refreshToken);
         userRepository.save(user);
@@ -202,6 +200,6 @@ public class UserService {
             }
         }
 
-        throw new DistoveException(NOT_REFRESH_TOKEN);
+        throw new DistoveException(JWT_INVALID);
     }
 }

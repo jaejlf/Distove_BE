@@ -16,20 +16,19 @@ public class WebController {
 
     private final UserService userService;
 
-    @GetMapping("/user")
+    @GetMapping("/web/user")
     public UserResponse getUser(@RequestHeader Long userId) {
         return userService.getUser(userId);
     }
 
-    @GetMapping("/user/list")
+    @GetMapping("/web/user/list")
     public List<UserResponse> getUsers(@RequestParam List<Long> userIds) {
         return userService.getUsers(userIds);
     }
 
-    @GetMapping("/user/nickname")
+    @GetMapping("/web/user/nickname")
     public List<Long> getUserByNickname(@RequestParam List<String> nicknames) {
         return userService.getUserIdsByNicknames(nicknames);
     }
-
 
 }
