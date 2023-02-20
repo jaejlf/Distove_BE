@@ -19,9 +19,9 @@ import org.springframework.stereotype.Service;
 
 import javax.servlet.http.Cookie;
 import javax.servlet.http.HttpServletRequest;
-
 import java.util.ArrayList;
 import java.util.List;
+import java.util.stream.Collectors;
 
 import static distove.auth.exception.ErrorCode.*;
 
@@ -78,8 +78,7 @@ public class UserService {
         return createCookie(refreshToken);
     }
 
-    public UserResponse logout(String token) {
-        Long userId = jwtProvider.getUserId(token);
+    public UserResponse logout(Long userId) {
         User user = userRepository.findById(userId)
                 .orElseThrow(() -> new DistoveException(ACCOUNT_NOT_FOUND));
 
@@ -88,8 +87,8 @@ public class UserService {
         return UserResponse.of(user.getId(), user.getNickname(), user.getEmail());
     }
 
-    public UserResponse updateNickname(String token, UpdateNicknameRequest request) {
-        User user = userRepository.findById(jwtProvider.getUserId(token))
+    public UserResponse updateNickname(Long userId, UpdateNicknameRequest request) {
+        User user = userRepository.findById(userId)
                 .orElseThrow(() -> new DistoveException(ACCOUNT_NOT_FOUND));
 
         user.updateNickname(request.getNickname());
@@ -184,13 +183,10 @@ public class UserService {
     }
 
     public List<Long> getUserIdsByNicknames(List<String> nicknames) {
-        List<Long> userIds = new ArrayList<>();
-
-        for (String nickname : nicknames) {
-            User user = userRepository.findByNickname(nickname)
-                    .orElseThrow(() -> new DistoveException(ACCOUNT_NOT_FOUND));
-            userIds.add(user.getId());
-        };
-        return userIds;
+        return nicknames.stream()
+                .flatMap(nickname -> userRepository.findByNickname(nickname).stream())
+                .map(User::getId)
+                .distinct()
+                .collect(Collectors.toList());
     }
 }
