@@ -78,13 +78,12 @@ public class MessageController {
         return ResultResponse.success(HttpStatus.OK, "안읽메 모두 읽음", null);
     }
 
-    @GetMapping("finding/{channelId}")
-    private ResponseEntity<Object> findMessages(@RequestUser Long userId,
-                                                @PathVariable Long channelId,
+    @GetMapping("/finding/{channelId}")
+    private ResponseEntity<Object> findMessages(@PathVariable Long channelId,
                                                 @RequestParam(required = false) String content,
                                                 @RequestParam(required = false) Long senderId,
                                                 @RequestParam(required = false) String searchType) {
-        List<MessageResponse> messages = messageService.findMessages(searchType, channelId, content, senderId);
+        List<MessageResponse> messages = messageService.findMessages(channelId, content, senderId);
         return ResultResponse.success(HttpStatus.OK, "메시지 검색", messages);
     }
 

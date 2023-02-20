@@ -28,6 +28,7 @@ import static distove.auth.exception.ErrorCode.*;
 @Service
 @RequiredArgsConstructor
 public class UserService {
+    
     private final UserRepository userRepository;
     private final BCryptPasswordEncoder bCryptPasswordEncoder;
     private final JwtProvider jwtProvider;
@@ -43,10 +44,10 @@ public class UserService {
             throw new DistoveException(DUPLICATE_EMAIL);
         }
 
-        if (request.getProfileImg() == null || request.getProfileImg().isEmpty()) {
-            profileImgUrl = defaultImgUrl;
-        } else {
+        if (request.getProfileImg() != null && !(request.getProfileImg().isEmpty())) {
             profileImgUrl = storageService.uploadToS3(request.getProfileImg());
+        } else {
+            profileImgUrl = null;
         }
 
         User user = new User(request.getEmail(), bCryptPasswordEncoder.encode(request.getPassword()), request.getNickname(), profileImgUrl);
@@ -64,7 +65,6 @@ public class UserService {
         }
 
         String accessToken = jwtProvider.createToken(user.getId(), "AT");
-
         UserResponse loginInfo = UserResponse.of(user.getId(), user.getNickname(), user.getProfileImgUrl());
 
         return LoginResponse.of(accessToken, loginInfo);
@@ -105,18 +105,27 @@ public class UserService {
         return UserResponse.of(user.getId(), user.getNickname(), user.getProfileImgUrl());
     }
 
+    public List<Long> getUserIdsByNicknames(List<String> nicknames) {
+        List<Long> userIds = new ArrayList<>();
+
+        for (String nickname : nicknames) {
+            Long userId = userRepository.findByNickname(nickname)
+                    .orElseThrow(() -> new DistoveException(ACCOUNT_NOT_FOUND));
+            userIds.add(userId);
+        }
+
+        return userIds;
+    }
+    
     public UserResponse updateProfileImg(Long userId, UpdateProfileImgRequest request) {
         String profileImgUrl;
         User user = userRepository.findById(userId)
                 .orElseThrow(() -> new DistoveException(ACCOUNT_NOT_FOUND));
 
-        if (request.getProfileImg() == null || request.getProfileImg().isEmpty()) {
-            profileImgUrl = defaultImgUrl;
-            if (user.getProfileImgUrl().equals(profileImgUrl)) {
-                return UserResponse.of(user.getId(), user.getNickname(), user.getProfileImgUrl());
-            }
-        } else {
+        if (request.getProfileImg() != null && !(request.getProfileImg().isEmpty())) {
             profileImgUrl = storageService.uploadToS3(request.getProfileImg());
+        } else {
+            profileImgUrl = null;
         }
 
         storageService.deleteFile(user.getProfileImgUrl());
@@ -128,22 +137,14 @@ public class UserService {
 
     public LoginResponse reissue(HttpServletRequest request) {
         String token = getRefreshToken(request);
-        log.info(token);
         if (jwtProvider.getTypeOfToken(token).equals("RT")) {
-            User user = userRepository.findById(jwtProvider.getUserId(token))
+            User user = userRepository.findByRefreshToken(token)
                     .orElseThrow(() -> new DistoveException(ACCOUNT_NOT_FOUND));
 
-            return LoginResponse.of(jwtProvider.createToken(getUserIdFromDatabase(token), "AT"), UserResponse.of(user.getId(), user.getNickname(), user.getProfileImgUrl()));
+            return LoginResponse.of(jwtProvider.createToken(user.getId(),"AT"), UserResponse.of(user.getId(), user.getNickname(), user.getProfileImgUrl()));
         }
 
         throw new DistoveException(JWT_INVALID);
-    }
-
-    //refreshToken
-    public Long getUserIdFromDatabase(String token) {
-        User user = userRepository.findById(jwtProvider.getUserId(token))
-                .orElseThrow(() -> new DistoveException(ACCOUNT_NOT_FOUND));
-        return user.getId();
     }
 
     public String createCookie(LoginRequest request) {
@@ -152,7 +153,6 @@ public class UserService {
 
         return createCookie(user);
     }
-
 
     private String createCookie(User user) {
         String refreshToken = jwtProvider.createToken(user.getId(), "RT");

@@ -17,7 +17,6 @@ import java.util.List;
 import java.util.Map;
 
 import static distove.chat.exception.ErrorCode.CHANNEL_NOT_FOUND;
-import static distove.chat.exception.ErrorCode.USER_NOT_FOUND;
 
 @Slf4j
 @RequiredArgsConstructor
@@ -36,16 +35,17 @@ public class NotificationService {
         List<Connection> connections = connectionRepository.findAllByServerId(serverId);
         for (Connection connection : connections) {
             List<Member> members = connection.getMembers();
-            log.info("here1");
             Member member = members.stream()
                     .filter(x -> x.getUserId().equals(userId)).findFirst()
-                    .orElseThrow(() -> new DistoveException(USER_NOT_FOUND));
-            log.info("here2");
-            int unreadCount = messageRepository.countUnreadMessage(connection.getChannelId(), member.getLatestConnectedAt());
-            if (unreadCount > 0) channelIds.add(connection.getChannelId());
+                    .orElse(null);
+            if (member != null) {
+                int unreadCount = messageRepository.countUnreadMessage(connection.getChannelId(), member.getLastReadAt());
+                if (unreadCount > 0) channelIds.add(connection.getChannelId());
+            }
         }
 
-        Map<String, List<Long>> map = new HashMap<>();
+        Map<String, Object> map = new HashMap<>();
+        map.put("serverId", serverId);
         map.put("channelIds", channelIds);
         simpMessagingTemplate.convertAndSend(destination + "server/" + serverId, map);
     }
@@ -54,7 +54,8 @@ public class NotificationService {
         Long serverId = connectionRepository.findByChannelId(channelId)
                 .orElseThrow(() -> new DistoveException(CHANNEL_NOT_FOUND)).getServerId();
 
-        Map<String, Long> map = new HashMap<>();
+        Map<String, Object> map = new HashMap<>();
+        map.put("serverId", serverId);
         map.put("channelId", channelId);
         simpMessagingTemplate.convertAndSend(destination + "server/" + serverId, map);
     }

@@ -157,13 +157,13 @@ public class MessageService {
                 .filter(x -> x.getUserId().equals(userId)).findFirst()
                 .orElseThrow(() -> new DistoveException(USER_NOT_FOUND));
 
-        if (getUnreadInfo(channelId, member) == null) updateLatestConnectedAt(userId, connection, members);
+        if (getUnreadInfo(channelId, member) == null) updateLastReadAt(userId, connection, members);
     }
 
     public void readAllUnreadMessages(Long userId, Long channelId) {
         Connection connection = checkChannelExist(channelId);
         List<Member> members = connection.getMembers();
-        updateLatestConnectedAt(userId, connection, members);
+        updateLastReadAt(userId, connection, members);
     }
 
     private Message createMessage(Long channelId, String parentId, MessageType type, String content, Long userId) {
@@ -250,12 +250,12 @@ public class MessageService {
 
     private UnreadInfo getUnreadInfo(Long channelId, Member member) {
         UnreadInfo unread = null;
-        int unreadCount = messageRepository.countUnreadMessage(channelId, member.getLatestConnectedAt());
+        int unreadCount = messageRepository.countUnreadMessage(channelId, member.getLastReadAt());
         if (unreadCount > 0) {
             unread = UnreadInfo.of(
-                    member.getLatestConnectedAt(),
+                    member.getLastReadAt(),
                     unreadCount,
-                    messageRepository.findFirstUnreadMessage(channelId, member.getLatestConnectedAt()).getId());
+                    messageRepository.findFirstUnreadMessage(channelId, member.getLastReadAt()).getId());
         }
         return unread;
     }
@@ -276,7 +276,7 @@ public class MessageService {
         return messageResponses;
     }
 
-    private void updateLatestConnectedAt(Long userId, Connection connection, List<Member> members) {
+    private void updateLastReadAt(Long userId, Connection connection, List<Member> members) {
         members.replaceAll(x -> Objects.equals(x.getUserId(), userId) ? newMember(userId) : x);
         connection.updateMembers(members);
         connectionRepository.save(connection);
@@ -317,14 +317,10 @@ public class MessageService {
         return cursorIdInfo;
     }
 
-    public List<MessageResponse> findMessages(String searchType, Long channelId, String content, Long userId) {
+    public List<MessageResponse> findMessages(Long channelId, String content, Long userId) {
         UserResponse writer = userClient.getUser(userId);
         List<Message> messages = findMessagesByFilter(channelId, userId, content);
 
-        //TODO 파일 타입 생각하기!
-        if (searchType == null) {
-            return messages.stream().map(message -> MessageResponse.ofSearching(message, writer)).collect(Collectors.toList());
-        }
         return messages.stream().map(message -> MessageResponse.ofSearching(message, writer)).collect(Collectors.toList());
     }
 

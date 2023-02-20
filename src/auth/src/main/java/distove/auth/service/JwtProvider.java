@@ -75,17 +75,11 @@ public class JwtProvider {
     }
 
     public String getTypeOfToken(String token) {
-        try {
-            return Jwts.parserBuilder()
-                    .setSigningKey(key)
-                    .build()
-                    .parseClaimsJws(token).getHeader().get("type").toString();
-
-        } catch (UnsupportedJwtException e) {
-            throw new DistoveException(JWT_INVALID);
-        } catch (ExpiredJwtException e) {
-            throw new DistoveException(JWT_EXPIRED);
-        }
+        Jws<Claims> jws = Jwts.parserBuilder()
+                .setSigningKey(key)
+                .build()
+                .parseClaimsJws(token);
+        return String.valueOf(jws.getHeader().get("type"));
     }
 
     public Long getUserId(String token) throws DistoveException {

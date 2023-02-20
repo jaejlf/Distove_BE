@@ -32,7 +32,7 @@ public class StorageService {
     private String url;
 
     public String uploadToS3(MultipartFile multipartFile) {
-        String fileName = String.valueOf(UUID.randomUUID());
+        String fileName = String.valueOf(UUID.randomUUID()).replaceAll("-","");
         ObjectMetadata objectMetadata = new ObjectMetadata();
         objectMetadata.setContentType(multipartFile.getContentType());
 
