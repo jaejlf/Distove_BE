@@ -26,7 +26,6 @@ import static distove.community.config.AuthorizedRole.Auth.CAN_UPDATE_MEMBER_ROL
 public class MemberController {
 
     private final MemberService memberService;
-    private final UserClient userClient;
 
     @GetMapping("/member")
     public ResponseEntity<Object> getMemberInfo(@RequestUser Long userId,
@@ -35,11 +34,6 @@ public class MemberController {
         return ResultResponse.success(HttpStatus.OK, "현재 멤버 정보 조회", result);
     }
 
-    @GetMapping("/server/{serverId}/users")
-    public List<UserResponse> getUsersByServerId(@PathVariable("serverId") Long serverId) {
-        List<UserResponse> users = memberService.getUsersByServerId(serverId);
-        return users;
-    }
 
     @GetMapping("/member/roles/{serverId}")
     public ResponseEntity<Object> getRolesByServerId(@RequestUser Long userId,
