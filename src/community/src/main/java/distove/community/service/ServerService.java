@@ -30,7 +30,6 @@ import static distove.community.exception.ErrorCode.SERVER_NOT_FOUND;
 @Slf4j
 @Service
 @RequiredArgsConstructor
-
 public class ServerService {
 
     private final ChatClient chatClient;
