@@ -70,8 +70,7 @@ public class UserService {
         return LoginResponse.of(accessToken, loginInfo);
     }
 
-        public UserResponse logout(Long userId) {
-
+    public UserResponse logout(Long userId) {
         User user = userRepository.findById(userId)
                 .orElseThrow(() -> new DistoveException(ACCOUNT_NOT_FOUND));
 
