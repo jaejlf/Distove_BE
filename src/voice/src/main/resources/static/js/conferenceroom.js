@@ -66,6 +66,18 @@ function register() {
         type: 'joinRoom',
         userId: Number(name),
         channelId: Number(room),
+        isCameraOn: false,
+        isMicOn: true
+    }
+    sendMessage(message);
+}
+function updateVideoInfo(){
+    var isCameraOn = document.getElementById('checkbox-camera').checked;
+    var isMicOn = document.getElementById('checkbox-mic').checked;
+    var message = {
+        type: 'updateVideoInfo',
+        isCameraOn,
+        isMicOn
     }
     sendMessage(message);
 }
