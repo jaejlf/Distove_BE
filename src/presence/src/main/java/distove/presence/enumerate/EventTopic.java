@@ -1,6 +1,7 @@
 package distove.presence.enumerate;
 
 import distove.presence.event.Event;
+import distove.presence.event.SendNewUserConnectionEvent;
 import distove.presence.event.UpdateUserPresenceEvent;
 import distove.presence.exception.DistoveException;
 import distove.presence.process.EventQ;
@@ -15,7 +16,8 @@ import static distove.presence.exception.ErrorCode.EVENT_HANDLE_ERROR;
 @AllArgsConstructor
 public enum EventTopic {
 
-    UPDATE_PRESENCE(UpdateUserPresenceEvent.class, new EventQ<UpdateUserPresenceEvent>());
+    UPDATE_PRESENCE(UpdateUserPresenceEvent.class, new EventQ<UpdateUserPresenceEvent>()),
+    SEND_NEW_USER_CONNECTION(SendNewUserConnectionEvent.class, new EventQ<SendNewUserConnectionEvent>());
 
 
 

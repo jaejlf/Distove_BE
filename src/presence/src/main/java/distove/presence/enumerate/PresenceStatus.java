@@ -8,6 +8,7 @@ import lombok.Getter;
 public enum PresenceStatus {
     OFFLINE("offline"),
     ONLINE("online"),
+    ONLINE_CALL("calling"),
     AWAY("away");
     private final String status;
 

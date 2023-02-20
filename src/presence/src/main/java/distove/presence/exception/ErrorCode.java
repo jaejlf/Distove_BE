@@ -9,7 +9,9 @@ import org.springframework.http.HttpStatus;
 public enum ErrorCode {
 
     SAMPLE_ERROR(HttpStatus.NOT_FOUND, "X0001", "샘플 예외입니다."),
-    EVENT_HANDLE_ERROR(HttpStatus.INTERNAL_SERVER_ERROR, "P0000", "이벤트 처리에 실패했습니다.");
+    EVENT_HANDLE_ERROR(HttpStatus.INTERNAL_SERVER_ERROR, "P0001", "이벤트 처리에 실패했습니다."),
+    SERVICE_INFO_TYPE_ERROR(HttpStatus.BAD_REQUEST, "P0002", "존재하지 않는 ServiceInfo type 입니다.");
+
 
 
     private final HttpStatus httpStatus;
