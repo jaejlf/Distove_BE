@@ -33,8 +33,13 @@
         <div id="room" style="display: none;">
             <h2 id="room-header"></h2>
             <div id="participants"></div>
-            <input type="button" id="button-leave" onmouseup="leaveRoom();"
-                   value="Leave room">
+            <input type="button" id="button-leave" onmouseup="leaveRoom();" value="Leave room">
+            <input type="checkbox" id="checkbox-camera" name="camera" onclick="updateVideoInfo();"/>
+            <label for="checkbox-camera">camera</label>
+            <input type="checkbox" id="checkbox-mic" name="mic" onclick="updateVideoInfo();"/>
+            <label for="checkbox-mic">mic</label>
+
+
         </div>
     </div>
 </div>
