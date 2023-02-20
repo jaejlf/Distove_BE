@@ -40,7 +40,7 @@ public class NotificationService {
                     .orElse(null);
 
             if (member != null) {
-                int unreadCount = messageRepository.countUnreadMessage(connection.getChannelId(), member.getLatestConnectedAt());
+                int unreadCount = messageRepository.countUnreadMessage(connection.getChannelId(), member.getLastReadAt());
                 if (unreadCount > 0) channelIds.add(connection.getChannelId());
             }
         }
