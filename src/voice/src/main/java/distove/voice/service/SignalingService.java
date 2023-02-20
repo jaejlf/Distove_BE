@@ -8,9 +8,11 @@ import distove.voice.entity.IncomingParticipant;
 import distove.voice.entity.Participant;
 import distove.voice.entity.Room;
 import distove.voice.entity.VideoInfo;
+import distove.voice.enumerate.ServiceInfoType;
 import distove.voice.exception.DistoveException;
 import distove.voice.repository.ParticipantRepository;
 import distove.voice.repository.RoomRepository;
+import distove.voice.web.PresenceClient;
 import distove.voice.web.UserClient;
 import distove.voice.web.UserResponse;
 import lombok.RequiredArgsConstructor;
@@ -45,6 +47,7 @@ public class SignalingService {
     private final UserClient userClient;
     private final RoomRepository roomRepository;
     private final ParticipantRepository participantRepository;
+    private final PresenceClient presenceClient;
 
 
     public <T> TextMessage toJson(T object) throws IOException {
@@ -54,7 +57,6 @@ public class SignalingService {
     }
 
     public void joinRoom(Long userId, Long channelId, WebSocketSession webSocketSession, Boolean isCameraOn, Boolean isMicOn) throws IOException {
-
         Room room = getRoomByChannelId(channelId);
         VideoInfo videoInfo = VideoInfo.of(isCameraOn, isMicOn);
         WebRtcEndpoint outgoingMediaEndpoint = new WebRtcEndpoint.Builder(room.getPipeline()).build();
@@ -67,6 +69,7 @@ public class SignalingService {
                 log.debug(e.getMessage());
             }
         });
+        presenceClient.updateUserPresence(userId, ServiceInfoType.VOICE_ON.getType());
         Participant participant = Participant.of(userId, room, outgoingMediaEndpoint, webSocketSession, videoInfo);
         List<Participant> participants = participantRepository.findParticipantsByChannelId(room.getChannelId());
         List<UserResponse> userResponses = userClient.getUsers(participants.stream().map(x->x.getUserId()).collect(Collectors.toList()).toString().replace("[","").replace("]",""));
@@ -154,6 +157,7 @@ public class SignalingService {
         participant.getMediaEndpoint().release();
         Room room = roomRepository.findRoomByChannelId(participant.getRoom().getChannelId())
                 .orElseThrow(() -> new DistoveException(ROOM_NOT_FOUND_ERROR));
+        presenceClient.updateUserPresence(participant.getUserId(), ServiceInfoType.VOICE_OFF.getType());
 
         List<Participant> participants = participantRepository.findParticipantsByChannelId(room.getChannelId());
 

@@ -1,5 +1,6 @@
 package distove.chat.controller;
 
+import distove.chat.config.RequestUser;
 import distove.chat.dto.request.FileUploadRequest;
 import distove.chat.dto.request.MessageRequest;
 import distove.chat.dto.response.MessageResponse;
@@ -40,7 +41,7 @@ public class MessageController {
     }
 
     @PostMapping("/file/{channelId}")
-    public void publishFile(@RequestHeader("userId") Long userId,
+    public void publishFile(@RequestUser Long userId,
                             @PathVariable Long channelId,
                             @RequestParam MessageType type,
                             @ModelAttribute FileUploadRequest request) {
@@ -55,7 +56,7 @@ public class MessageController {
     }
 
     @GetMapping("/list/{channelId}")
-    public ResponseEntity<Object> getMessagesByChannelId(@RequestHeader("userId") Long userId,
+    public ResponseEntity<Object> getMessagesByChannelId(@RequestUser Long userId,
                                                          @PathVariable Long channelId,
                                                          @RequestParam(required = false) Integer scroll,
                                                          @RequestParam(required = false) String cursorId) {
@@ -64,25 +65,24 @@ public class MessageController {
     }
 
     @PatchMapping("/unsubscribe/{channelId}")
-    public ResponseEntity<Object> unsubscribeChannel(@RequestHeader("userId") Long userId,
+    public ResponseEntity<Object> unsubscribeChannel(@RequestUser Long userId,
                                                      @PathVariable Long channelId) {
         messageService.unsubscribeChannel(userId, channelId);
         return ResultResponse.success(HttpStatus.OK, "채널 구독 해제", null);
     }
 
     @PatchMapping("/read/all/{channelId}")
-    public ResponseEntity<Object> readAllUnreadMessages(@RequestHeader("userId") Long userId,
+    public ResponseEntity<Object> readAllUnreadMessages(@RequestUser Long userId,
                                                         @PathVariable Long channelId) {
         messageService.readAllUnreadMessages(userId, channelId);
         return ResultResponse.success(HttpStatus.OK, "안읽메 모두 읽음", null);
     }
 
-    @GetMapping("finding/{channelId}")
-    private ResponseEntity<Object> findMessages(@RequestHeader("userId") Long userId,
-                                                         @PathVariable Long channelId,
-                                                         @RequestParam (required = false) String content,
-                                                         @RequestParam (required = false) Long senderId,
-                                                         @RequestParam (required = false) String searchType) {
+    @GetMapping("/finding/{channelId}")
+    private ResponseEntity<Object> findMessages(@PathVariable Long channelId,
+                                                @RequestParam(required = false) String content,
+                                                @RequestParam(required = false) Long senderId,
+                                                @RequestParam(required = false) String searchType) {
         List<MessageResponse> messages = messageService.findMessages(channelId, content, senderId);
         return ResultResponse.success(HttpStatus.OK, "메시지 검색", messages);
     }

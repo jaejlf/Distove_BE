@@ -5,6 +5,8 @@ import distove.chat.entity.Member;
 import distove.chat.exception.DistoveException;
 import distove.chat.repository.ConnectionRepository;
 import distove.chat.repository.MessageRepository;
+import distove.chat.web.CategoryInfoResponse;
+import distove.chat.web.CommunityClient;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.beans.factory.annotation.Value;
@@ -26,6 +28,7 @@ public class NotificationService {
     private final SimpMessagingTemplate simpMessagingTemplate;
     private final ConnectionRepository connectionRepository;
     private final MessageRepository messageRepository;
+    private final CommunityClient communityClient;
 
     @Value("${sub.destination}")
     private String destination;
@@ -38,16 +41,20 @@ public class NotificationService {
             Member member = members.stream()
                     .filter(x -> x.getUserId().equals(userId)).findFirst()
                     .orElse(null);
-
             if (member != null) {
-                int unreadCount = messageRepository.countUnreadMessage(connection.getChannelId(), member.getLatestConnectedAt());
+                int unreadCount = messageRepository.countUnreadMessage(connection.getChannelId(), member.getLastReadAt());
                 if (unreadCount > 0) channelIds.add(connection.getChannelId());
             }
         }
 
         Map<String, Object> map = new HashMap<>();
         map.put("serverId", serverId);
-        map.put("channelIds", channelIds);
+
+
+        String channelIdsString = channelIds.toString().replace("[", "").replace("]", "");
+        List<CategoryInfoResponse> categoryInfoResponses = communityClient.getCategoryIds(channelIdsString);
+
+        map.put("categories", categoryInfoResponses);
         simpMessagingTemplate.convertAndSend(destination + "server/" + serverId, map);
     }
 
@@ -57,7 +64,7 @@ public class NotificationService {
 
         Map<String, Object> map = new HashMap<>();
         map.put("serverId", serverId);
-        map.put("channelId", channelId);
+        map.put("category", communityClient.getCategoryId(channelId));
         simpMessagingTemplate.convertAndSend(destination + "server/" + serverId, map);
     }
 
