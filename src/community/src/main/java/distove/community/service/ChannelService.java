@@ -41,7 +41,7 @@ public class ChannelService {
         chatClient.clearAll(channelId);
     }
 
-    public Channel createNewChannel(Long userId, Long serverId, String name, Long categoryId, Integer channelTypeId) {
+    public Channel createNewChannel(Long serverId, String name, Long categoryId, Integer channelTypeId) {
         Category category = categoryRepository.findByIdAndServerId(categoryId, serverId)
                 .orElseThrow(() -> new DistoveException(CATEGORY_NOT_FOUND));
         Channel newChannel = channelRepository.save(newChannel(
@@ -49,7 +49,7 @@ public class ChannelService {
                 channelTypeId,
                 category
         ));
-        if (newChannel.getChannelTypeId() == 1) chatClient.createConnection(userId, newChannel.getId());
+        if (newChannel.getChannelTypeId() == 1) chatClient.createConnection(serverId, newChannel.getId());
 
         return newChannel;
     }

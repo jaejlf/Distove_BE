@@ -35,7 +35,6 @@ import static distove.community.exception.ErrorCode.*;
 @Slf4j
 @Service
 @RequiredArgsConstructor
-
 public class ServerService {
 
     private final ChatClient chatClient;
@@ -81,8 +80,8 @@ public class ServerService {
 
         Category defaultChatCategory = categoryRepository.save(newCategory(defaultChatCategoryName, newServer));
         Category defaultVoiceCategory = categoryRepository.save(newCategory(defaultVoiceCategoryName, newServer));
-        channelService.createNewChannel(userId, newServer.getId(), defaultChannelName, defaultChatCategory.getId(), ChannelType.CHAT.getCode());
-        channelService.createNewChannel(userId, newServer.getId(), defaultChannelName, defaultVoiceCategory.getId(), ChannelType.VOICE.getCode());
+        channelService.createNewChannel(newServer.getId(), defaultChannelName, defaultChatCategory.getId(), ChannelType.CHAT.getCode());
+        channelService.createNewChannel(newServer.getId(), defaultChannelName, defaultVoiceCategory.getId(), ChannelType.VOICE.getCode());
 
         setOwnerAndRole(userId, newServer);
         return newServer;
@@ -106,6 +105,14 @@ public class ServerService {
         List<Member> members = memberRepository.findMembersByUserId(userId);
         List<Server> servers = members.stream().map(member -> member.getServer()).collect(Collectors.toList());
         return servers;
+
+    }
+
+    public List<Long> getServerIdsByUserId(Long userId) {
+
+        List<Member> members = memberRepository.findMembersByUserId(userId);
+        List<Long> serverIds = members.stream().map(member -> member.getServer().getId()).collect(Collectors.toList());
+        return serverIds;
 
     }
 

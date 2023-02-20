@@ -2,12 +2,17 @@ package distove.voice.service;
 
 
 import com.fasterxml.jackson.databind.ObjectMapper;
+import distove.voice.dto.response.UpdatedVideoInfoResponse;
+import distove.voice.dto.response.UserVideoResponse;
 import distove.voice.entity.IncomingParticipant;
 import distove.voice.entity.Participant;
 import distove.voice.entity.Room;
+import distove.voice.entity.VideoInfo;
+import distove.voice.enumerate.ServiceInfoType;
 import distove.voice.exception.DistoveException;
 import distove.voice.repository.ParticipantRepository;
 import distove.voice.repository.RoomRepository;
+import distove.voice.web.PresenceClient;
 import distove.voice.web.UserClient;
 import distove.voice.web.UserResponse;
 import lombok.RequiredArgsConstructor;
@@ -22,6 +27,8 @@ import org.springframework.web.socket.WebSocketSession;
 import java.io.IOException;
 import java.util.ArrayList;
 import java.util.List;
+import java.util.Map;
+import java.util.stream.Collectors;
 
 import static distove.voice.dto.response.ExistingParticipantsResponse.newExistingParticipantsResponse;
 import static distove.voice.dto.response.IceCandidateResponse.newIceCandidateResponse;
@@ -40,6 +47,7 @@ public class SignalingService {
     private final UserClient userClient;
     private final RoomRepository roomRepository;
     private final ParticipantRepository participantRepository;
+    private final PresenceClient presenceClient;
 
 
     public <T> TextMessage toJson(T object) throws IOException {
@@ -48,9 +56,9 @@ public class SignalingService {
         return new TextMessage(jsonInString);
     }
 
-    public void joinRoom(Long userId, Long channelId, WebSocketSession webSocketSession) throws IOException {
-
+    public void joinRoom(Long userId, Long channelId, WebSocketSession webSocketSession, Boolean isCameraOn, Boolean isMicOn) throws IOException {
         Room room = getRoomByChannelId(channelId);
+        VideoInfo videoInfo = VideoInfo.of(isCameraOn, isMicOn);
         WebRtcEndpoint outgoingMediaEndpoint = new WebRtcEndpoint.Builder(room.getPipeline()).build();
         outgoingMediaEndpoint.addIceCandidateFoundListener(event -> {
             try {
@@ -61,32 +69,31 @@ public class SignalingService {
                 log.debug(e.getMessage());
             }
         });
-        Participant participant = new Participant(userId, room, outgoingMediaEndpoint, webSocketSession);
+        presenceClient.updateUserPresence(userId, ServiceInfoType.VOICE_ON.getType());
+        Participant participant = Participant.of(userId, room, outgoingMediaEndpoint, webSocketSession, videoInfo);
         List<Participant> participants = participantRepository.findParticipantsByChannelId(room.getChannelId());
+        List<UserResponse> userResponses = userClient.getUsers(participants.stream().map(x->x.getUserId()).collect(Collectors.toList()).toString().replace("[","").replace("]",""));
+        Map<Long,UserResponse> userResponsesMap = userResponses.stream().collect(Collectors.toMap(u->u.getId(), u->u));
+
         UserResponse user = userClient.getUser(participant.getUserId());
 
-//        boolean imNewParticipant = false;
-//        if(participants.isEmpty()){
-//            imNewParticipant = true;
-//        }
         participantRepository.insert(participant);
+        List<UserVideoResponse> users = new ArrayList<>();
 
-        if (!participants.isEmpty()) {
-            for (final Participant otherParticipant : participants) {
-                if (!otherParticipant.equals(participant)) {
-                    otherParticipant.getWebSocketSession().sendMessage(toJson(newNewParticipantArrivedResponse(user)));
-                }
+        for (Participant otherParticipant : participants) {
+            if (!otherParticipant.equals(participant)) {
+                otherParticipant.getWebSocketSession().sendMessage(toJson(newNewParticipantArrivedResponse(UserVideoResponse.of(user.getId(),user.getNickname(),user.getProfileImgUrl(),videoInfo))));
+
+                UserResponse otherParticipantUserResponse = userResponsesMap.get(otherParticipant.getUserId());
+                users.add(UserVideoResponse.of(
+                        otherParticipant.getUserId(),
+                        otherParticipantUserResponse.getNickname(),
+                        otherParticipantUserResponse.getProfileImgUrl(),
+                        otherParticipant.getVideoInfo()));
             }
-            List<UserResponse> users = new ArrayList<>();
-            for (Participant parti : participants) {
-                users.add(userClient.getUser(parti.getUserId()));
-            }
-            participant.getWebSocketSession().sendMessage(toJson(newExistingParticipantsResponse(users)));
-        } else {
-            participant.getWebSocketSession().sendMessage(toJson(newExistingParticipantsResponse(new ArrayList<>())));
         }
 
-//        participantRepository.insert(participant);
+        participant.getWebSocketSession().sendMessage(toJson(newExistingParticipantsResponse(users)));
     }
 
     public Room getRoomByChannelId(Long channelId) {
@@ -106,7 +113,6 @@ public class SignalingService {
                 .orElseThrow(() -> new DistoveException(PARTICIPANT_NOT_FOUND_ERROR));
         Participant sender = participantRepository.findParticipantByUserId(senderUserId)
                 .orElseThrow(() -> new DistoveException(PARTICIPANT_NOT_FOUND_ERROR));
-//        log.info("me {}, you {}", participant.getUserId(), senderUserId);
 
         WebRtcEndpoint incomingMediaEndpointFromYou = getIncomingMediaEndpointFromYou(participant, sender);
         participant.getIncomingParticipants()
@@ -120,11 +126,6 @@ public class SignalingService {
         if (participant.getUserId().equals(sender.getUserId())) {
             return participant.getMediaEndpoint();
         }
-//        Room roomA = roomRepository.findRoomByChannelId(participant.getRoom().getChannelId())
-//                .orElseThrow(() -> new DistoveException(ROOM_NOT_FOUND_ERROR));
-//        Room roomB = roomRepository.findRoomByChannelId(sender.getRoom().getChannelId())
-//                .orElseThrow(() -> new DistoveException(ROOM_NOT_FOUND_ERROR));
-
 
         IncomingParticipant incomingParticipant = participant.getIncomingParticipants().get(sender.getUserId());
         if (incomingParticipant == null) {
@@ -142,10 +143,7 @@ public class SignalingService {
             });
             incomingParticipant = newIncomingParticipant(sender.getUserId(), incomingMediaEndpoint);
         }
-//        log.info("loop start");
-//        for (Room room : roomRepository.findAll()) {
-//            log.info("existing room {} {}", room.getChannelId(), room.getPipeline());
-//        }
+
         sender.getMediaEndpoint().connect(incomingParticipant.getMediaEndpoint());
         incomingParticipant.getMediaEndpoint().gatherCandidates();
 
@@ -156,18 +154,15 @@ public class SignalingService {
     public void leaveRoom(WebSocketSession webSocketSession) throws IOException {
         Participant participant = participantRepository.findParticipantByWebSocketSession(webSocketSession)
                 .orElseThrow(() -> new DistoveException(PARTICIPANT_NOT_FOUND_ERROR));
-//        log.info("who is leaving {}", participant.getUserId());
         participant.getMediaEndpoint().release();
         Room room = roomRepository.findRoomByChannelId(participant.getRoom().getChannelId())
                 .orElseThrow(() -> new DistoveException(ROOM_NOT_FOUND_ERROR));
-//        log.info("which room participant leave {}", room.getChannelId());
+        presenceClient.updateUserPresence(participant.getUserId(), ServiceInfoType.VOICE_OFF.getType());
 
         List<Participant> participants = participantRepository.findParticipantsByChannelId(room.getChannelId());
 
         if (!participants.isEmpty()) {
-//            log.info("participants not empty ");
             for (Participant otherParticipant : participants) {
-//                log.info("participant who is still here {}", otherParticipant.getUserId());
                 otherParticipant.getWebSocketSession()
                         .sendMessage(toJson(newLeftRoomResponse(participant.getUserId())));
                 if (otherParticipant.getIncomingParticipants().containsKey(participant.getUserId())) {
@@ -202,7 +197,20 @@ public class SignalingService {
         }
     }
 
-    //    @PreDestroy
+
+    public void updateVideoInfoRequest(WebSocketSession webSocketSession, Boolean isCameraOn, Boolean isMicOn) throws IOException {
+        Participant me = participantRepository.findParticipantByWebSocketSession(webSocketSession)
+                .orElseThrow(() -> new DistoveException(PARTICIPANT_NOT_FOUND_ERROR));
+        List<Participant> participants = participantRepository.findParticipantsByChannelId(me.getRoom().getChannelId());
+        me.updateVideoInfoOfParticipant(VideoInfo.of(isCameraOn, isMicOn));
+        for (Participant participant : participants) {
+            if (!participant.equals(me)) {
+                participant.getWebSocketSession().sendMessage(toJson(UpdatedVideoInfoResponse.of(me.getUserId(),VideoInfo.of(isCameraOn,isMicOn))));
+            }
+        }
+
+    }
+
     public void preDestroy() {
         List<Participant> participants = participantRepository.findAll();
         List<Room> rooms = roomRepository.findAll();
@@ -211,12 +219,12 @@ public class SignalingService {
             participant.getMediaEndpoint().release();
             for (IncomingParticipant incomingParticipant : participant.getIncomingParticipants().values()) {
                 incomingParticipant.getMediaEndpoint().release();
-
             }
         }
         for (Room room : rooms) {
             room.getPipeline().release();
         }
-
+        participantRepository.deleteAllParticipant();
+        roomRepository.deleteAllRoom();
     }
 }

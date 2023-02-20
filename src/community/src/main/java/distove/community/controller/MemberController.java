@@ -28,7 +28,6 @@ public class MemberController {
     private final InvitationRepository invitationRepository;
 
     private final MemberService memberService;
-    private final UserClient userClient;
 
     @GetMapping("/member")
     public ResponseEntity<Object> getMemberInfo(@RequestUser Long userId,
@@ -37,15 +36,6 @@ public class MemberController {
         return ResultResponse.success(HttpStatus.OK, "현재 멤버 정보 조회", result);
     }
 
-    @GetMapping("/server/{serverId}/member/list")
-    public ResponseEntity<Object> getMembersByServerId(@PathVariable("serverId") Long serverId) {
-        List<UserResponse> users = new ArrayList<>();
-        List<Member> members = memberService.getMembersByServerId(serverId);
-        for (Member member : members) {
-            users.add(userClient.getUser(member.getUserId()));
-        }
-        return ResultResponse.success(HttpStatus.OK, "서버 내 멤버 리스트 조회", users);
-    }
 
     @GetMapping("/member/roles/{serverId}")
     public ResponseEntity<Object> getRolesByServerId(@RequestUser Long userId,
