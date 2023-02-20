@@ -43,6 +43,13 @@ public class MemberService {
         checkServerExist(serverId);
         return memberRepository.findMembersByServerId(serverId);
     }
+    public List<UserResponse> getUsersByServerId(Long serverId) {
+        List<Member> members = memberRepository.findMembersByServerId(serverId);
+        List<Long> userIds = members.stream().map(x->x.getUserId()).collect(Collectors.toList());
+        List<UserResponse> users = userClient.getUsers(userIds.toString().replace("[","").replace("]",""));
+        return users;
+    }
+
 
     public List<RoleResponse.MemberInfo> getMemberWithRolesByServerId(Long userId, Long serverId) {
         checkServerExist(serverId);
