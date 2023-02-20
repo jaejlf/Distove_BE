@@ -1,7 +1,5 @@
 package distove.presence.controller;
 
-
-import distove.presence.service.EventService;
 import distove.presence.service.RequestEventService;
 import lombok.RequiredArgsConstructor;
 import org.springframework.web.bind.annotation.PostMapping;
