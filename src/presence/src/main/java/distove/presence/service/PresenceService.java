@@ -4,7 +4,9 @@ import distove.presence.dto.Presence;
 import distove.presence.dto.PresenceTime;
 import distove.presence.dto.response.PresenceResponse;
 import distove.presence.dto.response.PresenceUpdateResponse;
+import distove.presence.enumerate.PresenceStatus;
 import distove.presence.enumerate.PresenceType;
+import distove.presence.exception.DistoveException;
 import distove.presence.repository.PresenceRepository;
 import distove.presence.repository.UserConnectionRepository;
 import distove.presence.web.CommunityClient;
@@ -19,6 +21,7 @@ import java.sql.Timestamp;
 import java.util.*;
 
 import static distove.presence.dto.PresenceTime.newPresenceTime;
+import static distove.presence.exception.ErrorCode.SERVICE_INFO_TYPE_ERROR;
 
 @Slf4j
 @Service
@@ -46,23 +49,53 @@ public class PresenceService {
         return presenceResponses;
     }
 
-    public void updateUserPresence(Long userId) {
+    public void updateUserPresence(Long userId,String serviceInfo) {
 
-        if (presenceRepository.isUserOnline(userId)) {
-            presenceRepository.removePresenceByUserId(userId);
-
-        } else {
-            List<Long> serverIds = communityClient.getServerIdsByUserId(userId);
-            for (Long serverId : serverIds) {
-                simpMessagingTemplate.convertAndSend("/sub/" + serverId, PresenceUpdateResponse.of(userId, PresenceType.ONLINE.getPresence()));
-            }
+        switch (serviceInfo){
+            case "voiceOn":
+                updateCallOnline(userId);
+                break;
+            case "voiceOff":
+            case "chat":
+            case "community":
+                updateOnline(userId);
+                break;
+            default:
+                throw new DistoveException(SERVICE_INFO_TYPE_ERROR);
         }
 
 
+    }
+    private void updateOnline(Long userId){
+        if (presenceRepository.isUserOnline(userId)) {
+            presenceRepository.removePresenceByUserId(userId);
+        } else {
+            sendUserPresence(userId,PresenceType.ONLINE);
+        }
         presenceRepository.save(userId, newPresenceTime(PresenceType.ONLINE.getPresence()));
 
     }
+    private void updateCallOnline(Long userId){
+        sendUserPresence(userId,PresenceType.ONLINE_CALL);
+        if (presenceRepository.isUserOnline(userId)) {
+            presenceRepository.removePresenceByUserId(userId);
+        }
+        presenceRepository.save(userId, newPresenceTime(PresenceType.ONLINE_CALL.getPresence()));
+    }
+    public void sendUserPresence(Long userId,PresenceType presenceType){
+        List<Long> serverIds = communityClient.getServerIdsByUserId(userId);
+        for (Long serverId : serverIds) {
+            simpMessagingTemplate.convertAndSend("/sub/" + serverId, PresenceUpdateResponse.of(userId, presenceType.getPresence()));
+        }
+    }
 
+    public void sendNewUserConnectionEvent(Long userId, PresenceType presenceType){
+        List<Long> serverIds = communityClient.getServerIdsByUserId(userId);
+        for (Long serverId : serverIds) {
+            simpMessagingTemplate.convertAndSend("/sub/" + serverId, PresenceUpdateResponse.of(userId, presenceType.getPresence()));
+        }
+
+    }
 
     @Scheduled(cron = "0/20 * * * * ?") // 1분
     public void setInactiveUsersToAway() {
@@ -70,7 +103,7 @@ public class PresenceService {
         Map<Long, PresenceTime> presenceTimeMap = presenceRepository.findAll();
         List<Long> awayUserIds = new ArrayList<>();
         for (Long userId : presenceTimeMap.keySet()) {
-            if (currentTime.getTime() > (presenceTimeMap.get(userId).getActiveAt().getTime() + 30000)) {
+            if ((currentTime.getTime() > (presenceTimeMap.get(userId).getActiveAt().getTime() + 30000))&& presenceTimeMap.get(userId).getPresence().getStatus()!= PresenceStatus.ONLINE_CALL) {
                 List<Long> serverIds = communityClient.getServerIdsByUserId(userId);
                 for (Long serverId : serverIds) {
                     simpMessagingTemplate.convertAndSend("/sub/" + serverId, PresenceUpdateResponse.of(userId, PresenceType.AWAY.getPresence()));

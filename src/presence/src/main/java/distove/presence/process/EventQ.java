@@ -18,7 +18,7 @@ public class EventQ<T extends Event> {
 
     public T remove() throws InterruptedException {
         while (queue.isEmpty()) {
-            Thread.sleep(10000); // WAIT_TIMEOUT : 10sec
+            Thread.sleep(1000); // WAIT_TIMEOUT : 5sec
         }
         return queue.poll();
     }

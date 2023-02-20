@@ -1,9 +1,10 @@
-let stompClient = null;
-const wsLink = "/presence/ws";
+var stompClient = null;
+var wsLink = "/presence/ws";
 
 function setConnected(connected) {
     $("#connect").prop("disabled", connected);
     $("#disconnect").prop("disabled", !connected);
+
 }
 
 function connect() {
@@ -12,7 +13,9 @@ function connect() {
     stompClient.connect({'userId': $("#userId").val()}, function (frame) {
         setConnected(true);
         console.log('Connected: ' + frame);
-        stompClient.subscribe($("#sub").val(),function (greeting) {});
+        stompClient.subscribe($("#subLink").val(),function (greeting) {
+            console.log("subscribed",greeting)
+        });
     });
 }
 
@@ -26,7 +29,7 @@ function disconnect() {
 
 function sendEmoji() {
 
-    stompClient.send($("#pub").val(), {'userId': $("#userId").val()}, JSON.stringify(
+    stompClient.send($("#pub").val(), { 'userId': $("#userId").val()}, JSON.stringify(
         {
             'messageId': $("#messageIdForEmoji").val(),
             'emoji': $("#emoji").val()
