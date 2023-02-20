@@ -1,5 +1,6 @@
 package distove.chat.controller;
 
+import distove.chat.config.RequestUser;
 import distove.chat.dto.request.FileUploadRequest;
 import distove.chat.dto.request.MessageRequest;
 import distove.chat.dto.response.MessageResponse;
@@ -48,7 +49,7 @@ public class ReplyController {
     }
 
     @PostMapping("/reply/file/{channelId}")
-    public void publishFile(@RequestHeader("userId") Long userId,
+    public void publishFile(@RequestUser Long userId,
                             @PathVariable Long channelId,
                             @RequestParam MessageType type,
                             @ModelAttribute FileUploadRequest request) {
@@ -63,14 +64,14 @@ public class ReplyController {
     }
 
     @GetMapping("/replies/{channelId}")
-    public ResponseEntity<Object> getParentByChannelId(@RequestHeader("userId") Long userId,
+    public ResponseEntity<Object> getParentByChannelId(@RequestUser Long userId,
                                                        @PathVariable Long channelId) {
         List<MessageResponse> result = messageService.getParentByChannelId(userId, channelId);
         return ResultResponse.success(HttpStatus.OK, "채널의 Reply 리스트 조회", result);
     }
 
     @GetMapping("/children")
-    public ResponseEntity<Object> getRepliesByParentId(@RequestHeader("userId") Long userId,
+    public ResponseEntity<Object> getRepliesByParentId(@RequestUser Long userId,
                                                        @RequestParam String parentId) {
         PagedMessageResponse result = messageService.getRepliesByParentId(userId, parentId);
         return ResultResponse.success(HttpStatus.OK, "부모 메시지의 Reply 리스트 조회", result);

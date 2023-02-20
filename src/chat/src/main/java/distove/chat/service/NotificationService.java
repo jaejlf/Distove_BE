@@ -38,7 +38,6 @@ public class NotificationService {
             Member member = members.stream()
                     .filter(x -> x.getUserId().equals(userId)).findFirst()
                     .orElse(null);
-
             if (member != null) {
                 int unreadCount = messageRepository.countUnreadMessage(connection.getChannelId(), member.getLastReadAt());
                 if (unreadCount > 0) channelIds.add(connection.getChannelId());

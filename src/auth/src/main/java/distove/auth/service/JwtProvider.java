@@ -4,7 +4,6 @@ import distove.auth.exception.DistoveException;
 import io.jsonwebtoken.*;
 import io.jsonwebtoken.io.Decoders;
 import io.jsonwebtoken.security.Keys;
-import io.jsonwebtoken.security.SignatureException;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -23,12 +22,12 @@ import static distove.auth.exception.ErrorCode.JWT_INVALID;
 @Slf4j
 @Service
 @RequiredArgsConstructor
-public class JwtTokenProvider {
+public class JwtProvider {
 
     private final Key key;
 
     @Autowired
-    public JwtTokenProvider(@Value("${jwt.secret}") String secretKey) {
+    public JwtProvider(@Value("${jwt.secret}") String secretKey) {
         byte[] keyBytes = Decoders.BASE64.decode(secretKey);
         this.key = Keys.hmacShaKeyFor(keyBytes);
     }
@@ -60,29 +59,37 @@ public class JwtTokenProvider {
                     .signWith(key, SignatureAlgorithm.HS256)
                     .compact();
         }
+    }
 
+    public void validToken(String token) {
+        try {
+            Jwts.parserBuilder()
+                    .setSigningKey(key)
+                    .build()
+                    .parseClaimsJws(token);
+        } catch (ExpiredJwtException e) {
+            throw new DistoveException(JWT_EXPIRED);
+        } catch (Exception e) {
+            throw new DistoveException(JWT_INVALID);
+        }
     }
 
     public String getTypeOfToken(String token) {
-        Jws<Claims> jws = validToken(token);
+        Jws<Claims> jws = Jwts.parserBuilder()
+                .setSigningKey(key)
+                .build()
+                .parseClaimsJws(token);
         return String.valueOf(jws.getHeader().get("type"));
     }
 
     public Long getUserId(String token) throws DistoveException {
-        Jws<Claims> jws = validToken(token);
-        return Long.valueOf(String.valueOf(jws.getBody().get("userId")));
+        return Long.valueOf(String.valueOf(
+                Jwts.parserBuilder()
+                        .setSigningKey(key)
+                        .build()
+                        .parseClaimsJws(token)
+                        .getBody()
+                        .get("userId")));
     }
 
-    public Jws<Claims> validToken(String token) throws DistoveException {
-        try {
-            return Jwts.parserBuilder()
-                    .setSigningKey(key)
-                    .build()
-                    .parseClaimsJws(token);
-        } catch (SignatureException e) {
-            throw new DistoveException(JWT_INVALID);
-        } catch (ExpiredJwtException e) {
-            throw new DistoveException(JWT_EXPIRED);
-        }
-    }
 }
