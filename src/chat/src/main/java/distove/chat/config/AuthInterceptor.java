@@ -22,12 +22,10 @@ public class AuthInterceptor implements HandlerInterceptor {
 
         log.info("-----> AuthCheckInterceptor 진입");
 
-        log.info("인증 구현 전까지 무조건 pass <-----");
-//        String token = request.getHeader("token");
-//        jwtProvider.validToken(token);
+        String token = request.getHeader("token");
+        jwtProvider.validToken(token);
 
-        Long userId = Long.valueOf(request.getHeader("userId"));
-//        Long userId = jwtProvider.getUserId(token);
+        Long userId = jwtProvider.getUserId(token);
         request.setAttribute("userId", userId);
         return true;
     }

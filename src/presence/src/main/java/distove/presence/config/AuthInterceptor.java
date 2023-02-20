@@ -1,6 +1,6 @@
-package distove.auth.config;
+package distove.presence.config;
 
-import distove.auth.service.JwtProvider;
+import distove.presence.service.JwtProvider;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.stereotype.Component;
