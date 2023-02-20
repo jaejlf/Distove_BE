@@ -19,6 +19,7 @@ import org.springframework.stereotype.Service;
 
 import javax.servlet.http.Cookie;
 import javax.servlet.http.HttpServletRequest;
+
 import java.util.ArrayList;
 import java.util.List;
 
@@ -68,7 +69,17 @@ public class UserService {
         return LoginResponse.of(accessToken, loginInfo);
     }
 
-    public UserResponse logout(Long userId) {
+    public String setCookieOnLogin(Long userId) {
+        String refreshToken = jwtProvider.createToken(userId, "RT");
+        User user = userRepository.findById(userId).orElseThrow(() -> new DistoveException(ACCOUNT_NOT_FOUND));
+
+        user.updateRefreshToken(refreshToken);
+        userRepository.save(user);
+        return createCookie(refreshToken);
+    }
+
+    public UserResponse logout(String token) {
+        Long userId = jwtProvider.getUserId(token);
         User user = userRepository.findById(userId)
                 .orElseThrow(() -> new DistoveException(ACCOUNT_NOT_FOUND));
 
@@ -77,41 +88,13 @@ public class UserService {
         return UserResponse.of(user.getId(), user.getNickname(), user.getEmail());
     }
 
-    public UserResponse getUser(Long userId) {
-        User user = userRepository.findById(userId)
-                .orElseThrow(() -> new DistoveException(ACCOUNT_NOT_FOUND));
-        return UserResponse.of(user.getId(), user.getNickname(), user.getProfileImgUrl());
-    }
-
-    public List<UserResponse> getUsers(List<Long> userIds) {
-        List<UserResponse> users = new ArrayList<>();
-
-        for (Long userId : userIds) {
-            User user = userRepository.findById(userId)
-                    .orElseThrow(() -> new DistoveException(ACCOUNT_NOT_FOUND));
-            users.add(UserResponse.of(user.getId(), user.getNickname(), user.getProfileImgUrl()));
-        }
-        return users;
-    }
-
-    public UserResponse updateNickname(Long userId, UpdateNicknameRequest request) {
-        User user = userRepository.findById(userId)
+    public UserResponse updateNickname(String token, UpdateNicknameRequest request) {
+        User user = userRepository.findById(jwtProvider.getUserId(token))
                 .orElseThrow(() -> new DistoveException(ACCOUNT_NOT_FOUND));
 
         user.updateNickname(request.getNickname());
         userRepository.save(user);
         return UserResponse.of(user.getId(), user.getNickname(), user.getProfileImgUrl());
-    }
-
-    public List<Long> getUserIdsByNicknames(List<String> nicknames) {
-        List<Long> userIds = new ArrayList<>();
-
-        for (String nickname : nicknames) {
-            User user = userRepository.findByNickname(nickname)
-                    .orElseThrow(() -> new DistoveException(ACCOUNT_NOT_FOUND));
-            userIds.add(user.getId());
-        };
-        return userIds;
     }
 
     public UserResponse updateProfileImg(Long userId, UpdateProfileImgRequest request) {
@@ -152,35 +135,15 @@ public class UserService {
 
             return LoginResponse.of(jwtProvider.createToken(user.getId(),"AT"), UserResponse.of(user.getId(), user.getNickname(), user.getProfileImgUrl()));
         }
-
         throw new DistoveException(JWT_INVALID);
     }
 
-    public String createCookie(LoginRequest request) {
-        User user = userRepository.findByEmail(request.getEmail())
-                .orElseThrow(() -> new DistoveException(ACCOUNT_NOT_FOUND));
-
-        return createCookie(user);
-    }
-
-    private String createCookie(User user) {
-        String refreshToken = jwtProvider.createToken(user.getId(), "RT");
-
-        user.updateRefreshToken(refreshToken);
-        userRepository.save(user);
-
-        return ResponseCookie.from("refreshToken", refreshToken)
-                .maxAge(60 * 60 * 24 * 30)
-                .path("/")
-                .httpOnly(true)
-                .secure(true)
-                .sameSite("None")
-                .domain("distove.onstove.com")
-                .build().toString();
-    }
-
-    public String createCookieFromReissue(HttpServletRequest request) {
+    public String setCookieOnReissue(HttpServletRequest request) {
         String refreshToken = getRefreshToken(request);
+        return createCookie(refreshToken);
+    }
+
+    private static String createCookie(String refreshToken) {
         return ResponseCookie.from("refreshToken", refreshToken)
                 .maxAge(60 * 60 * 24 * 30)
                 .path("/")
@@ -190,6 +153,7 @@ public class UserService {
                 .domain("distove.onstove.com")
                 .build().toString();
     }
+
     private String getRefreshToken(HttpServletRequest request) {
         Cookie[] cookies = request.getCookies();
         if (cookies != null) {
@@ -199,7 +163,34 @@ public class UserService {
                 }
             }
         }
-
         throw new DistoveException(JWT_INVALID);
+    }
+
+    public UserResponse getUser(Long userId) {
+        User user = userRepository.findById(userId)
+                .orElseThrow(() -> new DistoveException(ACCOUNT_NOT_FOUND));
+        return UserResponse.of(user.getId(), user.getNickname(), user.getProfileImgUrl());
+    }
+
+    public List<UserResponse> getUsers(List<Long> userIds) {
+        List<UserResponse> users = new ArrayList<>();
+
+        for (Long userId : userIds) {
+            User user = userRepository.findById(userId)
+                    .orElseThrow(() -> new DistoveException(ACCOUNT_NOT_FOUND));
+            users.add(UserResponse.of(user.getId(), user.getNickname(), user.getProfileImgUrl()));
+        }
+        return users;
+    }
+
+    public List<Long> getUserIdsByNicknames(List<String> nicknames) {
+        List<Long> userIds = new ArrayList<>();
+
+        for (String nickname : nicknames) {
+            User user = userRepository.findByNickname(nickname)
+                    .orElseThrow(() -> new DistoveException(ACCOUNT_NOT_FOUND));
+            userIds.add(user.getId());
+        };
+        return userIds;
     }
 }
