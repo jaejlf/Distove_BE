@@ -11,7 +11,6 @@ import java.util.concurrent.ConcurrentMap;
 
 @Repository
 public class MemoryRoomRepository implements RoomRepository {
-    //    private static Integer seq = 1;
     public static final ConcurrentMap<Long, Room> rooms = new ConcurrentHashMap<>();
 
     @Override
@@ -33,5 +32,10 @@ public class MemoryRoomRepository implements RoomRepository {
     @Override
     public List<Room> findAll() {
         return new ArrayList<>(rooms.values());
+    }
+
+    @Override
+    public void deleteAllRoom(){
+        rooms.clear();
     }
 }

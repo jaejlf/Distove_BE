@@ -55,5 +55,11 @@ public class MemoryParticipantRepository implements ParticipantRepository {
     @Override
     public List<Participant> findAll() {
         return new ArrayList<>(participants.values());
+
+
+    }
+    @Override
+    public void deleteAllParticipant(){
+        participants.clear();
     }
 }

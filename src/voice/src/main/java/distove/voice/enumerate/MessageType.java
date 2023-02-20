@@ -14,6 +14,8 @@ public enum MessageType {
     ICE_CANDIDATE("iceCandidate"),
     PARTICIPANT_LEFT("participantLeft"),
     NEW_PARTICIPANT_ARRIVED("newParticipantArrived"),
-    SDP_ANSWER("sdpAnswer");
+    SDP_ANSWER("sdpAnswer"),
+    UPDATED_VIDEO_INFO("updatedVideoInfo"),
+    UPDATE_VIDEO_INFO("updateVideoInfo");
     private final String type;
 }
