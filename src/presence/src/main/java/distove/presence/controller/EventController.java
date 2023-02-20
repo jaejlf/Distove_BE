@@ -14,7 +14,7 @@ import org.springframework.web.bind.annotation.RestController;
 public class EventController {
     private final RequestEventService requestEventService;
 
-    @PostMapping("/update")
+    @PostMapping("/web/update")
     void updateUserPresence(@RequestHeader("userId") Long userId,
                             @RequestParam("serviceInfo") String serviceInfo){
         requestEventService.requestUpdateUserPresence(userId,serviceInfo);
