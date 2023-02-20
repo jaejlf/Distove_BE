@@ -37,7 +37,7 @@ public class UserService {
     private String defaultImgUrl;
 
     public UserResponse join(JoinRequest request) {
-        String profileImgUrl;
+        String profileImgUrl = null;
 
         if (userRepository.existsByEmail(request.getEmail())) {
             throw new DistoveException(DUPLICATE_EMAIL);
@@ -45,8 +45,6 @@ public class UserService {
 
         if (request.getProfileImg() != null && !(request.getProfileImg().isEmpty())) {
             profileImgUrl = storageService.uploadToS3(request.getProfileImg());
-        } else {
-            profileImgUrl = null;
         }
 
         User user = new User(request.getEmail(), bCryptPasswordEncoder.encode(request.getPassword()), request.getNickname(), profileImgUrl);
@@ -117,21 +115,33 @@ public class UserService {
     }
 
     public UserResponse updateProfileImg(String token, UpdateProfileImgRequest request) {
-        String profileImgUrl;
         User user = userRepository.findById(jwtTokenProvider.getUserId(token))
                 .orElseThrow(() -> new DistoveException(ACCOUNT_NOT_FOUND));
 
-        if (request.getProfileImg() != null && !(request.getProfileImg().isEmpty())) {
-            profileImgUrl = storageService.uploadToS3(request.getProfileImg());
-        } else {
-            profileImgUrl = null;
-        }
-
-        storageService.deleteFile(user.getProfileImgUrl());
-        user.updateProfileImgUrl(profileImgUrl);
+        String profileImgUrl = getProfileImgUrl(request);
+        deletePreviousProfileImg(user);
+        updateProfileImgUrl(user, profileImgUrl);
         userRepository.save(user);
-        return UserResponse.of(user.getId(), user.getNickname(), user.getProfileImgUrl());
 
+        return UserResponse.of(user.getId(), user.getNickname(), user.getProfileImgUrl());
+    }
+
+    private String getProfileImgUrl(UpdateProfileImgRequest request) {
+        if (request.getProfileImg() != null && !request.getProfileImg().isEmpty()) {
+            return storageService.uploadToS3(request.getProfileImg());
+        } else {
+            return null;
+        }
+    }
+
+    private void deletePreviousProfileImg(User user) {
+        if (user.getProfileImgUrl() != null) {
+            storageService.deleteFile(user.getProfileImgUrl());
+        }
+    }
+
+    private void updateProfileImgUrl(User user, String profileImgUrl) {
+        user.updateProfileImgUrl(profileImgUrl);
     }
 
     public LoginResponse reissue(HttpServletRequest request) {
