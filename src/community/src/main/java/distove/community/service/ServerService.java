@@ -100,6 +100,14 @@ public class ServerService {
 
     }
 
+    public List<Long> getServerIdsByUserId(Long userId) {
+
+        List<Member> members = memberRepository.findMembersByUserId(userId);
+        List<Long> serverIds = members.stream().map(member -> member.getServer().getId()).collect(Collectors.toList());
+        return serverIds;
+
+    }
+
     @Transactional
     public void deleteServerById(Long serverId) {
 
