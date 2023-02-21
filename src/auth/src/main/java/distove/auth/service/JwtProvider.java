@@ -46,7 +46,7 @@ public class JwtProvider {
                     .setHeader(headers)
                     .setClaims(claims)
                     .setIssuedAt(now)
-                    .setExpiration(new Date(now.getTime() + Duration.ofMinutes(43200).toMillis()))
+                    .setExpiration(new Date(now.getTime() + Duration.ofMinutes(30).toMillis()))
                     .signWith(key, SignatureAlgorithm.HS256)
                     .compact();
         } else {

@@ -3,6 +3,7 @@ package distove.community.service;
 import distove.community.dto.response.CategoryInfoResponse;
 import distove.community.entity.Channel;
 import distove.community.repository.ChannelRepository;
+import distove.community.repository.MemberRepository;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.stereotype.Service;
@@ -16,6 +17,7 @@ import java.util.stream.Collectors;
 public class WebService {
 
     private final ChannelRepository channelRepository;
+    private final MemberRepository memberRepository;
 
     public List<CategoryInfoResponse> getCategoryIds(List<Long> channelIds) {
         Map<Long, List<Long>> map = new HashMap<>();
@@ -37,6 +39,11 @@ public class WebService {
         Channel channel = channelRepository.findById(channelId).get();
         Long categoryId = channel.getCategory().getId();
         return CategoryInfoResponse.of(categoryId, new ArrayList<>(List.of(channelId)));
+    }
+
+    public boolean checkIsMember(Long channelId, Long userId) {
+        Long serverId = channelRepository.findById(channelId).get().getCategory().getServer().getId();
+        return memberRepository.existsByUserIdAndServerId(userId, serverId);
     }
 
 }
