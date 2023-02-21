@@ -317,15 +317,11 @@ public class MessageService {
         return cursorIdInfo;
     }
 
-    public List<MessageResponse> findMessages(String searchType, Long channelId, String content, Long userId) {
-        UserResponse writer = userClient.getUser(userId);
-        List<Message> messages = findMessagesByFilter(channelId, userId, content);
+    public List<MessageResponse> findMessages(Long channelId, String content, String nickname) {
+        UserResponse user = userClient.getUserByNickname(nickname);
+        List<Message> messages = findMessagesByFilter(channelId, user.getId(), content);
 
-        //TODO 파일 타입 생각하기!
-        if (searchType == null) {
-            return messages.stream().map(message -> MessageResponse.ofSearching(message, writer)).collect(Collectors.toList());
-        }
-        return messages.stream().map(message -> MessageResponse.ofSearching(message, writer)).collect(Collectors.toList());
+        return messages.stream().map(message -> MessageResponse.ofSearching(message, user)).collect(Collectors.toList());
     }
 
     public List<Message> findMessagesByFilter(Long channelId, Long senderId, String content) {
@@ -345,6 +341,5 @@ public class MessageService {
 
         Query query = new Query(criteria);
         return mongoTemplate.find(query, Message.class);
-
     }
 }

@@ -77,13 +77,11 @@ public class MessageController {
         return ResultResponse.success(HttpStatus.OK, "안읽메 모두 읽음", null);
     }
 
-    @GetMapping("finding/{channelId}")
-    private ResponseEntity<Object> findMessages(@RequestHeader("userId") Long userId,
-                                                         @PathVariable Long channelId,
-                                                         @RequestParam (required = false) String content,
-                                                         @RequestParam (required = false) Long senderId,
-                                                         @RequestParam (required = false) String searchType) {
-        List<MessageResponse> messages = messageService.findMessages(searchType, channelId, content, senderId);
+    @GetMapping("/searching/{channelId}")
+    private ResponseEntity<Object> findMessages(@PathVariable Long channelId,
+                                                @RequestParam (required = false) String content,
+                                                @RequestParam (required = false) String nickname) {
+        List<MessageResponse> messages = messageService.findMessages(channelId, content, nickname);
         return ResultResponse.success(HttpStatus.OK, "메시지 검색", messages);
     }
 
