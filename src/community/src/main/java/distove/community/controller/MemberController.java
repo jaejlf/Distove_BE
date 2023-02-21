@@ -5,17 +5,13 @@ import distove.community.config.RequestUser;
 import distove.community.dto.response.MemberResponse;
 import distove.community.dto.response.ResultResponse;
 import distove.community.dto.response.RoleResponse;
-import distove.community.entity.Member;
 import distove.community.service.MemberService;
-import distove.community.web.UserClient;
-import distove.community.web.UserResponse;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
 
-import java.util.ArrayList;
 import java.util.List;
 
 import static distove.community.config.AuthorizedRole.Auth.CAN_UPDATE_MEMBER_ROLE;
@@ -26,7 +22,6 @@ import static distove.community.config.AuthorizedRole.Auth.CAN_UPDATE_MEMBER_ROL
 public class MemberController {
 
     private final MemberService memberService;
-    private final UserClient userClient;
 
     @GetMapping("/member")
     public ResponseEntity<Object> getMemberInfo(@RequestUser Long userId,
@@ -35,15 +30,6 @@ public class MemberController {
         return ResultResponse.success(HttpStatus.OK, "현재 멤버 정보 조회", result);
     }
 
-    @GetMapping("/server/{serverId}/member/list")
-    public ResponseEntity<Object> getMembersByServerId(@PathVariable("serverId") Long serverId) {
-        List<UserResponse> users = new ArrayList<>();
-        List<Member> members = memberService.getMembersByServerId(serverId);
-        for (Member member : members) {
-            users.add(userClient.getUser(member.getUserId()));
-        }
-        return ResultResponse.success(HttpStatus.OK, "서버 내 멤버 리스트 조회", users);
-    }
 
     @GetMapping("/member/roles/{serverId}")
     public ResponseEntity<Object> getRolesByServerId(@RequestUser Long userId,

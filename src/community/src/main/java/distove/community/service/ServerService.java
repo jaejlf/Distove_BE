@@ -30,7 +30,6 @@ import static distove.community.exception.ErrorCode.SERVER_NOT_FOUND;
 @Slf4j
 @Service
 @RequiredArgsConstructor
-
 public class ServerService {
 
     private final ChatClient chatClient;
@@ -98,6 +97,14 @@ public class ServerService {
         List<Member> members = memberRepository.findMembersByUserId(userId);
         List<Server> servers = members.stream().map(member -> member.getServer()).collect(Collectors.toList());
         return servers;
+
+    }
+
+    public List<Long> getServerIdsByUserId(Long userId) {
+
+        List<Member> members = memberRepository.findMembersByUserId(userId);
+        List<Long> serverIds = members.stream().map(member -> member.getServer().getId()).collect(Collectors.toList());
+        return serverIds;
 
     }
 

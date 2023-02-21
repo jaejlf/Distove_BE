@@ -10,12 +10,12 @@ import java.time.LocalDateTime;
 public class Member {
 
     private Long userId;
-    private LocalDateTime latestConnectedAt;
+    private LocalDateTime lastReadAt;
 
     public static Member newMember(Long userId) {
         return Member.builder()
                 .userId(userId)
-                .latestConnectedAt(LocalDateTime.now())
+                .lastReadAt(LocalDateTime.now())
                 .build();
     }
 
