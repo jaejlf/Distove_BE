@@ -14,6 +14,7 @@ public interface MemberRepository extends JpaRepository<Member, Long> {
     List<Member> findMembersByUserId(Long userId);
     Optional<Member> findByUserIdAndServerId(Long userId, Long serverId);
     void deleteAllByServerId(Long serverId);
+    boolean existsByIdAndServerId(Long userId, Long serverId);
 
     @Lock(LockModeType.OPTIMISTIC)
     List<Member> findMembersByServerId(Long serverId);
