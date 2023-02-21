@@ -46,17 +46,15 @@ public class ServerService {
     private static final String defaultVoiceCategoryName = "음성 채널";
     private static final String defaultChannelName = "일반";
 
-    //refact
     public List<CategoryResponse> getCategoriesWithChannelsByServerId(Long serverId) {
         List<Category> categories = categoryRepository.findCategoriesByServerId(serverId);
         List<Channel> channels = channelRepository.findChannelsByCategoryIn(categories);
         Map<Long, CategoryResponse> categoryHashMap = categories.stream()
                 .collect(Collectors.toMap(
-                        category -> category.getId(),
-                        category -> newCategoryResponse(category.getId(), category.getName(), new ArrayList<>())
-                ));
+                        Category::getId,
+                        category -> newCategoryResponse(category.getId(), category.getName(), new ArrayList<>())));
         for (Channel channel : channels) {
-            categoryHashMap.get(channel.getCategory().getId()).getChannels().add(newChannelResponse(channel.getId(),channel.getName(), channel.getChannelTypeId()));
+            categoryHashMap.get(channel.getCategory().getId()).getChannels().add(newChannelResponse(channel.getId(), channel.getName(), channel.getChannelTypeId()));
         }
         return new ArrayList<>(categoryHashMap.values());
     }
@@ -91,28 +89,21 @@ public class ServerService {
         return server;
     }
 
-    //
     public List<Server> getServersByUserId(Long userId) {
-
         List<Member> members = memberRepository.findMembersByUserId(userId);
-        List<Server> servers = members.stream().map(member -> member.getServer()).collect(Collectors.toList());
-        return servers;
+        return members.stream().map(Member::getServer).collect(Collectors.toList());
 
     }
 
     public List<Long> getServerIdsByUserId(Long userId) {
-
         List<Member> members = memberRepository.findMembersByUserId(userId);
-        List<Long> serverIds = members.stream().map(member -> member.getServer().getId()).collect(Collectors.toList());
-        return serverIds;
-
+        return members.stream().map(member -> member.getServer().getId()).collect(Collectors.toList());
     }
 
     @Transactional
     public void deleteServerById(Long serverId) {
-
         List<Category> categories = categoryRepository.findCategoriesByServerId(serverId);
-        List<Channel> channels = channelRepository.findChannelsByCategoryInAndChannelTypeIdEquals(categories,ChannelType.CHAT.getCode());
+        List<Channel> channels = channelRepository.findChannelsByCategoryInAndChannelTypeIdEquals(categories, ChannelType.CHAT.getCode());
 //        chatClient.clearAllByList(channels);
         channelRepository.deleteAllByCategoryIn(categories);
         memberRepository.deleteAllByServerId(serverId);
