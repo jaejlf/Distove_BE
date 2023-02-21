@@ -1,4 +1,4 @@
-package distove.chat.listener;
+package distove.chat.stomp;
 
 import distove.chat.service.NotificationService;
 import lombok.RequiredArgsConstructor;
