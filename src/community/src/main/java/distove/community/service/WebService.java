@@ -43,7 +43,7 @@ public class WebService {
 
     public boolean checkIsMember(Long channelId, Long userId) {
         Long serverId = channelRepository.findById(channelId).get().getCategory().getServer().getId();
-        return memberRepository.existsByIdAndServerId(userId, serverId);
+        return memberRepository.existsByUserIdAndServerId(userId, serverId);
     }
 
 }
