@@ -10,6 +10,7 @@ import distove.chat.enumerate.MessageType;
 import distove.chat.exception.DistoveException;
 import distove.chat.repository.ConnectionRepository;
 import distove.chat.repository.MessageRepository;
+import distove.chat.web.CommunityClient;
 import distove.chat.web.UserClient;
 import distove.chat.web.UserResponse;
 import lombok.RequiredArgsConstructor;
@@ -45,6 +46,7 @@ public class MessageService {
     private final ConnectionRepository connectionRepository;
     private final ReactionService reactionService;
     private final UserClient userClient;
+    private final CommunityClient communityClient;
     private final MongoTemplate mongoTemplate;
 
     public MessageResponse publishMessage(Long userId, Long channelId, MessageRequest request) {
@@ -91,6 +93,7 @@ public class MessageService {
     }
 
     public PagedMessageResponse getMessagesByChannelId(Long userId, Long channelId, Integer scroll, String cursorId) {
+        if (!communityClient.checkIsMember(channelId, userId)) throw new DistoveException(USER_NOT_FOUND);
         Connection connection = checkChannelExist(channelId);
         List<Member> members = connection.getMembers();
         Member member = members.stream()
@@ -113,12 +116,14 @@ public class MessageService {
         parent.addReplyInfo(request.getReplyName(), userId);
         messageRepository.save(parent);
 
-        UserResponse writer = userClient.getUser(userId);
+
+        UserResponse writer = userClient.getUser(parent.getUserId());
+        UserResponse stUser = userClient.getUser(userId);
         ReplyInfoResponse replyInfoResponse = ReplyInfoResponse.of(
                 request.getReplyName(),
-                writer.getId(),
-                writer.getNickname(),
-                writer.getProfileImgUrl()
+                stUser.getId(),
+                stUser.getNickname(),
+                stUser.getProfileImgUrl()
         );
 
         List<ReactionResponse> reactions = parent.getReactions() != null ? reactionService.getUserInfoOfReactions(parent.getReactions()) : null;
