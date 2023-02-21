@@ -113,12 +113,14 @@ public class MessageService {
         parent.addReplyInfo(request.getReplyName(), userId);
         messageRepository.save(parent);
 
-        UserResponse writer = userClient.getUser(userId);
+
+        UserResponse writer = userClient.getUser(parent.getUserId());
+        UserResponse stUser = userClient.getUser(userId);
         ReplyInfoResponse replyInfoResponse = ReplyInfoResponse.of(
                 request.getReplyName(),
-                writer.getId(),
-                writer.getNickname(),
-                writer.getProfileImgUrl()
+                stUser.getId(),
+                stUser.getNickname(),
+                stUser.getProfileImgUrl()
         );
 
         List<ReactionResponse> reactions = parent.getReactions() != null ? reactionService.getUserInfoOfReactions(parent.getReactions()) : null;
