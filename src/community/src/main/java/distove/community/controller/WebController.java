@@ -42,4 +42,9 @@ public class WebController {
         return webService.getCategoryId(channelId);
     }
 
+    @GetMapping("/web/channel/{channelId}/member")
+    public boolean checkIsMember(@PathVariable Long channelId, @RequestParam Long userId) {
+        return webService.checkIsMember(channelId, userId);
+    }
+
 }
