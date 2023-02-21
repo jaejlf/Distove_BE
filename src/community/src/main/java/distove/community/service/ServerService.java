@@ -104,7 +104,8 @@ public class ServerService {
     public void deleteServerById(Long serverId) {
         List<Category> categories = categoryRepository.findCategoriesByServerId(serverId);
         List<Channel> channels = channelRepository.findChannelsByCategoryInAndChannelTypeIdEquals(categories, ChannelType.CHAT.getCode());
-//        chatClient.clearAllByList(channels);
+        String channelIds = channels.stream().map(channel -> channel.getId()).collect(Collectors.toList()).toString().replace("[","").replace("]","");
+        chatClient.clearChatConnections(channelIds);
         channelRepository.deleteAllByCategoryIn(categories);
         memberRepository.deleteAllByServerId(serverId);
         categoryRepository.deleteAllByServerId(serverId);
