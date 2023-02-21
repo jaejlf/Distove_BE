@@ -322,7 +322,7 @@ public class MessageService {
         return cursorIdInfo;
     }
 
-    public List<MessageResponse> findMessages(Long channelId, String content, String nickname) {
+    public List<MessageResponse> searchMessages(Long channelId, String content, String nickname) {
 
         List<Message> messages = findMessagesByFilter(channelId, nickname, content);
 
