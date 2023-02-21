@@ -38,7 +38,7 @@ public class UserController {
     @PostMapping("/login")
     public ResponseEntity<Object> login(@RequestBody LoginRequest request, HttpServletResponse response) {
         LoginResponse loginResponse = userService.login(request);
-        response.addHeader("Set-Cookie", userService.createCookie(request));
+        response.addHeader("Set-Cookie", userService.setCookieOnLogin(loginResponse.getUser().getId()));
         return ResultResponse.success(
                 HttpStatus.CREATED,
                 "로그인",
@@ -77,9 +77,9 @@ public class UserController {
     }
 
     @GetMapping("/reissue")
-    public ResponseEntity<Object> reissue(HttpServletResponse response, HttpServletRequest request) {
+    public ResponseEntity<Object> reissue(HttpServletRequest request, HttpServletResponse response) {
         LoginResponse loginResponse = userService.reissue(request);
-        response.addHeader("Set-Cookie", userService.createCookieFromReissue(request));
+        response.addHeader("Set-Cookie", userService.setCookieOnReissue(request));
         return ResultResponse.success(
                 HttpStatus.CREATED,
                 "액세스 토큰 재발급",
