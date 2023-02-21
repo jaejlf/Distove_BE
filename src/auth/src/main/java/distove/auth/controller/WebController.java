@@ -27,8 +27,8 @@ public class WebController {
     }
 
     @GetMapping("/web/user/nickname")
-    public List<Long> getUserByNickname(@RequestParam List<String> nicknames) {
-        return userService.getUserIdsByNicknames(nicknames);
+    public UserResponse getUserByNickname(@RequestParam String nickname) {
+        return userService.getUserIdsByNickname(nickname);
     }
 
 }

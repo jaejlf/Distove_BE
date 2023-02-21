@@ -21,7 +21,6 @@ import javax.servlet.http.Cookie;
 import javax.servlet.http.HttpServletRequest;
 import java.util.ArrayList;
 import java.util.List;
-import java.util.stream.Collectors;
 
 import static distove.auth.exception.ErrorCode.*;
 
@@ -182,11 +181,10 @@ public class UserService {
         return users;
     }
 
-    public List<Long> getUserIdsByNicknames(List<String> nicknames) {
-        return nicknames.stream()
-                .flatMap(nickname -> userRepository.findByNickname(nickname).stream())
-                .map(User::getId)
-                .distinct()
-                .collect(Collectors.toList());
+    public UserResponse getUserIdsByNickname(String nickname) {
+        User user = userRepository.findByNickname(nickname)
+                .orElseThrow(() -> new DistoveException(ACCOUNT_NOT_FOUND));
+
+        return UserResponse.of(user.getId(), user.getNickname(), user.getProfileImgUrl());
     }
 }
