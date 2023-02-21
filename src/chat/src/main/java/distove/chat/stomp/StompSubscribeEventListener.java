@@ -22,7 +22,9 @@ public class StompSubscribeEventListener implements ApplicationListener<SessionS
         StompHeaderAccessor headerAccessor = StompHeaderAccessor.wrap(event.getMessage());
         if (headerAccessor.containsNativeHeader("userId")) {
             Long userId = Long.parseLong(requireNonNull(headerAccessor.getNativeHeader("userId")).get(0));
-            Long serverId = Long.parseLong(requireNonNull(headerAccessor.getDestination()).replace("/sub/server/", ""));
+            Long serverId = Long.parseLong(requireNonNull(headerAccessor.getDestination()).split("/")[3]);
+
+            log.info(">>>>> SUBSCRIBE EVENT! userId = " + userId + ", serverId = " + serverId);
             notificationService.publishAllNotification(userId, serverId); // '서버' 구독
         }
     }
