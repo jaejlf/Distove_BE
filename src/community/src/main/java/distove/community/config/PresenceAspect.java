@@ -5,7 +5,6 @@ import distove.community.web.PresenceClient;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.aspectj.lang.JoinPoint;
-import org.aspectj.lang.annotation.AfterReturning;
 import org.aspectj.lang.annotation.Aspect;
 import org.aspectj.lang.annotation.Before;
 import org.aspectj.lang.annotation.Pointcut;
@@ -14,7 +13,6 @@ import org.springframework.web.context.request.RequestContextHolder;
 import org.springframework.web.context.request.ServletRequestAttributes;
 
 import javax.servlet.http.HttpServletRequest;
-import java.util.Arrays;
 
 
 @Slf4j
@@ -37,7 +35,7 @@ public class PresenceAspect {
     @Before("pointUpdatePresence()")
     public void updatePresence(JoinPoint joinPoint) {
         HttpServletRequest request = ((ServletRequestAttributes) RequestContextHolder.getRequestAttributes()).getRequest();
-        Long userId = Long.parseLong(request.getHeader("userId"));
+        Long userId = (Long) request.getAttribute("userId");
         presenceClient.updateUserPresence(userId, ServiceInfoType.COMMUNITY.getType());
 
     }
