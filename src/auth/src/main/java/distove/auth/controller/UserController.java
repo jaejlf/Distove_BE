@@ -76,7 +76,7 @@ public class UserController {
         );
     }
 
-    @GetMapping("/reissue")
+    @PostMapping("/reissue")
     public ResponseEntity<Object> reissue(HttpServletRequest request, HttpServletResponse response) {
         LoginResponse loginResponse = userService.reissue(request);
         response.addHeader("Set-Cookie", userService.setCookieOnReissue(request));
