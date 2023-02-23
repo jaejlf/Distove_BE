@@ -26,11 +26,19 @@ public class JwtProvider {
 
     private final Key key;
 
+    @Value("${jwt.access.token.valid.time}")
+    private long validTimeAccessToken;
+
+    @Value("${jwt.refresh.token.valid.time}")
+    private long validTimeRefreshToken;
+
     @Autowired
     public JwtProvider(@Value("${jwt.secret}") String secretKey) {
         byte[] keyBytes = Decoders.BASE64.decode(secretKey);
         this.key = Keys.hmacShaKeyFor(keyBytes);
     }
+
+
 
     public String createToken(Long userId, String type) {
         Map<String, Object> headers = new HashMap<>();
@@ -46,7 +54,7 @@ public class JwtProvider {
                     .setHeader(headers)
                     .setClaims(claims)
                     .setIssuedAt(now)
-                    .setExpiration(new Date(now.getTime() + Duration.ofMinutes(30).toMillis()))
+                    .setExpiration(new Date(now.getTime() + Duration.ofMinutes(validTimeAccessToken).toMillis()))
                     .signWith(key, SignatureAlgorithm.HS256)
                     .compact();
         } else {
@@ -55,7 +63,7 @@ public class JwtProvider {
                     .setHeader(headers)
                     .setClaims(claims)
                     .setIssuedAt(now)
-                    .setExpiration(new Date(now.getTime() + Duration.ofDays(30).toMillis()))
+                    .setExpiration(new Date(now.getTime() + Duration.ofDays(validTimeRefreshToken).toMillis()))
                     .signWith(key, SignatureAlgorithm.HS256)
                     .compact();
         }
