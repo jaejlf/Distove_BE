@@ -1,7 +1,6 @@
 package distove.community.dto.response;
 
 import distove.community.entity.Invitation;
-import distove.community.web.UserClient;
 import lombok.Builder;
 import lombok.Getter;
 import lombok.extern.slf4j.Slf4j;
@@ -19,9 +18,9 @@ public class InvitationResponse {
     private boolean inviter;
 
 
-    public static InvitationResponse of(Invitation invitation, UserClient userClient, boolean inviter) {
+    public static InvitationResponse of(Invitation invitation, String nickname, boolean inviter) {
         return InvitationResponse.builder()
-                .nickname(userClient.getUser(invitation.getUserId()).getNickname())
+                .nickname(nickname)
                 .inviteCode(invitation.getInviteCode())
                 .countUsage(invitation.getCountUsage())
                 .expiresAt(invitation.getExpiresAt())
