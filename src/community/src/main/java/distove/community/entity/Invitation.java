@@ -30,8 +30,6 @@ public class Invitation {
 
     private LocalDateTime expiresAt;
 
-    private boolean isExpired;
-
     public static Invitation newInvitation(String inviteCode, Server server, Long userId) {
         LocalDateTime now = LocalDateTime.now();
         LocalDateTime expiresAt = now.plusDays(1);
@@ -41,15 +39,10 @@ public class Invitation {
                 .userId(userId)
                 .countUsage(3)
                 .expiresAt(expiresAt)
-                .isExpired(false)
                 .build();
     }
 
     public void decreaseInviteCodeUsage(int usage) {
         this.countUsage = usage - 1;
-    }
-
-    public void isExpired() {
-        this.isExpired = true;
     }
 }
