@@ -15,8 +15,6 @@ import org.springframework.stereotype.Service;
 import org.springframework.web.multipart.MultipartFile;
 
 import javax.transaction.Transactional;
-import java.time.Duration;
-import java.time.LocalDateTime;
 import java.util.ArrayList;
 import java.util.List;
 import java.util.Map;
@@ -130,10 +128,10 @@ public class ServerService {
         memberRepository.save(newMember(newServer, userId, ownerRole));
     }
 
-    public String createInvitation(Long userId, Long serverId) {
+    public String createInvitation(Long userId, Long serverId, Long days, int count) {
         String inviteCode = UUID.randomUUID().toString().substring(0, 8);
         Server server = serverRepository.findById(serverId).orElseThrow(() -> new DistoveException(SERVER_NOT_FOUND));
-        Invitation invitation = newInvitation(inviteCode, server, userId);
+        Invitation invitation = newInvitation(inviteCode, server, userId, days, count);
         invitationRepository.save(invitation);
         return inviteCode;
     }
@@ -145,14 +143,16 @@ public class ServerService {
     }
 
     public List<InvitationResponse> getInvitations(Long userId, Long serverId) {
+
         Server server = serverRepository.findById(serverId).orElseThrow(() -> new DistoveException(SERVER_NOT_FOUND));
         List<Invitation> invitations = invitationRepository.findAllByServer(server);
         List<InvitationResponse> invitationList = new ArrayList<>();
         for (Invitation invitation : invitations) {
+            String nickname = userClient.getUser(invitation.getUserId()).getNickname();
             if (userId.equals(invitation.getUserId())) {
-                invitationList.add(InvitationResponse.of(invitation, userClient, true));
+                invitationList.add(InvitationResponse.of(invitation, nickname, true));
             } else {
-                invitationList.add(InvitationResponse.of(invitation, userClient, false));
+                invitationList.add(InvitationResponse.of(invitation, nickname, false));
             }
         }
         return invitationList;
