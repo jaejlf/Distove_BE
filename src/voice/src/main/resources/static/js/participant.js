@@ -89,7 +89,11 @@ function Participant(name) {
 
         var message = {
             type: 'addIceCandidate',
-            candidateInfo: candidate,
+            candidateInfo: {
+                candidate: candidate.candidate,
+                sdpMid: candidate.sdpMid,
+                sdpMLineIndex: candidate.sdpMLineIndex
+            },
             userId: Number(name)
         };
         sendMessage(message);
