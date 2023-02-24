@@ -4,16 +4,19 @@ import lombok.AllArgsConstructor;
 import lombok.Builder;
 import lombok.Getter;
 import lombok.NoArgsConstructor;
+import lombok.extern.slf4j.Slf4j;
 
 import javax.persistence.*;
 import java.time.LocalDateTime;
 
+@Slf4j
 @Entity
 @Getter
 @Builder
 @NoArgsConstructor
 @AllArgsConstructor
 public class Invitation {
+
     @Id
     @GeneratedValue(strategy = GenerationType.IDENTITY)
     private Long id;
@@ -26,30 +29,23 @@ public class Invitation {
 
     private Long userId;
 
-    private int countUsage;
+    private int remainingInviteCodeCount;
 
     private LocalDateTime expiresAt;
 
-    private boolean isExpired;
-
-    public static Invitation newInvitation(String inviteCode, Server server, Long userId) {
+    public static Invitation newInvitation(String inviteCode, Server server, Long userId, Long days, int count) {
         LocalDateTime now = LocalDateTime.now();
-        LocalDateTime expiresAt = now.plusDays(1);
+        LocalDateTime expiresAt = now.plusDays(days);
         return Invitation.builder()
                 .inviteCode(inviteCode)
                 .server(server)
                 .userId(userId)
-                .countUsage(3)
+                .remainingInviteCodeCount(count)
                 .expiresAt(expiresAt)
-                .isExpired(false)
                 .build();
     }
 
     public void decreaseInviteCodeUsage(int usage) {
-        this.countUsage = usage - 1;
-    }
-
-    public void isExpired() {
-        this.isExpired = true;
+        this.remainingInviteCodeCount = usage - 1;
     }
 }
