@@ -5,14 +5,23 @@ import distove.chat.dto.response.MessageResponse;
 import distove.chat.dto.response.PagedMessageResponse;
 import distove.chat.dto.response.ReplyInfoResponse;
 import distove.chat.dto.response.TypedUserResponse;
+import distove.chat.entity.Connection;
+import distove.chat.entity.Member;
 import distove.chat.entity.Message;
 import distove.chat.exception.DistoveException;
+import net.bytebuddy.asm.Advice;
 import org.assertj.core.api.Assertions;
 import org.junit.jupiter.api.DisplayName;
 import org.junit.jupiter.api.Nested;
 import org.junit.jupiter.api.Test;
 import org.springframework.beans.factory.annotation.Autowired;
 
+import java.time.LocalDateTime;
+import java.time.format.DateTimeFormatter;
+import java.util.List;
+import java.util.Objects;
+
+import static distove.chat.entity.Member.newMember;
 import static distove.chat.entity.Message.newMessage;
 import static distove.chat.enumerate.MessageType.IMAGE;
 import static distove.chat.enumerate.MessageType.MessageStatus.*;
@@ -43,6 +52,7 @@ class MessageServiceTest extends CommonServiceTest {
             );
 
             given(userClient.getUser(any())).willReturn(dummyUser);
+            given(communityClient.checkIsMember(any(), any())).willReturn(true);
 
             // when
             MessageResponse result = messageService.publishMessage(userId, channelId, request);
@@ -76,6 +86,7 @@ class MessageServiceTest extends CommonServiceTest {
             );
 
             given(userClient.getUser(any())).willReturn(dummyUser);
+            given(communityClient.checkIsMember(any(), any())).willReturn(true);
 
             // when & then
             assertThatThrownBy(() -> messageService.publishMessage(userId, channelId, request))
@@ -94,6 +105,7 @@ class MessageServiceTest extends CommonServiceTest {
             );
 
             given(userClient.getUser(any())).willReturn(dummyUser);
+            given(communityClient.checkIsMember(any(), any())).willReturn(true);
 
             // when & then
             assertThatThrownBy(() -> messageService.publishMessage(userId, channelId, request))
@@ -139,6 +151,7 @@ class MessageServiceTest extends CommonServiceTest {
                     newMessage(channelId, userId, TEXT, CREATED, "{{MESSAGE CONTENT}}"));
 
             given(userClient.getUser(any())).willReturn(dummyUser);
+            given(communityClient.checkIsMember(any(), any())).willReturn(true);
 
             // when
             PagedMessageResponse result = messageService.getMessagesByChannelId(userId, channelId, null, null);
@@ -168,6 +181,7 @@ class MessageServiceTest extends CommonServiceTest {
             Long channelId = 99L;
 
             given(userClient.getUser(any())).willReturn(dummyUser);
+            given(communityClient.checkIsMember(any(), any())).willReturn(true);
 
             // when & then
             assertThatThrownBy(() -> messageService.getMessagesByChannelId(userId, channelId, null, null))
@@ -229,6 +243,51 @@ class MessageServiceTest extends CommonServiceTest {
             assertThatThrownBy(() -> messageService.createReply(userId, request))
                     .isInstanceOf(DistoveException.class)
                     .hasMessageContaining("존재하지 않는 메시지입니다.");
+        }
+
+    }
+
+    @DisplayName("구독 해제 시 안읽메 시간 업데이트")
+    @Nested
+    class UnsubscribeTest {
+
+        @Test
+        void 안읽메_존재할_경우() {
+            // before
+            Long userId = 1L;
+            Long channelId = 1L;
+            MessageRequest request = new MessageRequest(
+                    TEXT, CREATED, null, "{{MESSAGE CONTENT}}", null, null);
+
+            given(userClient.getUser(any())).willReturn(dummyUser);
+            given(communityClient.checkIsMember(any(), any())).willReturn(true);
+            messageService.publishMessage(userId, channelId, request);
+
+            // given
+            Long targetId = unreadMember.getUserId();
+            Connection connection = connectionRepository.findByChannelId(channelId).get();
+            LocalDateTime before = connection.getMembers().stream()
+                    .filter(x -> x.getUserId().equals(targetId)).findFirst()
+                    .orElse(null).getLastReadAt();
+
+            // when
+            messageService.unsubscribeChannel(10L, channelId);
+
+            // then
+            LocalDateTime after = unreadMember.getLastReadAt();
+            assertThat(after.format(formatter)).isEqualTo(before.format(formatter));
+        }
+
+        @Test
+        void 존재하지_않는_유저() {
+            // given
+            Long channelId = 1L;
+            Long userId = 99L;
+
+            // when & then
+            assertThatThrownBy(() -> messageService.unsubscribeChannel(userId, channelId))
+                    .isInstanceOf(DistoveException.class)
+                    .hasMessageContaining("존재하지 않는 유저입니다.");
         }
 
     }
