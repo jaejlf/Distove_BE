@@ -163,11 +163,11 @@ public class MemberService {
             throw new InvitationException(INVITE_CODE_EXPIRED);
         }
 
-        if (invitation.getCountUsage() <= 0) {
+        if (invitation.getRemainingInviteCodeCount() <= 0) {
             throw new InvitationException(INVITE_CODE_USAGE_EXCEEDED);
         }
 
-        invitation.decreaseInviteCodeUsage(invitation.getCountUsage());
+        invitation.decreaseInviteCodeUsage(invitation.getRemainingInviteCodeCount());
         joinServer(userId, invitation.getServer().getId());
 
         return invitation.getServer().getId();

@@ -8,6 +8,7 @@ import distove.community.dto.response.ResultResponse;
 import distove.community.entity.Server;
 import distove.community.service.ServerService;
 import lombok.RequiredArgsConstructor;
+import org.springframework.beans.factory.annotation.Value;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
@@ -22,6 +23,11 @@ import static distove.community.config.AuthorizedRole.Auth.CAN_MANAGE_SERVER;
 @RequiredArgsConstructor
 public class ServerController {
 
+    @Value("${invitation.expire.days}")
+    private Long days;
+
+    @Value("${invitation.available.count}")
+    private int count;
     private final ServerService serverService;
 
     @GetMapping("/server")
@@ -65,7 +71,7 @@ public class ServerController {
     @PostMapping("/server/invitation/{serverId}")
     public ResponseEntity<Object> createInvitation(@RequestUser Long userId,
                                                    @PathVariable ("serverId") Long serverId){
-        String inviteCode = serverService.createInvitation(userId, serverId);
+        String inviteCode = serverService.createInvitation(userId, serverId, days, count);
         return ResultResponse.success(HttpStatus.OK, "초대 코드 생성 성공", inviteCode);
     }
 

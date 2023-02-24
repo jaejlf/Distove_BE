@@ -13,7 +13,7 @@ import java.time.LocalDateTime;
 public class InvitationResponse {
     private String nickname;
     private String inviteCode;
-    private int countUsage;
+    private int remainingInviteCodeCount;
     private LocalDateTime expiresAt;
     private boolean inviter;
 
@@ -22,7 +22,7 @@ public class InvitationResponse {
         return InvitationResponse.builder()
                 .nickname(nickname)
                 .inviteCode(invitation.getInviteCode())
-                .countUsage(invitation.getCountUsage())
+                .remainingInviteCodeCount(invitation.getRemainingInviteCodeCount())
                 .expiresAt(invitation.getExpiresAt())
                 .inviter(inviter)
                 .build();

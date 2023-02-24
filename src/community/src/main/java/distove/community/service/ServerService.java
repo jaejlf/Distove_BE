@@ -124,10 +124,10 @@ public class ServerService {
         memberRepository.save(newMember(newServer, userId, ownerRole));
     }
 
-    public String createInvitation(Long userId, Long serverId) {
+    public String createInvitation(Long userId, Long serverId, Long days, int count) {
         String inviteCode = UUID.randomUUID().toString().substring(0, 8);
         Server server = serverRepository.findById(serverId).orElseThrow(() -> new DistoveException(SERVER_NOT_FOUND));
-        Invitation invitation = newInvitation(inviteCode, server, userId);
+        Invitation invitation = newInvitation(inviteCode, server, userId, days, count);
         invitationRepository.save(invitation);
         return inviteCode;
     }
