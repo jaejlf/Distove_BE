@@ -153,7 +153,6 @@ public class MemberService {
     @Transactional(noRollbackFor = InvitationException.class)
     public Long validateInviteCode(Long userId, String inviteCode) {
 
-        log.info(INVITE_CODE_USAGE_EXCEEDED.getCode());
         Invitation invitation = invitationRepository.findByInviteCode(inviteCode)
                 .orElseThrow(() -> new DistoveException(INVITE_CODE_NOT_FOUND));
 
@@ -161,17 +160,14 @@ public class MemberService {
         Duration duration = Duration.between(now, invitation.getExpiresAt());
 
         if (duration.getSeconds() < 0) {
-            invitation.isExpired();
             throw new InvitationException(INVITE_CODE_EXPIRED);
         }
 
-        if (invitation.getCountUsage() > 0) {
-            invitation.decreaseInviteCodeUsage(invitation.getCountUsage());
-        } else {
-            invitation.isExpired();
+        if (invitation.getCountUsage() <= 0) {
             throw new InvitationException(INVITE_CODE_USAGE_EXCEEDED);
         }
 
+        invitation.decreaseInviteCodeUsage(invitation.getCountUsage());
         joinServer(userId, invitation.getServer().getId());
 
         return invitation.getServer().getId();
