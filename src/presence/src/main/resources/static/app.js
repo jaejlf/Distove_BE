@@ -46,13 +46,26 @@ function subscribe() {
         console.log("Subscribed: ", JSON.parse(update.body))
         let body =JSON.parse(update.body)
         const presence = document.getElementById(body.userId);
-        presence.innerHTML=
+
+
+
+        function changeColor(newColor) {
+            var elem = document.getElementById('para');
+            elem.style.color = newColor;
+        }
+        presence.innerHTML=color(body.presence.status)+
             "   <div>"+body.presence.status+"</div>" +
-            "   <div >"+body.presence.description+"</div>"
+            "   <div>"+body.presence.description+"</div></div>"
 
     });
 }
+function color(status){
+    if(status==='ONLINE'){return '<div style=\"background-color: lightseagreen;">'}
+    else if(status==='AWAY'){return '<div style=\"background-color: yellow;">'}
+    else if(status==='ONLINE_CALL'){return '<div style=\"background-color: lightcoral;">'}
+    else return '<div style=\"background-color: lightgrey;">'
 
+}
 function disconnect() {
     if (stompClient !== null) {
         stompClient.disconnect();
@@ -76,17 +89,13 @@ function member(userId,profileImgUrl,nickname,presence) {
         "<div><div><img src=" + profileImgUrl + " alt=\"...\" style=\"border-radius: 50%; width:50px; height: 50px\"></div>" +
         "<div>"+userId+" "+nickname+"</div></div>" +
         "<div id=\'"+userId+"\'>" +
+        color(presence.status)+
         "   <div>"+presence.status+"</div>" +
         "   <div >"+presence.description+"</div>" +
-        "</div>" +
+        "</div>" + "</div>"
         "</div>"
 }
-function color(status){
-    if(status==='ONLINE'){return 'green'}
-    else if(status==='AWAY'){return 'yellow'}
-    else return 'gray'
 
-}
 
 $(function () {
     $("form").on('submit', function (e) {
