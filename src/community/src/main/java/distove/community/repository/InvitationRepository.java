@@ -13,4 +13,5 @@ public interface InvitationRepository extends JpaRepository<Invitation, Long> {
     Optional<Invitation> findByInviteCode(String inviteCode);
     Optional<Invitation> findByUserIdAndInviteCode(Long userId, String inviteCode);
     List<Invitation> findAllByServer(Server server);
+    void deleteInvitationsByServer(Server server);
 }
