@@ -62,7 +62,7 @@ public class ServerController {
         return ResultResponse.success(HttpStatus.OK, "서버 삭제 성공", null);
     }
 
-    @GetMapping("/server/invitation/{serverId}")
+    @PostMapping("/server/invitation/{serverId}")
     public ResponseEntity<Object> createInvitation(@RequestUser Long userId,
                                                    @PathVariable ("serverId") Long serverId){
         String inviteCode = serverService.createInvitation(userId, serverId);
