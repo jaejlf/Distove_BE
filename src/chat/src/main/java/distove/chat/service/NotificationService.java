@@ -10,6 +10,9 @@ import distove.chat.web.CommunityClient;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.beans.factory.annotation.Value;
+import org.springframework.messaging.MessageHeaders;
+import org.springframework.messaging.simp.SimpMessageHeaderAccessor;
+import org.springframework.messaging.simp.SimpMessageType;
 import org.springframework.messaging.simp.SimpMessagingTemplate;
 import org.springframework.stereotype.Service;
 
@@ -50,12 +53,11 @@ public class NotificationService {
         Map<String, Object> map = new HashMap<>();
         map.put("serverId", serverId);
 
-
         String channelIdsString = channelIds.toString().replace("[", "").replace("]", "");
         List<CategoryInfoResponse> categoryInfoResponses = communityClient.getCategoryIds(channelIdsString);
 
         map.put("categories", categoryInfoResponses);
-        simpMessagingTemplate.convertAndSend(destination + "server/" + serverId, map);
+        simpMessagingTemplate.convertAndSend(destination + "server/" + serverId + "/" + userId, map);
     }
 
     public void publishNotification(Long channelId) {

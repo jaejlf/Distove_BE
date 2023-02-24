@@ -32,6 +32,12 @@ public class StorageService {
     private String url;
 
     public String upload(MultipartFile multipartFile) {
+
+        String originFileName = multipartFile.getOriginalFilename();
+        String ext = originFileName.substring(originFileName.lastIndexOf('.'));
+        if (!ext.equals(".jpg") && !ext.equals(".png") && !ext.equals(".jpeg")) {
+            return null;
+        }
         String fileName = String.valueOf(UUID.randomUUID());
         ObjectMetadata objectMetadata = new ObjectMetadata();
         objectMetadata.setContentType(multipartFile.getContentType());
