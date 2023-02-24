@@ -110,11 +110,15 @@ public class ServerService {
 
     @Transactional
     public void deleteServerById(Long serverId) {
+        Server server = serverRepository.findById(serverId).orElseThrow(() -> new DistoveException(SERVER_NOT_FOUND));
         List<Category> categories = categoryRepository.findCategoriesByServerId(serverId);
         List<Channel> channels = channelRepository.findChannelsByCategoryInAndChannelTypeIdEquals(categories, ChannelType.CHAT.getCode());
-//        chatClient.clearAllByList(channels);
+        String channelIds = channels.stream().map(channel -> channel.getId()).collect(Collectors.toList()).toString().replace("[","").replace("]","");
+        chatClient.clearChatConnections(channelIds);
         channelRepository.deleteAllByCategoryIn(categories);
         memberRepository.deleteAllByServerId(serverId);
+        memberRoleRepository.deleteMemberRolesByServer(server);
+        invitationRepository.deleteInvitationsByServer(server);
         categoryRepository.deleteAllByServerId(serverId);
         serverRepository.deleteById(serverId);
     }
