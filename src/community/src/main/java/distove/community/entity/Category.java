@@ -26,4 +26,7 @@ public class Category {
     public static Category newCategory(String name, Server server) {
         return Category.builder().name(name).server(server).build();
     }
+    public void updateCategory(String name) {
+        this.name = name;
+    }
 }
