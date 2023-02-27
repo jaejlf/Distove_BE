@@ -5,18 +5,14 @@ import distove.community.config.RequestUser;
 import distove.community.dto.response.MemberResponse;
 import distove.community.dto.response.ResultResponse;
 import distove.community.dto.response.RoleResponse;
-import distove.community.entity.Member;
-import distove.community.repository.InvitationRepository;
+import distove.community.service.InvitationService;
 import distove.community.service.MemberService;
-import distove.community.web.UserClient;
-import distove.community.web.UserResponse;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
 
-import java.util.ArrayList;
 import java.util.List;
 
 import static distove.community.config.AuthorizedRole.Auth.CAN_UPDATE_MEMBER_ROLE;
@@ -25,9 +21,9 @@ import static distove.community.config.AuthorizedRole.Auth.CAN_UPDATE_MEMBER_ROL
 @RequiredArgsConstructor
 @RestController
 public class MemberController {
-    private final InvitationRepository invitationRepository;
 
     private final MemberService memberService;
+    private final InvitationService invitationService;
 
     @GetMapping("/member")
     public ResponseEntity<Object> getMemberInfo(@RequestUser Long userId,
@@ -35,7 +31,6 @@ public class MemberController {
         MemberResponse result = memberService.getMemberInfo(userId, serverId);
         return ResultResponse.success(HttpStatus.OK, "현재 멤버 정보 조회", result);
     }
-
 
     @GetMapping("/member/roles/{serverId}")
     public ResponseEntity<Object> getRolesByServerId(@RequestUser Long userId,
@@ -63,7 +58,7 @@ public class MemberController {
     @PostMapping("/server/join/{inviteCode}")
     public ResponseEntity<Object> validateInviteCode(@RequestUser Long userId,
                                                      @PathVariable String inviteCode){
-        Long serverId = memberService.validateInviteCode(userId, inviteCode);
+        Long serverId = invitationService.validateInviteCode(userId, inviteCode);
         return ResultResponse.success(HttpStatus.OK, "초대 코드 확인 성공", serverId);
     }
 }
