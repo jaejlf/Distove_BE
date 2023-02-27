@@ -2,13 +2,11 @@ package distove.community.service;
 
 
 import distove.community.dto.response.CategoryResponse;
-import distove.community.dto.response.InvitationResponse;
 import distove.community.entity.*;
 import distove.community.enumerate.ChannelType;
 import distove.community.exception.DistoveException;
 import distove.community.repository.*;
 import distove.community.web.ChatClient;
-import distove.community.web.UserClient;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.stereotype.Service;
@@ -18,17 +16,16 @@ import javax.transaction.Transactional;
 import java.util.ArrayList;
 import java.util.List;
 import java.util.Map;
-import java.util.UUID;
 import java.util.stream.Collectors;
 
 import static distove.community.dto.response.CategoryResponse.newCategoryResponse;
 import static distove.community.dto.response.ChannelResponse.newChannelResponse;
 import static distove.community.entity.Category.newCategory;
-import static distove.community.entity.Invitation.newInvitation;
 import static distove.community.entity.Member.newMember;
 import static distove.community.entity.Server.newServer;
 import static distove.community.enumerate.DefaultRoleName.OWNER;
-import static distove.community.exception.ErrorCode.*;
+import static distove.community.exception.ErrorCode.ROLE_NOT_FOUND;
+import static distove.community.exception.ErrorCode.SERVER_NOT_FOUND;
 
 @Slf4j
 @Service
@@ -36,7 +33,6 @@ import static distove.community.exception.ErrorCode.*;
 public class ServerService {
 
     private final ChatClient chatClient;
-    private final UserClient userClient;
     private final ServerRepository serverRepository;
     private final MemberRepository memberRepository;
     private final MemberRoleRepository memberRoleRepository;
@@ -45,7 +41,7 @@ public class ServerService {
     private final InvitationRepository invitationRepository;
     private final StorageService storageService;
     private final ChannelService channelService;
-    private final MemberService memberService;
+
 
     private static final String defaultCategoryName = null;
     private static final String defaultChatCategoryName = "채팅 채널";
@@ -126,35 +122,5 @@ public class ServerService {
         MemberRole ownerRole = memberRoleRepository.findByRoleNameAndServerId(OWNER.getName(), newServer.getId())
                 .orElseThrow(() -> new DistoveException(ROLE_NOT_FOUND));
         memberRepository.save(newMember(newServer, userId, ownerRole));
-    }
-
-    public String createInvitation(Long userId, Long serverId, Long days, int count) {
-        String inviteCode = UUID.randomUUID().toString().substring(0, 8);
-        Server server = serverRepository.findById(serverId).orElseThrow(() -> new DistoveException(SERVER_NOT_FOUND));
-        Invitation invitation = newInvitation(inviteCode, server, userId, days, count);
-        invitationRepository.save(invitation);
-        return inviteCode;
-    }
-
-    public void deleteInvitation(Long userId, String inviteCode) {
-        Invitation invitation = invitationRepository.findByUserIdAndInviteCode(userId, inviteCode)
-                .orElseThrow(() -> new DistoveException(INVITE_CODE_NOT_FOUND));
-        invitationRepository.deleteById(invitation.getId());
-    }
-
-    public List<InvitationResponse> getInvitations(Long userId, Long serverId) {
-
-        Server server = serverRepository.findById(serverId).orElseThrow(() -> new DistoveException(SERVER_NOT_FOUND));
-        List<Invitation> invitations = invitationRepository.findAllByServer(server);
-        List<InvitationResponse> invitationList = new ArrayList<>();
-        for (Invitation invitation : invitations) {
-            String nickname = userClient.getUser(invitation.getUserId()).getNickname();
-            if (userId.equals(invitation.getUserId())) {
-                invitationList.add(InvitationResponse.of(invitation, nickname, true));
-            } else {
-                invitationList.add(InvitationResponse.of(invitation, nickname, false));
-            }
-        }
-        return invitationList;
     }
 }
