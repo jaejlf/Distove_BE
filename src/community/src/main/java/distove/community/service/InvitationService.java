@@ -61,7 +61,7 @@ public class InvitationService {
     }
 
     @Transactional(noRollbackFor = InvitationException.class)
-    public Long validateInviteCode(Long userId, String inviteCode) {
+    public Server validateInviteCode(Long userId, String inviteCode) {
 
         Invitation invitation = invitationRepository.findByInviteCode(inviteCode)
                 .orElseThrow(() -> new DistoveException(INVITE_CODE_NOT_FOUND));
@@ -79,7 +79,7 @@ public class InvitationService {
 
         invitation.decreaseInviteCodeUsage(invitation.getRemainingInviteCodeCount());
         memberService.joinServer(userId, invitation.getServer().getId());
-
-        return invitation.getServer().getId();
+        return serverRepository.findById(invitation.getServer().getId())
+                .orElseThrow(() -> new DistoveException(SERVER_NOT_FOUND));
     }
 }
