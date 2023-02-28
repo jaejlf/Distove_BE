@@ -13,8 +13,7 @@ public class EventQ<T extends Event> {
 
     public void add(T event) {
         queue.offer(event);
-        log.info(">>>>> ADD " + event.getClass().getSimpleName());
-        log.info(">>>>> Queue.size " + event.getClass().getSimpleName() + " => " + queue.size());
+        log.info(">>>>> ADD " + event.getClass().getSimpleName() + " QUEUE SIZE = " + size());
     }
 
     public T remove() throws InterruptedException {
@@ -22,6 +21,10 @@ public class EventQ<T extends Event> {
             Thread.sleep(1000); // WAIT_TIMEOUT : 5sec
         }
         return queue.poll();
+    }
+
+    public int size() {
+        return queue.size();
     }
 
 }
