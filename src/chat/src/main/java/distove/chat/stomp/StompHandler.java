@@ -1,4 +1,4 @@
-package distove.chat.config;
+package distove.chat.stomp;
 
 import distove.chat.enumerate.ServiceInfoType;
 import distove.chat.web.PresenceClient;
@@ -15,6 +15,7 @@ import org.springframework.stereotype.Component;
 @RequiredArgsConstructor
 @Slf4j
 public class StompHandler implements ChannelInterceptor {
+
     private final PresenceClient presenceClient;
 
     @Override
@@ -27,4 +28,5 @@ public class StompHandler implements ChannelInterceptor {
         }
         return message;
     }
+
 }

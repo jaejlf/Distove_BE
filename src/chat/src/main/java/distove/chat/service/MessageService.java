@@ -50,6 +50,7 @@ public class MessageService {
     private final MongoTemplate mongoTemplate;
 
     public MessageResponse publishMessage(Long userId, Long channelId, MessageRequest request) {
+        if (!communityClient.checkIsMember(channelId, userId)) throw new DistoveException(USER_NOT_FOUND);
         checkStatusCanChanged(request.getType(), request.getStatus());
 
         Message message;

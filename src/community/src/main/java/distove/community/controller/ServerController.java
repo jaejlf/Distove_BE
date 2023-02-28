@@ -3,10 +3,13 @@ package distove.community.controller;
 import distove.community.config.AuthorizedRole;
 import distove.community.config.RequestUser;
 import distove.community.dto.response.CategoryResponse;
+import distove.community.dto.response.InvitationResponse;
 import distove.community.dto.response.ResultResponse;
 import distove.community.entity.Server;
+import distove.community.service.InvitationService;
 import distove.community.service.ServerService;
 import lombok.RequiredArgsConstructor;
+import org.springframework.beans.factory.annotation.Value;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
@@ -21,7 +24,13 @@ import static distove.community.config.AuthorizedRole.Auth.CAN_MANAGE_SERVER;
 @RequiredArgsConstructor
 public class ServerController {
 
+    @Value("${invitation.expire.days}")
+    private Long days;
+
+    @Value("${invitation.available.count}")
+    private int count;
     private final ServerService serverService;
+    private final InvitationService invitationService;
 
     @GetMapping("/server")
     public ResponseEntity<Object> getServersByUserId(@RequestUser Long userId) {
@@ -61,4 +70,25 @@ public class ServerController {
         return ResultResponse.success(HttpStatus.OK, "서버 삭제 성공", null);
     }
 
+    @PostMapping("/server/invitation/{serverId}")
+    public ResponseEntity<Object> createInvitation(@RequestUser Long userId,
+                                                   @PathVariable ("serverId") Long serverId){
+        String inviteCode = invitationService.createInvitation(userId, serverId, days, count);
+        return ResultResponse.success(HttpStatus.OK, "초대 코드 생성 성공", inviteCode);
+    }
+
+    @GetMapping("/server/invitations/{serverId}")
+    public ResponseEntity<Object> listInvitations(@RequestUser Long userId,
+                                                  @PathVariable ("serverId") Long serverId) {
+        List<InvitationResponse> invitations = invitationService.getInvitations(userId, serverId);
+        return ResultResponse.success(HttpStatus.OK, "초대 리스트 조회 성공", invitations);
+    }
+
+    @DeleteMapping("/server/invitation/{inviteCode}")
+    public ResponseEntity<Object> deleteInvitation(@RequestUser Long userId,
+                                                   @PathVariable ("inviteCode") String inviteCode) {
+        invitationService.deleteInvitation(userId, inviteCode);
+        return ResultResponse.success(HttpStatus.OK, "초대 코드 삭제 성공", inviteCode);
+
+    }
 }

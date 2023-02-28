@@ -17,12 +17,17 @@
     <form>
         <div class="form-group">
             <label for="connect">WebSocket connection : </label>
-            <input type="text" id="subLink" class="form-control" placeholder="SUBSCRIBE LINK">
-            <input type="text" id="userId" class="form-control" placeholder="userId">
-            <button id="connect" class="btn btn-default" type="submit">Connect</button>
-            <button id="subscribe" class="btn btn-default" type="submit">Subscribe</button>
-            <button id="disconnect" class="btn btn-default" type="submit" disabled="disabled">Disconnect
-            </button>
+            <div>
+                <span>serverId</span><input label="serverId" type="text" id="serverId" class="form-control" placeholder="serverId">
+                <span>userId</span><input label="userId" type="text" id="userId" class="form-control" placeholder="userId">
+                <span>token</span><input label="token" type="text" id="token" class="form-control" placeholder="token">
+                <button id="connect" class="btn btn-default" type="submit">Connect</button>
+                <button id="subscribe" class="btn btn-default" type="submit">Subscribe</button>
+                <button id="disconnect" class="btn btn-default" type="submit" disabled="disabled">Disconnect</button></div>
+
+        </div>
+        <div id="members">
+
         </div>
     </form>
 </div>

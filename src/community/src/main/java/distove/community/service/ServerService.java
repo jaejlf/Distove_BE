@@ -38,8 +38,10 @@ public class ServerService {
     private final MemberRoleRepository memberRoleRepository;
     private final CategoryRepository categoryRepository;
     private final ChannelRepository channelRepository;
+    private final InvitationRepository invitationRepository;
     private final StorageService storageService;
     private final ChannelService channelService;
+
 
     private static final String defaultCategoryName = null;
     private static final String defaultChatCategoryName = "채팅 채널";
@@ -102,15 +104,18 @@ public class ServerService {
 
     @Transactional
     public void deleteServerById(Long serverId) {
+        Server server = serverRepository.findById(serverId).orElseThrow(() -> new DistoveException(SERVER_NOT_FOUND));
         List<Category> categories = categoryRepository.findCategoriesByServerId(serverId);
         List<Channel> channels = channelRepository.findChannelsByCategoryInAndChannelTypeIdEquals(categories, ChannelType.CHAT.getCode());
-//        chatClient.clearAllByList(channels);
+        String channelIds = channels.stream().map(channel -> channel.getId()).collect(Collectors.toList()).toString().replace("[","").replace("]","");
+        chatClient.clearChatConnections(channelIds);
         channelRepository.deleteAllByCategoryIn(categories);
         memberRepository.deleteAllByServerId(serverId);
+        memberRoleRepository.deleteMemberRolesByServer(server);
+        invitationRepository.deleteInvitationsByServer(server);
         categoryRepository.deleteAllByServerId(serverId);
         serverRepository.deleteById(serverId);
     }
-
 
     private void setOwnerAndRole(Long userId, Server newServer) {
         memberRoleRepository.saveAll(MemberRole.createDefaultRoles(newServer));
@@ -118,5 +123,4 @@ public class ServerService {
                 .orElseThrow(() -> new DistoveException(ROLE_NOT_FOUND));
         memberRepository.save(newMember(newServer, userId, ownerRole));
     }
-
 }
