@@ -14,6 +14,7 @@ public class EventQ<T extends Event> {
     public void add(T event) {
         queue.offer(event);
         log.info(">>>>> ADD " + event.getClass().getSimpleName());
+        log.info(">>>>> Queue.size " + event.getClass().getSimpleName() + " => " + queue.size());
     }
 
     public T remove() throws InterruptedException {

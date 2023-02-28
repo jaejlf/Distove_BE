@@ -22,7 +22,6 @@ public class EventConsumer<T extends Event> {
         while (true) {
             try {
                 T event = this.eventQ.remove();
-                if (event == null) continue;
                 log.info("REMOVE " + event.getClass().getSimpleName() + " <<<<<");
                 this.consumer.accept(event);
             } catch (InterruptedException e) {
