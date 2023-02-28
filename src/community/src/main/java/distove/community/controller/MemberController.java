@@ -5,6 +5,7 @@ import distove.community.config.RequestUser;
 import distove.community.dto.response.MemberResponse;
 import distove.community.dto.response.ResultResponse;
 import distove.community.dto.response.RoleResponse;
+import distove.community.entity.Server;
 import distove.community.service.InvitationService;
 import distove.community.service.MemberService;
 import lombok.RequiredArgsConstructor;
@@ -58,7 +59,7 @@ public class MemberController {
     @PostMapping("/server/join/{inviteCode}")
     public ResponseEntity<Object> validateInviteCode(@RequestUser Long userId,
                                                      @PathVariable String inviteCode){
-        Long serverId = invitationService.validateInviteCode(userId, inviteCode);
-        return ResultResponse.success(HttpStatus.OK, "초대 코드 확인 성공", serverId);
+        Server server = invitationService.validateInviteCode(userId, inviteCode);
+        return ResultResponse.success(HttpStatus.OK, "초대 코드 확인 성공", server);
     }
 }
