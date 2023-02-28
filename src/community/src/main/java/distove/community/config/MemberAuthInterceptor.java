@@ -54,27 +54,33 @@ public class MemberAuthInterceptor implements HandlerInterceptor {
             case CAN_DELETE_SERVER:
                 member = getMemberByPath(request, userId);
                 if (!member.getRole().isCanDeleteServer()) throw new DistoveException(NO_AUTH);
+                break;
             case CAN_MANAGE_SERVER:
                 member = getMemberByPath(request, userId);
                 if (!member.getRole().isCanManageServer()) throw new DistoveException(NO_AUTH);
+                break;
             case CAN_MANAGE_CHANNEL:
                 member = getMemberByQuery(request, userId);
                 if (!member.getRole().isCanManageChannel()) throw new DistoveException(NO_AUTH);
+                break;
             case CAN_UPDATE_MEMBER_ROLE:
                 member = getMemberByPath(request, userId);
                 if (!member.getRole().isCanUpdateMemberRole()) throw new DistoveException(NO_AUTH);
+                break;
         }
     }
 
     private Member getMemberByPath(HttpServletRequest request, Long userId) {
         Map pathVariables = (Map) request.getAttribute(HandlerMapping.URI_TEMPLATE_VARIABLES_ATTRIBUTE);
         String serverId = pathVariables.get("serverId").toString();
+        log.info("-----> Authorized Role 통과6");
         return memberRepository.findByUserIdAndServerId(userId, Long.valueOf(serverId))
                 .orElseThrow(() -> new DistoveException(MEMBER_NOT_FOUND));
     }
 
     private Member getMemberByQuery(HttpServletRequest request, Long userId) {
         String serverId = request.getParameter("serverId");
+        log.info("-----> Authorized Role 통과7");
         return memberRepository.findByUserIdAndServerId(userId, Long.valueOf(serverId))
                 .orElseThrow(() -> new DistoveException(MEMBER_NOT_FOUND));
     }
