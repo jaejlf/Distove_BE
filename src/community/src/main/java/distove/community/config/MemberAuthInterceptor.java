@@ -48,22 +48,22 @@ public class MemberAuthInterceptor implements HandlerInterceptor {
 
     private void checkHasAuthorizedRole(HttpServletRequest request, Long userId, AuthorizedRole authorizedRole) {
         log.info("-----> Authorized Role 체크");
-        Member member;
-        Auth auth = authorizedRole.name();
-        switch (auth) {
-            case CAN_DELETE_SERVER:
-                member = getMemberByPath(request, userId);
-                if (!member.getRole().isCanDeleteServer()) throw new DistoveException(NO_AUTH);
-            case CAN_MANAGE_SERVER:
-                member = getMemberByPath(request, userId);
-                if (!member.getRole().isCanManageServer()) throw new DistoveException(NO_AUTH);
-            case CAN_MANAGE_CHANNEL:
-                member = getMemberByQuery(request, userId);
-                if (!member.getRole().isCanManageChannel()) throw new DistoveException(NO_AUTH);
-            case CAN_UPDATE_MEMBER_ROLE:
-                member = getMemberByPath(request, userId);
-                if (!member.getRole().isCanUpdateMemberRole()) throw new DistoveException(NO_AUTH);
-        }
+//        Member member;
+//        Auth auth = authorizedRole.name();
+//        switch (auth) {
+//            case CAN_DELETE_SERVER:
+//                member = getMemberByPath(request, userId);
+//                if (!member.getRole().isCanDeleteServer()) throw new DistoveException(NO_AUTH);
+//            case CAN_MANAGE_SERVER:
+//                member = getMemberByPath(request, userId);
+//                if (!member.getRole().isCanManageServer()) throw new DistoveException(NO_AUTH);
+//            case CAN_MANAGE_CHANNEL:
+//                member = getMemberByQuery(request, userId);
+//                if (!member.getRole().isCanManageChannel()) throw new DistoveException(NO_AUTH);
+//            case CAN_UPDATE_MEMBER_ROLE:
+//                member = getMemberByPath(request, userId);
+//                if (!member.getRole().isCanUpdateMemberRole()) throw new DistoveException(NO_AUTH);
+//        }
     }
 
     private Member getMemberByPath(HttpServletRequest request, Long userId) {
