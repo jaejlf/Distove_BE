@@ -325,12 +325,12 @@ public class MessageService {
 
     public List<MessageResponse> searchMessages(Long channelId, String content, String nickname) {
 
-        List<Message> messages = findMessagesByFilter(channelId, nickname, content);
+        List<Message> messages = searchMessagesByFilter(channelId, nickname, content);
 
         return messages.stream().map(message -> MessageResponse.ofSearching(message, userClient.getUser(message.getUserId()))).collect(Collectors.toList());
     }
 
-    public List<Message> findMessagesByFilter(Long channelId, String nickname, String content) {
+    public List<Message> searchMessagesByFilter(Long channelId, String nickname, String content) {
         if (nickname == null & content == null) {
             throw new DistoveException(MISSING_SEARCH_PARAMETER);
         }
