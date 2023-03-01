@@ -341,6 +341,8 @@ public class MessageService {
             List<Long> userIds = userClient.getUserByNickname(nickname);
             if (userIds != null && !userIds.isEmpty()) {
                 senderIds.addAll(userIds);
+            } else {
+                throw new DistoveException(ACCOUNT_NOT_FOUND);
             }
         }
         Criteria criteria = new Criteria();
