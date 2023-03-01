@@ -331,26 +331,24 @@ public class MessageService {
     }
 
     public List<Message> searchMessagesByFilter(Long channelId, String nickname, String content) {
-        if (nickname == null && content == null) {
+        if (nickname == null & content == null) {
             throw new DistoveException(MISSING_SEARCH_PARAMETER);
         }
+        Long senderId = null;
 
-        List<Long> senderIds = new ArrayList<>();
-
-        if (nickname != null && !nickname.isEmpty()) {
-            List<Long> userIds = userClient.getUserByNickname(nickname);
-            if (userIds != null && !userIds.isEmpty()) {
-                senderIds.addAll(userIds);
-            }
+        if (nickname != null) {
+            UserResponse user = userClient.getUserByNickname(nickname);
+            senderId = user.getId();
         }
 
         Criteria criteria = new Criteria();
+
         if (channelId != null) {
             criteria.and("channelId").is(channelId);
         }
 
-        if (!senderIds.isEmpty()) {
-            criteria.and("userId").in(senderIds);
+        if (senderId != null) {
+            criteria.and("userId").is(senderId);
         }
 
         if (content != null) {
