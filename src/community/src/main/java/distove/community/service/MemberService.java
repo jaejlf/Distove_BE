@@ -43,10 +43,11 @@ public class MemberService {
         checkServerExist(serverId);
         return memberRepository.findMembersByServerId(serverId);
     }
+
     public List<UserResponse> getUsersByServerId(Long serverId) {
         List<Member> members = memberRepository.findMembersByServerId(serverId);
-        List<Long> userIds = members.stream().map(x->x.getUserId()).collect(Collectors.toList());
-        List<UserResponse> users = userClient.getUsers(userIds.toString().replace("[","").replace("]",""));
+        List<Long> userIds = members.stream().map(x -> x.getUserId()).collect(Collectors.toList());
+        List<UserResponse> users = userClient.getUsers(userIds.toString().replace("[", "").replace("]", ""));
         return users;
     }
 
@@ -61,11 +62,13 @@ public class MemberService {
 
         for (Member member : members) {
             MemberRole role = member.getRole();
+            UserResponse userResponse = userClient.getUser(member.getUserId());
 
             boolean isActive = getIsActive(serverId, role);
             roleResponses.add(RoleResponse.MemberInfo.builder()
                     .id(member.getUserId())
-                    .nickname(userClient.getUser(member.getUserId()).getNickname())
+                    .profileImgUrl(userResponse.getProfileImgUrl())
+                    .nickname(userResponse.getNickname())
                     .roleName(role.getRoleName())
                     .isActive(isActive)
                     .build());

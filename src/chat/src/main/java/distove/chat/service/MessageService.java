@@ -323,14 +323,24 @@ public class MessageService {
         return cursorIdInfo;
     }
 
-    public List<MessageResponse> findMessages(Long channelId, String content, Long userId) {
-        UserResponse writer = userClient.getUser(userId);
-        List<Message> messages = findMessagesByFilter(channelId, userId, content);
+    public List<MessageResponse> searchMessages(Long channelId, String content, String nickname) {
 
-        return messages.stream().map(message -> MessageResponse.ofSearching(message, writer)).collect(Collectors.toList());
+        List<Message> messages = searchMessagesByFilter(channelId, nickname, content);
+
+        return messages.stream().map(message -> MessageResponse.ofSearching(message, userClient.getUser(message.getUserId()))).collect(Collectors.toList());
     }
 
-    public List<Message> findMessagesByFilter(Long channelId, Long senderId, String content) {
+    public List<Message> searchMessagesByFilter(Long channelId, String nickname, String content) {
+        if (nickname == null & content == null) {
+            throw new DistoveException(MISSING_SEARCH_PARAMETER);
+        }
+        Long senderId = null;
+
+        if (nickname != null) {
+            UserResponse user = userClient.getUserByNickname(nickname);
+            senderId = user.getId();
+        }
+
         Criteria criteria = new Criteria();
 
         if (channelId != null) {
@@ -347,6 +357,5 @@ public class MessageService {
 
         Query query = new Query(criteria);
         return mongoTemplate.find(query, Message.class);
-
     }
 }

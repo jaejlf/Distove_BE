@@ -9,6 +9,7 @@ public class RoleResponse {
     @Builder
     public static class MemberInfo {
         private Long id;
+        private String profileImgUrl;
         private String nickname;
         private String roleName;
         private boolean isActive;

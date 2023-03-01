@@ -13,10 +13,13 @@ import static distove.presence.enumerate.EventTopic.getEventQ;
 @Slf4j
 public class RequestEventService {
 
-    public void requestUpdateUserPresence(Long userId,String serviceInfo){
-        getEventQ(UpdateUserPresenceEvent.class).add(UpdateUserPresenceEvent.of(userId,serviceInfo));
+    public void requestUpdateUserPresence(Long userId, String serviceInfo) {
+        log.info(">>>>> UPDATE - Data : userId " + userId + ", serviceInfo = " + serviceInfo);
+        getEventQ(UpdateUserPresenceEvent.class).add(UpdateUserPresenceEvent.of(userId, serviceInfo));
     }
-    public void requestSendNewUserConnection(Long userId, PresenceType presenceType){
-        getEventQ(SendNewUserConnectionEvent.class).add(SendNewUserConnectionEvent.of(userId,presenceType));
+
+    public void requestSendNewUserConnection(Long userId, PresenceType presenceType) {
+        log.info(">>>>> NEW - Data : userId " + userId + ", presenceType = " + presenceType);
+        getEventQ(SendNewUserConnectionEvent.class).add(SendNewUserConnectionEvent.of(userId, presenceType));
     }
 }

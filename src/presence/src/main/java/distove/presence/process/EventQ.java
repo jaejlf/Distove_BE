@@ -5,15 +5,16 @@ import lombok.extern.slf4j.Slf4j;
 
 import java.util.LinkedList;
 import java.util.Queue;
+import java.util.concurrent.LinkedBlockingQueue;
 
 @Slf4j
 public class EventQ<T extends Event> {
 
-    private final Queue<T> queue = new LinkedList<>();
+    private final Queue<T> queue = new LinkedBlockingQueue<>();
 
     public void add(T event) {
         queue.offer(event);
-        log.info(">>>>> ADD " + event.getClass().getSimpleName());
+        log.info(">>>>> ADD " + event.getClass().getSimpleName() + " QUEUE SIZE = " + size());
     }
 
     public T remove() throws InterruptedException {
@@ -21,6 +22,10 @@ public class EventQ<T extends Event> {
             Thread.sleep(1000); // WAIT_TIMEOUT : 5sec
         }
         return queue.poll();
+    }
+
+    public int size() {
+        return queue.size();
     }
 
 }

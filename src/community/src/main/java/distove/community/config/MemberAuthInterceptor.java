@@ -2,6 +2,7 @@ package distove.community.config;
 
 import distove.community.entity.Member;
 import distove.community.exception.DistoveException;
+import distove.community.exception.ErrorCode;
 import distove.community.repository.MemberRepository;
 import distove.community.service.JwtProvider;
 import lombok.RequiredArgsConstructor;
@@ -15,6 +16,8 @@ import javax.servlet.http.HttpServletRequest;
 import javax.servlet.http.HttpServletResponse;
 import java.util.Map;
 
+import static distove.community.config.AuthorizedRole.*;
+import static distove.community.exception.ErrorCode.*;
 import static distove.community.exception.ErrorCode.MEMBER_NOT_FOUND;
 
 @Slf4j
@@ -45,34 +48,39 @@ public class MemberAuthInterceptor implements HandlerInterceptor {
 
     private void checkHasAuthorizedRole(HttpServletRequest request, Long userId, AuthorizedRole authorizedRole) {
         log.info("-----> Authorized Role 체크");
-        log.info("역할 구현 전까지 무조건 pass <-----");
-//        Member member;
-//        Auth auth = authorizedRole.name();
-//        switch (auth) {
-//            case CAN_DELETE_SERVER:
-//                member = getMemberByPath(request, userId);
-//                if (!member.getRole().isCanDeleteServer()) throw new DistoveException(NO_AUTH_ERROR);
-//            case CAN_MANAGE_SERVER:
-//                member = getMemberByPath(request, userId);
-//                if (!member.getRole().isCanManageServer()) throw new DistoveException(NO_AUTH_ERROR);
-//            case CAN_MANAGE_CHANNEL:
-//                member = getMemberByQuery(request, userId);
-//                if (!member.getRole().isCanManageChannel()) throw new DistoveException(NO_AUTH_ERROR);
-//            case CAN_UPDATE_MEMBER_ROLE:
-//                member = getMemberByPath(request, userId);
-//                if (!member.getRole().isCanUpdateMemberRole()) throw new DistoveException(NO_AUTH_ERROR);
-//        }
+        Member member;
+        Auth auth = authorizedRole.name();
+        switch (auth) {
+            case CAN_DELETE_SERVER:
+                member = getMemberByPath(request, userId);
+                if (!member.getRole().isCanDeleteServer()) throw new DistoveException(NO_AUTH);
+                break;
+            case CAN_MANAGE_SERVER:
+                member = getMemberByPath(request, userId);
+                if (!member.getRole().isCanManageServer()) throw new DistoveException(NO_AUTH);
+                break;
+            case CAN_MANAGE_CHANNEL:
+                member = getMemberByQuery(request, userId);
+                if (!member.getRole().isCanManageChannel()) throw new DistoveException(NO_AUTH);
+                break;
+            case CAN_UPDATE_MEMBER_ROLE:
+                member = getMemberByPath(request, userId);
+                if (!member.getRole().isCanUpdateMemberRole()) throw new DistoveException(NO_AUTH);
+                break;
+        }
     }
 
     private Member getMemberByPath(HttpServletRequest request, Long userId) {
         Map pathVariables = (Map) request.getAttribute(HandlerMapping.URI_TEMPLATE_VARIABLES_ATTRIBUTE);
         String serverId = pathVariables.get("serverId").toString();
+        log.info("-----> Authorized Role 통과6");
         return memberRepository.findByUserIdAndServerId(userId, Long.valueOf(serverId))
                 .orElseThrow(() -> new DistoveException(MEMBER_NOT_FOUND));
     }
 
     private Member getMemberByQuery(HttpServletRequest request, Long userId) {
         String serverId = request.getParameter("serverId");
+        log.info("-----> Authorized Role 통과7");
         return memberRepository.findByUserIdAndServerId(userId, Long.valueOf(serverId))
                 .orElseThrow(() -> new DistoveException(MEMBER_NOT_FOUND));
     }
