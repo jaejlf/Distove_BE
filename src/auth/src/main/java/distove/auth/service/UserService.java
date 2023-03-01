@@ -28,7 +28,7 @@ import static distove.auth.exception.ErrorCode.*;
 @Service
 @RequiredArgsConstructor
 public class UserService {
-    
+
     private final UserRepository userRepository;
     private final BCryptPasswordEncoder bCryptPasswordEncoder;
     private final JwtProvider jwtProvider;
@@ -131,7 +131,7 @@ public class UserService {
             User user = userRepository.findByRefreshToken(token)
                     .orElseThrow(() -> new DistoveException(ACCOUNT_NOT_FOUND));
 
-            return LoginResponse.of(jwtProvider.createToken(user.getId(),"AT"), UserResponse.of(user.getId(), user.getNickname(), user.getProfileImgUrl()));
+            return LoginResponse.of(jwtProvider.createToken(user.getId(), "AT"), UserResponse.of(user.getId(), user.getNickname(), user.getProfileImgUrl()));
         }
         throw new DistoveException(JWT_INVALID);
     }
@@ -181,10 +181,14 @@ public class UserService {
         return users;
     }
 
-    public UserResponse getUserIdsByNickname(String nickname) {
-        User user = userRepository.findByNickname(nickname)
-                .orElseThrow(() -> new DistoveException(ACCOUNT_NOT_FOUND));
+    public List<Long> getUserIdsByNickname(String nickname) {
+        List<User> users = userRepository.findByNickname(nickname).orElseThrow(() -> new DistoveException(ACCOUNT_NOT_FOUND));
 
-        return UserResponse.of(user.getId(), user.getNickname(), user.getProfileImgUrl());
+        List<Long> userIds = new ArrayList<>();
+        for (User user : users) {
+            userIds.add(user.getId());
+        }
+
+        return userIds;
     }
 }
