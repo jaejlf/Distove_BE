@@ -181,10 +181,14 @@ public class UserService {
         return users;
     }
 
-    public UserResponse getUserIdsByNickname(String nickname) {
-        User user = userRepository.findByNickname(nickname)
-                .orElseThrow(() -> new DistoveException(ACCOUNT_NOT_FOUND));
+    public List<Long> getUserIdsByNicknames(List<String> nicknames) {
+        List<Long> responses = new ArrayList<>();
+        for (String nickname : nicknames) {
+            User user = userRepository.findByNickname(nickname)
+                    .orElseThrow(() -> new DistoveException(ACCOUNT_NOT_FOUND));
+            responses.add(user.getId());
+        }
 
-        return UserResponse.of(user.getId(), user.getNickname(), user.getProfileImgUrl());
+        return responses;
     }
 }
