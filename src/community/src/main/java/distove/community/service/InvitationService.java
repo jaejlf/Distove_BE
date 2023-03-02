@@ -11,7 +11,6 @@ import distove.community.web.UserClient;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.stereotype.Service;
-import org.springframework.transaction.annotation.Transactional;
 
 import java.time.Duration;
 import java.time.LocalDateTime;
@@ -21,7 +20,6 @@ import java.util.UUID;
 
 import static distove.community.entity.Invitation.newInvitation;
 import static distove.community.exception.ErrorCode.*;
-import static distove.community.exception.ErrorCode.INVITE_CODE_USAGE_EXCEEDED;
 
 @Slf4j
 @Service
@@ -62,14 +60,13 @@ public class InvitationService {
         return invitationList;
     }
 
-    @Transactional(noRollbackFor = InvitationException.class)
-    public Server joinServer(Long userId, String inviteCode) {
+    public Server joinServerByInviteCode(Long userId, String inviteCode) {
 
         Invitation invitation = invitationRepository.findByInviteCode(inviteCode)
                 .orElseThrow(() -> new InvitationException(INVITE_CODE_NOT_FOUND));
 
         validateCode(invitation);
-        memberService.joinServer(invitation.getServer().getId(), userId);
+        memberService.joinServer(userId, invitation.getServer().getId());
 
         return serverRepository.findById(invitation.getServer().getId())
                 .orElseThrow(() -> new DistoveException(SERVER_NOT_FOUND));
