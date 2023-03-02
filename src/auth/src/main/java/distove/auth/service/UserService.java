@@ -11,11 +11,11 @@ import distove.auth.entity.User;
 import distove.auth.exception.DistoveException;
 import distove.auth.repoisitory.UserRepository;
 import lombok.RequiredArgsConstructor;
-import lombok.extern.slf4j.Slf4j;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.http.ResponseCookie;
 import org.springframework.security.crypto.bcrypt.BCryptPasswordEncoder;
 import org.springframework.stereotype.Service;
+import org.springframework.transaction.annotation.Transactional;
 
 import javax.servlet.http.Cookie;
 import javax.servlet.http.HttpServletRequest;
@@ -24,7 +24,7 @@ import java.util.List;
 
 import static distove.auth.exception.ErrorCode.*;
 
-@Slf4j
+@Transactional
 @Service
 @RequiredArgsConstructor
 public class UserService {
@@ -171,11 +171,10 @@ public class UserService {
     }
 
     public List<UserResponse> getUsers(List<Long> userIds) {
+        List<User> userList = userRepository.findByIdIn(userIds);
         List<UserResponse> users = new ArrayList<>();
 
-        for (Long userId : userIds) {
-            User user = userRepository.findById(userId)
-                    .orElseThrow(() -> new DistoveException(ACCOUNT_NOT_FOUND));
+        for (User user : userList) {
             users.add(UserResponse.of(user.getId(), user.getNickname(), user.getProfileImgUrl()));
         }
         return users;
