@@ -56,6 +56,7 @@ public class PresenceService {
                 updateCallOnline(userId);
                 break;
             case "voiceOff":
+                updateCallEnded(userId);
             case "chat":
             case "community":
                 updateOnline(userId);
@@ -66,6 +67,7 @@ public class PresenceService {
 
 
     }
+
     private void updateOnline(Long userId){
         if (presenceRepository.isUserOnline(userId)) {
             presenceRepository.removePresenceByUserId(userId);
@@ -74,6 +76,9 @@ public class PresenceService {
         }
         presenceRepository.save(userId, newPresenceTime(PresenceType.ONLINE.getPresence()));
 
+    }
+    private void updateCallEnded(Long userId){
+        presenceRepository.removePresenceByUserIdIfOffline(userId);
     }
     private void updateCallOnline(Long userId){
         sendUserPresence(userId,PresenceType.ONLINE_CALL);

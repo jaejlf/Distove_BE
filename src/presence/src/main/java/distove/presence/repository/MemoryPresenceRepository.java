@@ -2,6 +2,7 @@ package distove.presence.repository;
 
 import distove.presence.dto.Presence;
 import distove.presence.dto.PresenceTime;
+import distove.presence.enumerate.PresenceType;
 import org.springframework.stereotype.Repository;
 
 import java.util.HashMap;
@@ -21,6 +22,11 @@ public class MemoryPresenceRepository implements PresenceRepository{
 
     @Override
     public void removePresenceByUserId(Long userId){
+        presences.remove(userId);
+    }
+
+    @Override
+    public void removePresenceByUserIdIfOffline(Long userId){
         presences.remove(userId);
     }
 
