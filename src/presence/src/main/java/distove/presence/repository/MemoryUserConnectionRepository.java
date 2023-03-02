@@ -31,7 +31,7 @@ public class MemoryUserConnectionRepository implements UserConnectionRepository 
     public Long findUserIdBySessionId(String sessionId) {
         Long userId = null;
         for (Long uid : userConnections.keySet()) {
-            log.info("userId,sessionId {} {}", uid,sessionId);
+            log.info("userId,sessionId {} {}", uid,userConnections.get(uid));
             if(userConnections.get(uid).equals(sessionId)){
                 userId = uid;
             }
