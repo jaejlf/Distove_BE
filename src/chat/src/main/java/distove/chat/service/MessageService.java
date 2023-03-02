@@ -331,14 +331,20 @@ public class MessageService {
     }
 
     public List<Message> searchMessagesByFilter(Long channelId, String nickname, String content) {
-        if (nickname == null & content == null) {
+        if (nickname == null && content == null) {
             throw new DistoveException(MISSING_SEARCH_PARAMETER);
         }
-        Long senderId = null;
 
-        if (nickname != null) {
-            UserResponse user = userClient.getUserByNickname(nickname);
-            senderId = user.getId();
+        List<Message> result = new ArrayList<>();
+        List<Long> senderIds = new ArrayList<>();
+
+        if (nickname != null && !nickname.isEmpty()) {
+            List<Long> userIds = userClient.getUserByNickname(nickname);
+            if (userIds != null && !userIds.isEmpty()) {
+                senderIds.addAll(userIds);
+            } else {
+                return result;
+            }
         }
 
         Criteria criteria = new Criteria();
@@ -347,8 +353,8 @@ public class MessageService {
             criteria.and("channelId").is(channelId);
         }
 
-        if (senderId != null) {
-            criteria.and("userId").is(senderId);
+        if (!senderIds.isEmpty()) {
+            criteria.and("userId").in(senderIds);
         }
 
         if (content != null) {
@@ -356,6 +362,8 @@ public class MessageService {
         }
 
         Query query = new Query(criteria);
-        return mongoTemplate.find(query, Message.class);
+
+        result = mongoTemplate.find(query, Message.class);
+        return result;
     }
 }

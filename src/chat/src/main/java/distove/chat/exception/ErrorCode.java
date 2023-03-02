@@ -17,10 +17,10 @@ public enum ErrorCode {
     NO_AUTH(HttpStatus.BAD_REQUEST, "S0003", "수정/삭제 권한이 없습니다."),
     FILE_UPLOAD_ERROR(HttpStatus.INTERNAL_SERVER_ERROR, "S0004", "파일 업로드에 실패했습니다."),
     CHANNEL_NOT_FOUND(HttpStatus.NOT_FOUND, "S0005", "존재하지 않는 채널입니다."),
-    EMOJI_NOT_FOUND(HttpStatus.NOT_FOUND, "S0006", "이모지를 찾을 수 없습니다."),
-    USER_NOT_FOUND(HttpStatus.NOT_FOUND, "S0007", "존재하지 않는 유저입니다."),
-    SCROLL_ERROR(HttpStatus.BAD_REQUEST, "S0008", "스크롤 값은 0 또는 1이어야 합니다."),
-    MISSING_SEARCH_PARAMETER(HttpStatus.BAD_REQUEST,"S0009", "최소 하나의 검색 조건은 있어야 합니다.");
+    USER_NOT_FOUND(HttpStatus.NOT_FOUND, "S0006", "존재하지 않는 유저입니다."),
+    SCROLL_ERROR(HttpStatus.BAD_REQUEST, "S0007", "스크롤 값은 0 또는 1이어야 합니다."),
+    MISSING_SEARCH_PARAMETER(HttpStatus.BAD_REQUEST,"S0008", "최소 하나의 검색 조건은 있어야 합니다.");
+
 
     private final HttpStatus httpStatus;
     private final String code;

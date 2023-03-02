@@ -9,6 +9,7 @@ import distove.community.repository.InvitationRepository;
 import distove.community.repository.ServerRepository;
 import distove.community.web.UserClient;
 import lombok.RequiredArgsConstructor;
+import lombok.extern.slf4j.Slf4j;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
@@ -22,6 +23,7 @@ import static distove.community.entity.Invitation.newInvitation;
 import static distove.community.exception.ErrorCode.*;
 import static distove.community.exception.ErrorCode.INVITE_CODE_USAGE_EXCEEDED;
 
+@Slf4j
 @Service
 @RequiredArgsConstructor
 public class InvitationService {
@@ -61,11 +63,19 @@ public class InvitationService {
     }
 
     @Transactional(noRollbackFor = InvitationException.class)
-    public Server validateInviteCode(Long userId, String inviteCode) {
+    public Server joinServer(Long userId, String inviteCode) {
 
         Invitation invitation = invitationRepository.findByInviteCode(inviteCode)
-                .orElseThrow(() -> new DistoveException(INVITE_CODE_NOT_FOUND));
+                .orElseThrow(() -> new InvitationException(INVITE_CODE_NOT_FOUND));
 
+        validateCode(invitation);
+        memberService.joinServer(invitation.getServer().getId(), userId);
+
+        return serverRepository.findById(invitation.getServer().getId())
+                .orElseThrow(() -> new DistoveException(SERVER_NOT_FOUND));
+    }
+
+    private void validateCode(Invitation invitation) {
         LocalDateTime now = LocalDateTime.now();
         Duration duration = Duration.between(now, invitation.getExpiresAt());
 
@@ -78,8 +88,6 @@ public class InvitationService {
         }
 
         invitation.decreaseInviteCodeUsage(invitation.getRemainingInviteCodeCount());
-        memberService.joinServer(userId, invitation.getServer().getId());
-        return serverRepository.findById(invitation.getServer().getId())
-                .orElseThrow(() -> new DistoveException(SERVER_NOT_FOUND));
     }
+
 }

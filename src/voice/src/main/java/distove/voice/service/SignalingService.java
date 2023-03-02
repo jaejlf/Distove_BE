@@ -36,8 +36,8 @@ import static distove.voice.dto.response.LeftRoomResponse.newLeftRoomResponse;
 import static distove.voice.dto.response.NewParticipantArrivedResponse.newNewParticipantArrivedResponse;
 import static distove.voice.dto.response.SdpAnswerResponse.newSdpAnswerResponse;
 import static distove.voice.entity.IncomingParticipant.newIncomingParticipant;
-import static distove.voice.exception.ErrorCode.PARTICIPANT_NOT_FOUND_ERROR;
-import static distove.voice.exception.ErrorCode.ROOM_NOT_FOUND_ERROR;
+import static distove.voice.exception.ErrorCode.PARTICIPANT_NOT_FOUND;
+import static distove.voice.exception.ErrorCode.ROOM_NOT_FOUND;
 
 @Slf4j
 @Service
@@ -113,9 +113,9 @@ public class SignalingService {
     public void sdpOffer(WebSocketSession webSocketSession, Long senderUserId, String sdpOffer) throws IOException {
 
         Participant participant = participantRepository.findParticipantByWebSocketSession(webSocketSession)
-                .orElseThrow(() -> new DistoveException(PARTICIPANT_NOT_FOUND_ERROR));
+                .orElseThrow(() -> new DistoveException(PARTICIPANT_NOT_FOUND));
         Participant sender = participantRepository.findParticipantByUserId(senderUserId)
-                .orElseThrow(() -> new DistoveException(PARTICIPANT_NOT_FOUND_ERROR));
+                .orElseThrow(() -> new DistoveException(PARTICIPANT_NOT_FOUND));
 
         WebRtcEndpoint incomingMediaEndpointFromYou = getIncomingMediaEndpointFromYou(participant, sender);
         participant.getIncomingParticipants()
@@ -159,10 +159,10 @@ public class SignalingService {
 
     public void leaveRoom(WebSocketSession webSocketSession) throws IOException {
         Participant participant = participantRepository.findParticipantByWebSocketSession(webSocketSession)
-                .orElseThrow(() -> new DistoveException(PARTICIPANT_NOT_FOUND_ERROR));
+                .orElseThrow(() -> new DistoveException(PARTICIPANT_NOT_FOUND));
         participant.getMediaEndpoint().release();
         Room room = roomRepository.findRoomByChannelId(participant.getRoom().getChannelId())
-                .orElseThrow(() -> new DistoveException(ROOM_NOT_FOUND_ERROR));
+                .orElseThrow(() -> new DistoveException(ROOM_NOT_FOUND));
         presenceClient.updateUserPresence(participant.getUserId(), ServiceInfoType.VOICE_OFF.getType());
 
         List<Participant> participants = participantRepository.findParticipantsByChannelId(room.getChannelId());
@@ -209,7 +209,7 @@ public class SignalingService {
 
     public void updateVideoInfoRequest(WebSocketSession webSocketSession, Boolean isCameraOn, Boolean isMicOn) throws IOException {
         Participant me = participantRepository.findParticipantByWebSocketSession(webSocketSession)
-                .orElseThrow(() -> new DistoveException(PARTICIPANT_NOT_FOUND_ERROR));
+                .orElseThrow(() -> new DistoveException(PARTICIPANT_NOT_FOUND));
         List<Participant> participants = participantRepository.findParticipantsByChannelId(me.getRoom().getChannelId());
         me.updateVideoInfoOfParticipant(VideoInfo.of(isCameraOn, isMicOn));
         for (Participant participant : participants) {

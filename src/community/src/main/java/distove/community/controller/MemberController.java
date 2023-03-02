@@ -57,9 +57,9 @@ public class MemberController {
     }
 
     @PostMapping("/server/join/{inviteCode}")
-    public ResponseEntity<Object> validateInviteCode(@RequestUser Long userId,
+    public ResponseEntity<Object> joinServerByInviteCode(@RequestUser Long userId,
                                                      @PathVariable String inviteCode){
-        Server server = invitationService.validateInviteCode(userId, inviteCode);
+        Server server = invitationService.joinServer(userId, inviteCode);
         return ResultResponse.success(HttpStatus.OK, "초대 코드 확인 성공", server);
     }
 }

@@ -24,22 +24,13 @@ public class EventController {
 
     @DeleteMapping("/web/clear/{channelId}")
     public void clear(@PathVariable Long channelId) {
-
-//        eventService.requestDelChannel(channelId);
-
-        connectionService.clear(channelId);
-        messageService.clear(channelId);
+        eventService.requestDelChannel(channelId);
     }
 
     @DeleteMapping("/web/clear/list")
     public void clearAll(@RequestParam List<Long> channelIds) {
 
         eventService.requestDelChannelList(channelIds);
-    }
-
-    @GetMapping("/web/hello")
-    public String helloWeb() {
-        return "DEV SERVER 배포되었는나요?";
     }
 
 }
