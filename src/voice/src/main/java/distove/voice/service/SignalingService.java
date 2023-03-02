@@ -193,9 +193,9 @@ public class SignalingService {
     public void addIceCandidate(WebSocketSession webSocketSession, Long senderUserId, IceCandidate iceCandidateInfo) {
         if(iceCandidateInfo.getCandidate().contains("udp")&& iceCandidateInfo.getCandidate().contains("host")){
             Participant participant = participantRepository.findParticipantByWebSocketSession(webSocketSession)
-                    .orElseThrow(() -> new DistoveException(PARTICIPANT_NOT_FOUND_ERROR));
+                    .orElseThrow(() -> new DistoveException(PARTICIPANT_NOT_FOUND));
             Participant sender = participantRepository.findParticipantByUserId(senderUserId)
-                    .orElseThrow(() -> new DistoveException(PARTICIPANT_NOT_FOUND_ERROR));
+                    .orElseThrow(() -> new DistoveException(PARTICIPANT_NOT_FOUND));
             if (participant.getUserId().equals(senderUserId)) {
                 participant.getMediaEndpoint().addIceCandidate(iceCandidateInfo);
             } else {
