@@ -15,7 +15,7 @@ public enum ErrorCode {
     INVALID_PASSWORD(HttpStatus.BAD_REQUEST, "A0003", "패스워드가 다릅니다."),
 
     // JWT
-    JWT_INVALID(HttpStatus.UNAUTHORIZED, "A0004", "토큰이 유효하지 않습니다."),
+    JWT_INVALID(HttpStatus.FORBIDDEN, "A0004", "토큰이 유효하지 않습니다."),
     JWT_EXPIRED(HttpStatus.UNAUTHORIZED, "A0005", "토큰이 만료되었습니다."),
 
     // 프로필 이미지
