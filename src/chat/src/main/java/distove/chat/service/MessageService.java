@@ -335,6 +335,7 @@ public class MessageService {
             throw new DistoveException(MISSING_SEARCH_PARAMETER);
         }
 
+        List<Message> result = new ArrayList<>();
         List<Long> senderIds = new ArrayList<>();
 
         if (nickname != null && !nickname.isEmpty()) {
@@ -342,9 +343,10 @@ public class MessageService {
             if (userIds != null && !userIds.isEmpty()) {
                 senderIds.addAll(userIds);
             } else {
-                throw new DistoveException(ACCOUNT_NOT_FOUND);
+                return result;
             }
         }
+
         Criteria criteria = new Criteria();
 
         if (channelId != null) {
@@ -360,6 +362,8 @@ public class MessageService {
         }
 
         Query query = new Query(criteria);
-        return mongoTemplate.find(query, Message.class);
+
+        result = mongoTemplate.find(query, Message.class);
+        return result;
     }
 }
