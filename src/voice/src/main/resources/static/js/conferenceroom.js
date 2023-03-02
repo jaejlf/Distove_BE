@@ -14,7 +14,8 @@
  * limitations under the License.
  *
  */
-// var ws = new WebSocket('ws://localhost:8080/voice/signaling');
+// var ws = new WebSocket('ws://localhost:8083/voice/signaling');
+// var ws = new WebSocket('ws://10.5.26.45:8083/voice/signaling');
 
 var ws = new WebSocket('wss://distove.onstove.com/voice/signaling');
 var participants = {};

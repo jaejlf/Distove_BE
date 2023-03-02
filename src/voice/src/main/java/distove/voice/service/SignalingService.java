@@ -61,13 +61,16 @@ public class SignalingService {
         VideoInfo videoInfo = VideoInfo.of(isCameraOn, isMicOn);
         WebRtcEndpoint outgoingMediaEndpoint = new WebRtcEndpoint.Builder(room.getPipeline()).build();
         outgoingMediaEndpoint.addIceCandidateFoundListener(event -> {
-            try {
-                synchronized (webSocketSession) {
-                    webSocketSession.sendMessage(toJson(newIceCandidateResponse(userId, event.getCandidate())));
+            if(event.getCandidate().getCandidate().contains("UDP")&&event.getCandidate().getCandidate().contains("host")){
+                try {
+                    synchronized (webSocketSession) {
+                        webSocketSession.sendMessage(toJson(newIceCandidateResponse(userId, event.getCandidate())));
+                    }
+                } catch (IOException e) {
+                    log.debug(e.getMessage());
                 }
-            } catch (IOException e) {
-                log.debug(e.getMessage());
             }
+
         });
         presenceClient.updateUserPresence(userId, ServiceInfoType.VOICE_ON.getType());
         Participant participant = Participant.of(userId, room, outgoingMediaEndpoint, webSocketSession, videoInfo);
@@ -132,14 +135,17 @@ public class SignalingService {
             WebRtcEndpoint incomingMediaEndpoint = new WebRtcEndpoint.Builder(participant.getRoom()
                     .getPipeline()).build();
             incomingMediaEndpoint.addIceCandidateFoundListener(event -> {
-                try {
-                    synchronized (participant.getWebSocketSession()) {
-                        participant.getWebSocketSession()
-                                .sendMessage(toJson(newIceCandidateResponse(sender.getUserId(), event.getCandidate())));
+                if(event.getCandidate().getCandidate().contains("UDP")&&event.getCandidate().getCandidate().contains("host")){
+                    try {
+                        synchronized (participant.getWebSocketSession()) {
+                            participant.getWebSocketSession()
+                                    .sendMessage(toJson(newIceCandidateResponse(sender.getUserId(), event.getCandidate())));
+                        }
+                    } catch (IOException e) {
+                        log.debug(e.getMessage());
                     }
-                } catch (IOException e) {
-                    log.debug(e.getMessage());
                 }
+
             });
             incomingParticipant = newIncomingParticipant(sender.getUserId(), incomingMediaEndpoint);
         }
@@ -185,16 +191,19 @@ public class SignalingService {
     }
 
     public void addIceCandidate(WebSocketSession webSocketSession, Long senderUserId, IceCandidate iceCandidateInfo) {
-        Participant participant = participantRepository.findParticipantByWebSocketSession(webSocketSession)
-                .orElseThrow(() -> new DistoveException(PARTICIPANT_NOT_FOUND_ERROR));
-        Participant sender = participantRepository.findParticipantByUserId(senderUserId)
-                .orElseThrow(() -> new DistoveException(PARTICIPANT_NOT_FOUND_ERROR));
-        if (participant.getUserId().equals(senderUserId)) {
-            participant.getMediaEndpoint().addIceCandidate(iceCandidateInfo);
-        } else {
-            participant.getIncomingParticipants().get(senderUserId).getMediaEndpoint()
-                    .addIceCandidate(iceCandidateInfo);
+        if(iceCandidateInfo.getCandidate().contains("udp")&& iceCandidateInfo.getCandidate().contains("host")){
+            Participant participant = participantRepository.findParticipantByWebSocketSession(webSocketSession)
+                    .orElseThrow(() -> new DistoveException(PARTICIPANT_NOT_FOUND_ERROR));
+            Participant sender = participantRepository.findParticipantByUserId(senderUserId)
+                    .orElseThrow(() -> new DistoveException(PARTICIPANT_NOT_FOUND_ERROR));
+            if (participant.getUserId().equals(senderUserId)) {
+                participant.getMediaEndpoint().addIceCandidate(iceCandidateInfo);
+            } else {
+                participant.getIncomingParticipants().get(senderUserId).getMediaEndpoint()
+                        .addIceCandidate(iceCandidateInfo);
+            }
         }
+
     }
 
 
