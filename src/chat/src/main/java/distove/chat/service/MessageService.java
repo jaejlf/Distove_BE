@@ -335,14 +335,18 @@ public class MessageService {
             throw new DistoveException(MISSING_SEARCH_PARAMETER);
         }
 
+        List<Message> result = new ArrayList<>();
         List<Long> senderIds = new ArrayList<>();
 
         if (nickname != null && !nickname.isEmpty()) {
             List<Long> userIds = userClient.getUserByNickname(nickname);
             if (userIds != null && !userIds.isEmpty()) {
                 senderIds.addAll(userIds);
+            } else {
+                return result;
             }
         }
+
         Criteria criteria = new Criteria();
 
         if (channelId != null) {
@@ -358,6 +362,8 @@ public class MessageService {
         }
 
         Query query = new Query(criteria);
-        return mongoTemplate.find(query, Message.class);
+
+        result = mongoTemplate.find(query, Message.class);
+        return result;
     }
 }
