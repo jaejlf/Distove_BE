@@ -1,12 +1,12 @@
 package distove.community.service;
 
 
+import distove.community.client.ChatClient;
 import distove.community.dto.response.CategoryResponse;
 import distove.community.entity.*;
 import distove.community.enumerate.ChannelType;
 import distove.community.exception.DistoveException;
 import distove.community.repository.*;
-import distove.community.web.ChatClient;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.stereotype.Service;
@@ -18,11 +18,7 @@ import java.util.List;
 import java.util.Map;
 import java.util.stream.Collectors;
 
-import static distove.community.dto.response.CategoryResponse.newCategoryResponse;
-import static distove.community.dto.response.ChannelResponse.newChannelResponse;
-import static distove.community.entity.Category.newCategory;
-import static distove.community.entity.Member.newMember;
-import static distove.community.entity.Server.newServer;
+import static distove.community.dto.response.ChannelResponse.of;
 import static distove.community.enumerate.DefaultRoleName.OWNER;
 import static distove.community.exception.ErrorCode.ROLE_NOT_FOUND;
 import static distove.community.exception.ErrorCode.SERVER_NOT_FOUND;
@@ -54,9 +50,9 @@ public class ServerService {
         Map<Long, CategoryResponse> categoryHashMap = categories.stream()
                 .collect(Collectors.toMap(
                         Category::getId,
-                        category -> newCategoryResponse(category.getId(), category.getName(), new ArrayList<>())));
+                        category -> CategoryResponse.of(category.getId(), category.getName(), new ArrayList<>())));
         for (Channel channel : channels) {
-            categoryHashMap.get(channel.getCategory().getId()).getChannels().add(newChannelResponse(channel.getId(), channel.getName(), channel.getChannelTypeId()));
+            categoryHashMap.get(channel.getCategory().getId()).getChannels().add(of(channel.getId(), channel.getName(), channel.getChannelTypeId()));
         }
         return new ArrayList<>(categoryHashMap.values());
     }
@@ -67,11 +63,11 @@ public class ServerService {
         if (!image.isEmpty()) {
             imgUrl = storageService.upload(image);
         }
-        Server newServer = serverRepository.save(newServer(name, imgUrl));
-        categoryRepository.save(newCategory(defaultCategoryName, newServer));
+        Server newServer = serverRepository.save(new Server(name, imgUrl));
+        categoryRepository.save(new Category(defaultCategoryName, newServer));
 
-        Category defaultChatCategory = categoryRepository.save(newCategory(defaultChatCategoryName, newServer));
-        Category defaultVoiceCategory = categoryRepository.save(newCategory(defaultVoiceCategoryName, newServer));
+        Category defaultChatCategory = categoryRepository.save(new Category(defaultChatCategoryName, newServer));
+        Category defaultVoiceCategory = categoryRepository.save(new Category(defaultVoiceCategoryName, newServer));
         channelService.createNewChannel(newServer.getId(), defaultChannelName, defaultChatCategory.getId(), ChannelType.CHAT.getCode());
         channelService.createNewChannel(newServer.getId(), defaultChannelName, defaultVoiceCategory.getId(), ChannelType.VOICE.getCode());
 
@@ -107,8 +103,8 @@ public class ServerService {
         Server server = serverRepository.findById(serverId).orElseThrow(() -> new DistoveException(SERVER_NOT_FOUND));
         List<Category> categories = categoryRepository.findCategoriesByServerId(serverId);
         List<Channel> channels = channelRepository.findChannelsByCategoryInAndChannelTypeIdEquals(categories, ChannelType.CHAT.getCode());
-        String channelIds = channels.stream().map(channel -> channel.getId()).collect(Collectors.toList()).toString().replace("[","").replace("]","");
-        chatClient.clearChatConnections(channelIds);
+        String channelIds = channels.stream().map(channel -> channel.getId()).collect(Collectors.toList()).toString().replace("[", "").replace("]", "");
+        chatClient.clearAll(channelIds);
         channelRepository.deleteAllByCategoryIn(categories);
         memberRepository.deleteAllByServerId(serverId);
         memberRoleRepository.deleteMemberRolesByServer(server);
@@ -121,6 +117,7 @@ public class ServerService {
         memberRoleRepository.saveAll(MemberRole.createDefaultRoles(newServer));
         MemberRole ownerRole = memberRoleRepository.findByRoleNameAndServerId(OWNER.getName(), newServer.getId())
                 .orElseThrow(() -> new DistoveException(ROLE_NOT_FOUND));
-        memberRepository.save(newMember(newServer, userId, ownerRole));
+        memberRepository.save(new Member(newServer, userId, ownerRole));
     }
+
 }

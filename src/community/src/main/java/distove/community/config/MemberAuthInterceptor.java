@@ -30,9 +30,7 @@ public class MemberAuthInterceptor implements HandlerInterceptor {
 
     @Override
     public boolean preHandle(HttpServletRequest request, HttpServletResponse response, Object handler) {
-        if(request.getMethod().equals("OPTIONS")) return true;
-
-        log.info("-----> AuthCheckInterceptor 진입");
+        if (request.getMethod().equals("OPTIONS")) return true;
 
         String token = request.getHeader("token");
         jwtProvider.validToken(token);
@@ -47,7 +45,6 @@ public class MemberAuthInterceptor implements HandlerInterceptor {
     }
 
     private void checkHasAuthorizedRole(HttpServletRequest request, Long userId, AuthorizedRole authorizedRole) {
-        log.info("-----> Authorized Role 체크");
         Member member;
         Auth auth = authorizedRole.name();
         switch (auth) {
@@ -73,14 +70,12 @@ public class MemberAuthInterceptor implements HandlerInterceptor {
     private Member getMemberByPath(HttpServletRequest request, Long userId) {
         Map pathVariables = (Map) request.getAttribute(HandlerMapping.URI_TEMPLATE_VARIABLES_ATTRIBUTE);
         String serverId = pathVariables.get("serverId").toString();
-        log.info("-----> Authorized Role 통과6");
         return memberRepository.findByUserIdAndServerId(userId, Long.valueOf(serverId))
                 .orElseThrow(() -> new DistoveException(MEMBER_NOT_FOUND));
     }
 
     private Member getMemberByQuery(HttpServletRequest request, Long userId) {
         String serverId = request.getParameter("serverId");
-        log.info("-----> Authorized Role 통과7");
         return memberRepository.findByUserIdAndServerId(userId, Long.valueOf(serverId))
                 .orElseThrow(() -> new DistoveException(MEMBER_NOT_FOUND));
     }

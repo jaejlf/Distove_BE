@@ -14,7 +14,7 @@ import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
 
 import static distove.community.config.AuthorizedRole.Auth.CAN_MANAGE_CHANNEL;
-import static distove.community.dto.response.ChannelResponse.newChannelResponse;
+import static distove.community.dto.response.ChannelResponse.of;
 
 @Slf4j
 @RestController
@@ -29,7 +29,7 @@ public class ChannelController {
                                                    @RequestBody ChannelCreateRequest channelCreateRequest) {
         Channel newChannel = channelService.createNewChannel(serverId, channelCreateRequest.getName(), channelCreateRequest.getCategoryId(), channelCreateRequest.getChannelTypeId());
         return ResultResponse.success(HttpStatus.OK, "채널 생성 성공",
-                newChannelResponse(newChannel.getId(), newChannel.getName(), newChannel.getChannelTypeId()));
+                of(newChannel.getId(), newChannel.getName(), newChannel.getChannelTypeId()));
     }
 
     @AuthorizedRole(name = CAN_MANAGE_CHANNEL)
@@ -48,4 +48,5 @@ public class ChannelController {
         channelService.deleteChannelById(channelId, serverId);
         return ResultResponse.success(HttpStatus.OK, "채널 삭제 성공", null);
     }
+
 }

@@ -20,8 +20,6 @@ public class AuthInterceptor implements HandlerInterceptor {
     public boolean preHandle(HttpServletRequest request, HttpServletResponse response, Object handler) {
         if(request.getMethod().equals("OPTIONS")) return true;
 
-        log.info("-----> AuthCheckInterceptor 진입");
-
         String token = request.getHeader("token");
         jwtProvider.validToken(token);
 

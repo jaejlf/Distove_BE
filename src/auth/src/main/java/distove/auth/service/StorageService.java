@@ -1,6 +1,5 @@
 package distove.auth.service;
 
-import com.amazonaws.AmazonServiceException;
 import com.amazonaws.services.s3.AmazonS3;
 import com.amazonaws.services.s3.model.CannedAccessControlList;
 import com.amazonaws.services.s3.model.ObjectMetadata;
@@ -31,7 +30,8 @@ public class StorageService {
     @Value("${cloud.aws.ceph.url}")
     private String url;
 
-    public String uploadToS3(MultipartFile multipartFile) {
+    public String upload(MultipartFile multipartFile) {
+        if (multipartFile.isEmpty()) return null;
 
         String originFileName = multipartFile.getOriginalFilename();
         String ext = originFileName.substring(originFileName.lastIndexOf('.'));
@@ -39,7 +39,7 @@ public class StorageService {
             return null;
         }
 
-        String fileName = String.valueOf(UUID.randomUUID()).replaceAll("-","");
+        String fileName = String.valueOf(UUID.randomUUID()).replaceAll("-", "");
         ObjectMetadata objectMetadata = new ObjectMetadata();
         objectMetadata.setContentType(multipartFile.getContentType());
 
@@ -54,12 +54,4 @@ public class StorageService {
         return url + fileName;
     }
 
-    public void deleteFile(String originImgUrl) {
-        if (originImgUrl == null) return;
-        try {
-            amazonS3Client.deleteObject(bucket, originImgUrl.split("/")[4]);
-        } catch (AmazonServiceException e) {
-            e.printStackTrace();
-        }
-    }
 }

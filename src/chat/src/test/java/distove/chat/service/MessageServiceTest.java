@@ -6,10 +6,8 @@ import distove.chat.dto.response.PagedMessageResponse;
 import distove.chat.dto.response.ReplyInfoResponse;
 import distove.chat.dto.response.TypedUserResponse;
 import distove.chat.entity.Connection;
-import distove.chat.entity.Member;
 import distove.chat.entity.Message;
 import distove.chat.exception.DistoveException;
-import net.bytebuddy.asm.Advice;
 import org.assertj.core.api.Assertions;
 import org.junit.jupiter.api.DisplayName;
 import org.junit.jupiter.api.Nested;
@@ -17,11 +15,7 @@ import org.junit.jupiter.api.Test;
 import org.springframework.beans.factory.annotation.Autowired;
 
 import java.time.LocalDateTime;
-import java.time.format.DateTimeFormatter;
-import java.util.List;
-import java.util.Objects;
 
-import static distove.chat.entity.Member.newMember;
 import static distove.chat.entity.Message.newMessage;
 import static distove.chat.enumerate.MessageType.IMAGE;
 import static distove.chat.enumerate.MessageType.MessageStatus.*;
@@ -52,7 +46,7 @@ class MessageServiceTest extends CommonServiceTest {
             );
 
             given(userClient.getUser(any())).willReturn(dummyUser);
-            given(communityClient.checkIsMember(any(), any())).willReturn(true);
+            given(communityClient.isMember(any(), any())).willReturn(true);
 
             // when
             MessageResponse result = messageService.publishMessage(userId, channelId, request);
@@ -86,7 +80,7 @@ class MessageServiceTest extends CommonServiceTest {
             );
 
             given(userClient.getUser(any())).willReturn(dummyUser);
-            given(communityClient.checkIsMember(any(), any())).willReturn(true);
+            given(communityClient.isMember(any(), any())).willReturn(true);
 
             // when & then
             assertThatThrownBy(() -> messageService.publishMessage(userId, channelId, request))
@@ -105,7 +99,7 @@ class MessageServiceTest extends CommonServiceTest {
             );
 
             given(userClient.getUser(any())).willReturn(dummyUser);
-            given(communityClient.checkIsMember(any(), any())).willReturn(true);
+            given(communityClient.isMember(any(), any())).willReturn(true);
 
             // when & then
             assertThatThrownBy(() -> messageService.publishMessage(userId, channelId, request))
@@ -151,7 +145,7 @@ class MessageServiceTest extends CommonServiceTest {
                     newMessage(channelId, userId, TEXT, CREATED, "{{MESSAGE CONTENT}}"));
 
             given(userClient.getUser(any())).willReturn(dummyUser);
-            given(communityClient.checkIsMember(any(), any())).willReturn(true);
+            given(communityClient.isMember(any(), any())).willReturn(true);
 
             // when
             PagedMessageResponse result = messageService.getMessagesByChannelId(userId, channelId, null, null);
@@ -181,7 +175,7 @@ class MessageServiceTest extends CommonServiceTest {
             Long channelId = 99L;
 
             given(userClient.getUser(any())).willReturn(dummyUser);
-            given(communityClient.checkIsMember(any(), any())).willReturn(true);
+            given(communityClient.isMember(any(), any())).willReturn(true);
 
             // when & then
             assertThatThrownBy(() -> messageService.getMessagesByChannelId(userId, channelId, null, null))
@@ -260,7 +254,7 @@ class MessageServiceTest extends CommonServiceTest {
                     TEXT, CREATED, null, "{{MESSAGE CONTENT}}", null, null);
 
             given(userClient.getUser(any())).willReturn(dummyUser);
-            given(communityClient.checkIsMember(any(), any())).willReturn(true);
+            given(communityClient.isMember(any(), any())).willReturn(true);
             messageService.publishMessage(userId, channelId, request);
 
             // given

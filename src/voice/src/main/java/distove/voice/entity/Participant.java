@@ -1,7 +1,6 @@
 package distove.voice.entity;
 
 import com.fasterxml.jackson.annotation.JsonIgnore;
-import lombok.Builder;
 import lombok.Getter;
 import org.kurento.client.WebRtcEndpoint;
 import org.springframework.web.socket.WebSocketSession;
@@ -10,30 +9,37 @@ import java.util.concurrent.ConcurrentHashMap;
 import java.util.concurrent.ConcurrentMap;
 
 @Getter
-@Builder
 public class Participant implements Cloneable {
 
     private final Long userId;
+
     @JsonIgnore
-    private final Room room;
+    private final VoiceRoom voiceRoom;
+
     private final WebRtcEndpoint mediaEndpoint;
     private final WebSocketSession webSocketSession;
-    private VideoInfo videoInfo;
+    private VideoSetting videoSetting;
     private final ConcurrentMap<Long, IncomingParticipant> incomingParticipants = new ConcurrentHashMap<>();
 
-    public static Participant of(Long userId, Room room, WebRtcEndpoint mediaEndpoint, WebSocketSession webSocketSession,VideoInfo videoInfo) {
-        return Participant.builder()
-                .userId(userId)
-                .room(room)
-                .mediaEndpoint(mediaEndpoint)
-                .webSocketSession(webSocketSession)
-                .videoInfo(videoInfo)
-                .build();
-
-    }
-    public void updateVideoInfoOfParticipant (VideoInfo videoInfo){
-        this.videoInfo = videoInfo;
+    public Participant(Long userId, VoiceRoom voiceRoom, WebRtcEndpoint mediaEndpoint, WebSocketSession webSocketSession, VideoSetting videoSetting) {
+        this.userId = userId;
+        this.voiceRoom = voiceRoom;
+        this.mediaEndpoint = mediaEndpoint;
+        this.webSocketSession = webSocketSession;
+        this.videoSetting = videoSetting;
     }
 
+    public void updateVideoInfo(VideoSetting videoSetting) {
+        this.videoSetting = videoSetting;
+    }
+
+    @Override
+    public Participant clone() {
+        try {
+            return (Participant) super.clone();
+        } catch (CloneNotSupportedException e) {
+            throw new AssertionError();
+        }
+    }
 
 }

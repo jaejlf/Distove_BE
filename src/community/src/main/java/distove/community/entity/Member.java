@@ -6,10 +6,9 @@ import javax.persistence.*;
 
 @Getter
 @Entity
-@Builder
 @NoArgsConstructor
-@AllArgsConstructor
 public class Member {
+
     @Id
     @GeneratedValue(strategy = GenerationType.IDENTITY)
     private Long id;
@@ -27,12 +26,10 @@ public class Member {
     @Version
     private Long version;
 
-    public static Member newMember(Server server, Long userId, MemberRole role) {
-        return Member.builder()
-                .server(server)
-                .userId(userId)
-                .role(role)
-                .build();
+    public Member(Server server, Long userId, MemberRole role) {
+        this.server = server;
+        this.userId = userId;
+        this.role = role;
     }
 
     public void updateRole(MemberRole role) {

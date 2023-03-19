@@ -4,9 +4,9 @@ import distove.chat.entity.Connection;
 import distove.chat.entity.Member;
 import distove.chat.repository.ConnectionRepository;
 import distove.chat.repository.MessageRepository;
-import distove.chat.web.CommunityClient;
-import distove.chat.web.UserClient;
-import distove.chat.web.UserResponse;
+import distove.chat.client.CommunityClient;
+import distove.chat.client.UserClient;
+import distove.chat.client.dto.UserResponse;
 import org.assertj.core.api.Assertions;
 import org.junit.jupiter.api.AfterEach;
 import org.junit.jupiter.api.BeforeEach;
@@ -17,7 +17,6 @@ import org.springframework.boot.test.mock.mockito.MockBean;
 
 import java.time.format.DateTimeFormatter;
 import java.util.ArrayList;
-import java.util.Date;
 import java.util.List;
 
 import static distove.chat.entity.Connection.newConnection;

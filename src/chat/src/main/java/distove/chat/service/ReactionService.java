@@ -1,5 +1,7 @@
 package distove.chat.service;
 
+import distove.chat.client.UserClient;
+import distove.chat.client.dto.UserResponse;
 import distove.chat.dto.request.ReactionRequest;
 import distove.chat.dto.response.ReactionMessageResponse;
 import distove.chat.dto.response.ReactionResponse;
@@ -7,8 +9,6 @@ import distove.chat.entity.Message;
 import distove.chat.entity.Reaction;
 import distove.chat.exception.DistoveException;
 import distove.chat.repository.MessageRepository;
-import distove.chat.web.UserClient;
-import distove.chat.web.UserResponse;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.stereotype.Service;
@@ -17,9 +17,7 @@ import org.springframework.transaction.annotation.Transactional;
 import java.util.*;
 import java.util.stream.Collectors;
 
-import static distove.chat.dto.response.ReactionMessageResponse.newReactionMessageResponse;
-import static distove.chat.dto.response.ReactionResponse.newReactionResponse;
-import static distove.chat.entity.Reaction.newReaction;
+import static distove.chat.dto.response.ReactionMessageResponse.of;
 import static distove.chat.exception.ErrorCode.MESSAGE_NOT_FOUND;
 
 @Service
@@ -55,13 +53,13 @@ public class ReactionService {
             }
         }
         if (!isReacted) {
-            Reaction createdNewReaction = newReaction(reactionRequest.getEmoji(), List.of(userId));
+            Reaction createdNewReaction = new Reaction(reactionRequest.getEmoji(), List.of(userId));
             reactions.add(createdNewReaction);
         }
         message.updateReaction(reactions);
         messageRepository.save(message);
 
-        return newReactionMessageResponse(reactionRequest.getMessageId(), getReactionResponses(reactions, userIds));
+        return of(reactionRequest.getMessageId(), getReactionResponses(reactions, userIds));
     }
 
     public List<ReactionResponse> getUserInfoOfReactions(List<Reaction> reactions) {
@@ -76,7 +74,7 @@ public class ReactionService {
         List<UserResponse> users = userClient.getUsers(userIds.toString().replace("[", "").replace("]", ""));
         Map<Long, UserResponse> userResponseMap = users.stream().collect(Collectors.toMap(UserResponse::getId, u -> u));
         return reactions.stream()
-                .map(reaction -> newReactionResponse(
+                .map(reaction -> ReactionResponse.of(
                         reaction.getEmoji(),
                         reaction.getUserIds().stream()
                                 .map(userResponseMap::get)

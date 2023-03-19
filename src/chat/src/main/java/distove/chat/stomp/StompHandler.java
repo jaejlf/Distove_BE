@@ -1,7 +1,7 @@
 package distove.chat.stomp;
 
-import distove.chat.enumerate.ServiceInfoType;
-import distove.chat.web.PresenceClient;
+import distove.chat.enumerate.PresenceType;
+import distove.chat.client.PresenceClient;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.messaging.Message;
@@ -24,7 +24,7 @@ public class StompHandler implements ChannelInterceptor {
 
         if (StompCommand.SEND.equals(accessor.getCommand())) {
             Long userId = Long.valueOf(accessor.getNativeHeader("userId").get(0).toString());
-            presenceClient.updateUserPresence(userId, ServiceInfoType.CHAT.getType());
+            presenceClient.updateUserPresence(userId, PresenceType.CHAT.getType());
         }
         return message;
     }

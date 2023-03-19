@@ -4,3 +4,5 @@
 .gitlab-ci.yml
 Dockerfile
 application.yml
+
+**/web/

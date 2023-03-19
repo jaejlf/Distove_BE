@@ -82,5 +82,4 @@ public interface CustomMessageRepository {
             "{ '$limit' : 1 }"})
     Message findFirstUnreadMessage(Long channelId, LocalDateTime latestConnectedAt);
 
-
 }

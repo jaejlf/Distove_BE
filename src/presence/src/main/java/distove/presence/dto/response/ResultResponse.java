@@ -27,6 +27,7 @@ public class ResultResponse<T> {
                         .data(data)
                         .build());
     }
+
     public static ResponseEntity<Object> fail(HttpStatus httpStatus, String code, String message) {
         return ResponseEntity
                 .status(httpStatus)

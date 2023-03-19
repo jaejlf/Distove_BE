@@ -7,6 +7,7 @@ import lombok.Getter;
 @Getter
 @Builder
 public class SendNewUserConnectionEvent implements Event {
+
     private Long userId;
     private PresenceType presenceType;
 
@@ -16,4 +17,5 @@ public class SendNewUserConnectionEvent implements Event {
                 .presenceType(presenceType)
                 .build();
     }
+
 }

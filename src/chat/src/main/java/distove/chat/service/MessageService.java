@@ -1,5 +1,8 @@
 package distove.chat.service;
 
+import distove.chat.client.CommunityClient;
+import distove.chat.client.UserClient;
+import distove.chat.client.dto.UserResponse;
 import distove.chat.dto.request.FileUploadRequest;
 import distove.chat.dto.request.MessageRequest;
 import distove.chat.dto.response.*;
@@ -10,22 +13,15 @@ import distove.chat.enumerate.MessageType;
 import distove.chat.exception.DistoveException;
 import distove.chat.repository.ConnectionRepository;
 import distove.chat.repository.MessageRepository;
-import distove.chat.web.CommunityClient;
-import distove.chat.web.UserClient;
-import distove.chat.web.UserResponse;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.beans.factory.annotation.Value;
-import org.springframework.data.mongodb.core.MongoTemplate;
-import org.springframework.data.mongodb.core.query.Criteria;
-import org.springframework.data.mongodb.core.query.Query;
 import org.springframework.stereotype.Service;
 
 import java.util.*;
 import java.util.stream.Collectors;
 
 import static distove.chat.dto.response.PagedMessageResponse.UnreadInfo;
-import static distove.chat.entity.Member.newMember;
 import static distove.chat.entity.Message.newMessage;
 import static distove.chat.entity.Message.newReply;
 import static distove.chat.enumerate.MessageType.MessageStatus.*;
@@ -47,11 +43,10 @@ public class MessageService {
     private final ReactionService reactionService;
     private final UserClient userClient;
     private final CommunityClient communityClient;
-    private final MongoTemplate mongoTemplate;
 
     public MessageResponse publishMessage(Long userId, Long channelId, MessageRequest request) {
-        if (!communityClient.checkIsMember(channelId, userId)) throw new DistoveException(USER_NOT_FOUND);
-        checkStatusCanChanged(request.getType(), request.getStatus());
+        if (!communityClient.isMember(channelId, userId)) throw new DistoveException(USER_NOT_FOUND_ERROR);
+        validateTypeAndStatus(request.getType(), request.getStatus());
 
         Message message;
         switch (request.getStatus()) {
@@ -62,7 +57,7 @@ public class MessageService {
                 message = modifyMessage(request.getMessageId(), request.getContent(), userId);
                 break;
             case DELETED:
-                message = deleteMessage(request.getMessageId(), userId);
+                message = deleteByChannelId(request.getMessageId(), userId);
                 messageRepository.deleteById(message.getId());
                 break;
             default:
@@ -94,7 +89,7 @@ public class MessageService {
     }
 
     public PagedMessageResponse getMessagesByChannelId(Long userId, Long channelId, Integer scroll, String cursorId) {
-        if (!communityClient.checkIsMember(channelId, userId)) throw new DistoveException(USER_NOT_FOUND);
+        if (!communityClient.isMember(channelId, userId)) throw new DistoveException(USER_NOT_FOUND_ERROR);
         Connection connection = checkChannelExist(channelId);
         List<Member> members = connection.getMembers();
         Member member = members.stream()
@@ -146,14 +141,8 @@ public class MessageService {
         return PagedMessageResponse.ofChild(replyInfo, convertMessagesToDto(userId, messages));
     }
 
-    public void clear(Long channelId) {
+    public void deleteByChannelId(Long channelId) {
         messageRepository.deleteAllByChannelId(channelId);
-    }
-
-    public void clearAll(List<Long> channelIds) {
-        for (Long channelId : channelIds) {
-            messageRepository.deleteAllByChannelId(channelId);
-        }
     }
 
     public void unsubscribeChannel(Long userId, Long channelId) {
@@ -161,7 +150,7 @@ public class MessageService {
         List<Member> members = connection.getMembers();
         Member member = members.stream()
                 .filter(x -> x.getUserId().equals(userId)).findFirst()
-                .orElseThrow(() -> new DistoveException(USER_NOT_FOUND));
+                .orElseThrow(() -> new DistoveException(USER_NOT_FOUND_ERROR));
 
         if (getUnreadInfo(channelId, member) == null) updateLastReadAt(userId, connection, members);
     }
@@ -192,7 +181,7 @@ public class MessageService {
         return messageRepository.save(origin);
     }
 
-    private Message deleteMessage(String messageId, Long userId) {
+    private Message deleteByChannelId(String messageId, Long userId) {
         Message origin = getMessage(messageId);
         checkAuthorization(userId, origin);
         deleteAssociatedData(origin);
@@ -217,7 +206,7 @@ public class MessageService {
     }
 
     private static void checkAuthorization(Long userId, Message message) {
-        if (!Objects.equals(message.getUserId(), userId)) throw new DistoveException(NO_AUTH);
+        if (!Objects.equals(message.getUserId(), userId)) throw new DistoveException(NO_AUTH_ERROR);
     }
 
     private void deleteAssociatedData(Message origin) {
@@ -242,7 +231,7 @@ public class MessageService {
     }
 
     private Member addUserToConnection(Long userId, Connection connection, List<Member> members) {
-        Member member = newMember(userId);
+        Member member = new Member(userId);
         members.add(member);
         connection.updateMembers(members);
         connectionRepository.save(connection);
@@ -251,7 +240,7 @@ public class MessageService {
 
     private Connection checkChannelExist(Long channelId) {
         return connectionRepository.findByChannelId(channelId)
-                .orElseThrow(() -> new DistoveException(CHANNEL_NOT_FOUND));
+                .orElseThrow(() -> new DistoveException(CHANNEL_NOT_FOUND_ERROR));
     }
 
     private UnreadInfo getUnreadInfo(Long channelId, Member member) {
@@ -283,7 +272,7 @@ public class MessageService {
     }
 
     private void updateLastReadAt(Long userId, Connection connection, List<Member> members) {
-        members.replaceAll(x -> Objects.equals(x.getUserId(), userId) ? newMember(userId) : x);
+        members.replaceAll(x -> Objects.equals(x.getUserId(), userId) ? new Member(userId) : x);
         connection.updateMembers(members);
         connectionRepository.save(connection);
     }
@@ -323,47 +312,4 @@ public class MessageService {
         return cursorIdInfo;
     }
 
-    public List<MessageResponse> searchMessages(Long channelId, String content, String nickname) {
-
-        List<Message> messages = searchMessagesByFilter(channelId, nickname, content);
-
-        return messages.stream().map(message -> MessageResponse.ofSearching(message, userClient.getUser(message.getUserId()))).collect(Collectors.toList());
-    }
-
-    public List<Message> searchMessagesByFilter(Long channelId, String nickname, String content) {
-        if (nickname == null && content == null) {
-            throw new DistoveException(MISSING_SEARCH_PARAMETER);
-        }
-
-        List<Message> result = new ArrayList<>();
-        List<Long> senderIds = new ArrayList<>();
-
-        if (nickname != null && !nickname.isEmpty()) {
-            List<Long> userIds = userClient.getUserByNickname(nickname);
-            if (userIds != null && !userIds.isEmpty()) {
-                senderIds.addAll(userIds);
-            } else {
-                return result;
-            }
-        }
-
-        Criteria criteria = new Criteria();
-
-        if (channelId != null) {
-            criteria.and("channelId").is(channelId);
-        }
-
-        if (!senderIds.isEmpty()) {
-            criteria.and("userId").in(senderIds);
-        }
-
-        if (content != null) {
-            criteria.and("content").regex(".*" + content + ".*");
-        }
-
-        Query query = new Query(criteria);
-
-        result = mongoTemplate.find(query, Message.class);
-        return result;
-    }
 }

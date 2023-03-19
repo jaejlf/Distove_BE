@@ -20,10 +20,8 @@ import org.springframework.messaging.handler.annotation.Payload;
 import org.springframework.messaging.simp.SimpMessagingTemplate;
 import org.springframework.web.bind.annotation.*;
 
-import java.util.List;
-
-@RequiredArgsConstructor
 @RestController
+@RequiredArgsConstructor
 public class MessageController {
 
     private final SimpMessagingTemplate simpMessagingTemplate;
@@ -76,15 +74,6 @@ public class MessageController {
                                                         @PathVariable Long channelId) {
         messageService.readAllUnreadMessages(userId, channelId);
         return ResultResponse.success(HttpStatus.OK, "안읽메 모두 읽음", null);
-    }
-
-    @GetMapping("/searching/{channelId}")
-    private ResponseEntity<Object> searchMessages(@PathVariable Long channelId,
-                                                @RequestParam (required = false) String content,
-                                                @RequestParam (required = false) String nickname) {
-        List<MessageResponse> messages = messageService.searchMessages(channelId, content, nickname);
-
-        return ResultResponse.success(HttpStatus.OK, "메시지 검색", messages);
     }
 
 }

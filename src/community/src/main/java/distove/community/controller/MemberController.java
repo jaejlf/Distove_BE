@@ -58,8 +58,9 @@ public class MemberController {
 
     @PostMapping("/server/join/{inviteCode}")
     public ResponseEntity<Object> joinServerByInviteCode(@RequestUser Long userId,
-                                                     @PathVariable String inviteCode){
+                                                         @PathVariable String inviteCode) {
         Server server = invitationService.joinServerByInviteCode(userId, inviteCode);
         return ResultResponse.success(HttpStatus.OK, "서버 가입 성공", server);
     }
+
 }

@@ -1,5 +1,6 @@
 package distove.auth.dto.response;
 
+import distove.auth.entity.User;
 import lombok.Builder;
 import lombok.Getter;
 
@@ -11,11 +12,12 @@ public class UserResponse {
     private String nickname;
     private String profileImgUrl;
 
-    public static UserResponse of(Long id, String nickname, String profileImgUrl) {
+    public static UserResponse of(User user) {
         return UserResponse.builder()
-                .id(id)
-                .nickname(nickname)
-                .profileImgUrl(profileImgUrl)
+                .id(user.getId())
+                .nickname(user.getNickname())
+                .profileImgUrl(user.getProfileImgUrl())
                 .build();
     }
+
 }

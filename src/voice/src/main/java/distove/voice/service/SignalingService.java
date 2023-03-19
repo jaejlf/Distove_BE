@@ -1,24 +1,16 @@
 package distove.voice.service;
 
-
 import com.fasterxml.jackson.databind.ObjectMapper;
-import distove.voice.dto.response.UpdatedVideoInfoResponse;
-import distove.voice.dto.response.UserVideoResponse;
+import distove.voice.client.UserClient;
+import distove.voice.client.dto.UserResponse;
+import distove.voice.dto.response.*;
 import distove.voice.entity.IncomingParticipant;
 import distove.voice.entity.Participant;
-import distove.voice.entity.Room;
-import distove.voice.entity.VideoInfo;
-import distove.voice.enumerate.ServiceInfoType;
-import distove.voice.exception.DistoveException;
-import distove.voice.repository.ParticipantRepository;
-import distove.voice.repository.RoomRepository;
-import distove.voice.web.PresenceClient;
-import distove.voice.web.UserClient;
-import distove.voice.web.UserResponse;
+import distove.voice.entity.VideoSetting;
+import distove.voice.entity.VoiceRoom;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.kurento.client.IceCandidate;
-import org.kurento.client.KurentoClient;
 import org.kurento.client.WebRtcEndpoint;
 import org.springframework.stereotype.Service;
 import org.springframework.web.socket.TextMessage;
@@ -30,116 +22,154 @@ import java.util.List;
 import java.util.Map;
 import java.util.stream.Collectors;
 
-import static distove.voice.dto.response.ExistingParticipantsResponse.newExistingParticipantsResponse;
-import static distove.voice.dto.response.IceCandidateResponse.newIceCandidateResponse;
-import static distove.voice.dto.response.LeftRoomResponse.newLeftRoomResponse;
-import static distove.voice.dto.response.NewParticipantArrivedResponse.newNewParticipantArrivedResponse;
-import static distove.voice.dto.response.SdpAnswerResponse.newSdpAnswerResponse;
-import static distove.voice.entity.IncomingParticipant.newIncomingParticipant;
-import static distove.voice.exception.ErrorCode.PARTICIPANT_NOT_FOUND;
-import static distove.voice.exception.ErrorCode.ROOM_NOT_FOUND;
-
-@Slf4j
 @Service
+@Slf4j
 @RequiredArgsConstructor
 public class SignalingService {
-    private final KurentoClient kurentoClient;
+
     private final UserClient userClient;
-    private final RoomRepository roomRepository;
-    private final ParticipantRepository participantRepository;
-    private final PresenceClient presenceClient;
+    private final VoiceRoomService voiceRoomService;
+    private final ParticipantService participantService;
 
-
-    public <T> TextMessage toJson(T object) throws IOException {
-        ObjectMapper mapper = new ObjectMapper();
-        String jsonInString = mapper.writeValueAsString(object);
-        return new TextMessage(jsonInString);
-    }
-
-    public void joinRoom(Long userId, Long channelId, WebSocketSession webSocketSession, Boolean isCameraOn, Boolean isMicOn) throws IOException {
-        Room room = getRoomByChannelId(channelId);
-        VideoInfo videoInfo = VideoInfo.of(isCameraOn, isMicOn);
-        WebRtcEndpoint outgoingMediaEndpoint = new WebRtcEndpoint.Builder(room.getPipeline()).build();
+    public void joinRoom(Long userId, Long channelId, WebSocketSession webSocketSession) throws IOException {
+        VoiceRoom voiceRoom = voiceRoomService.getByChannelId(channelId);
+        WebRtcEndpoint outgoingMediaEndpoint = new WebRtcEndpoint.Builder(voiceRoom.getPipeline()).build();
         outgoingMediaEndpoint.addIceCandidateFoundListener(event -> {
-            if(event.getCandidate().getCandidate().contains("UDP")&&event.getCandidate().getCandidate().contains("host")){
+            String candidate = event.getCandidate().getCandidate();
+            if (candidate.contains("UDP") && candidate.contains("host")) {
                 try {
                     synchronized (webSocketSession) {
-                        webSocketSession.sendMessage(toJson(newIceCandidateResponse(userId, event.getCandidate())));
+                        IceCandidateResponse iceCandidateResponse = IceCandidateResponse.of(userId, event.getCandidate());
+                        sendMessage(webSocketSession, iceCandidateResponse);
                     }
                 } catch (IOException e) {
                     log.debug(e.getMessage());
                 }
             }
-
         });
-        presenceClient.updateUserPresence(userId, ServiceInfoType.VOICE_ON.getType());
-        Participant participant = Participant.of(userId, room, outgoingMediaEndpoint, webSocketSession, videoInfo);
-        List<Participant> participants = participantRepository.findParticipantsByChannelId(room.getChannelId());
-        List<UserResponse> userResponses = userClient.getUsers(participants.stream().map(x->x.getUserId()).collect(Collectors.toList()).toString().replace("[","").replace("]",""));
-        Map<Long,UserResponse> userResponsesMap = userResponses.stream().collect(Collectors.toMap(u->u.getId(), u->u));
 
-        UserResponse user = userClient.getUser(participant.getUserId());
+        VideoSetting videoSetting = new VideoSetting(false, false);
+        Participant me = new Participant(userId, voiceRoom, outgoingMediaEndpoint, webSocketSession, videoSetting);
+        participantService.add(me);
 
-        participantRepository.insert(participant);
-        List<UserVideoResponse> users = new ArrayList<>();
+        List<Participant> participants = participantService.findAllByChannelId(voiceRoom.getChannelId());
+        List<UserResponse> userResponses = getUsersByClient(participants);
+        Map<Long, UserResponse> userResponsesMap = userResponses.stream().collect(Collectors.toMap(UserResponse::getId, x -> x));
 
-        for (Participant otherParticipant : participants) {
-            if (!otherParticipant.equals(participant)) {
-                otherParticipant.getWebSocketSession().sendMessage(toJson(newNewParticipantArrivedResponse(UserVideoResponse.of(user.getId(),user.getNickname(),user.getProfileImgUrl(),videoInfo))));
+        UserResponse user = userClient.getUser(me.getUserId());
+        List<ParticipantResponse> participantResponses = new ArrayList<>();
+        for (Participant participant : participants) {
+            if (!participant.equals(me)) {
+                ParticipantJoinedResponse participantJoinedResponse = ParticipantJoinedResponse.of(user, videoSetting);
+                sendMessage(participant.getWebSocketSession(), participantJoinedResponse);
 
-                UserResponse otherParticipantUserResponse = userResponsesMap.get(otherParticipant.getUserId());
-                users.add(UserVideoResponse.of(
-                        otherParticipant.getUserId(),
-                        otherParticipantUserResponse.getNickname(),
-                        otherParticipantUserResponse.getProfileImgUrl(),
-                        otherParticipant.getVideoInfo()));
+                UserResponse otherParticipant = userResponsesMap.get(participant.getUserId());
+                participantResponses.add(ParticipantResponse.of(otherParticipant, participant.getVideoSetting()));
             }
         }
-
-        participant.getWebSocketSession().sendMessage(toJson(newExistingParticipantsResponse(users)));
+        sendMessage(me.getWebSocketSession(), ExistingParticipantsResponse.of(participantResponses));
     }
 
-    public Room getRoomByChannelId(Long channelId) {
-        Room room = roomRepository.findRoomByChannelId(channelId).orElseGet(() -> createNewRoomByChannelId(channelId));
-        return room;
-    }
+    public void leaveRoom(WebSocketSession webSocketSession) throws IOException {
+        Participant me = participantService.findByWebSocketSession(webSocketSession);
+        me.getMediaEndpoint().release();
 
-    public Room createNewRoomByChannelId(Long channelId) {
-        Room room = roomRepository.save(new Room(channelId, kurentoClient.createMediaPipeline()));
-        return room;
-    }
+        VoiceRoom voiceRoom = voiceRoomService.findByParticipant(me);
+        Long userId = me.getUserId();
 
+        List<Participant> participants = participantService.findAllByChannelId(voiceRoom.getChannelId());
+        if (!participants.isEmpty()) {
+            for (Participant participant : participants) {
+                sendMessage(participant.getWebSocketSession(), ParticipantLeftResponse.of(userId));
+                if (participant.getIncomingParticipants().containsKey(userId)) {
+                    participant.getIncomingParticipants().get(userId).getMediaEndpoint().release();
+                    participant.getIncomingParticipants().remove(userId);
+                }
+            }
+        } else {
+            voiceRoomService.close(voiceRoom);
+        }
+        participantService.delete(me);
+    }
 
     public void sdpOffer(WebSocketSession webSocketSession, Long senderUserId, String sdpOffer) throws IOException {
+        Participant me = participantService.findByWebSocketSession(webSocketSession);
+        Participant sender = participantService.findByUserId(senderUserId);
 
-        Participant participant = participantRepository.findParticipantByWebSocketSession(webSocketSession)
-                .orElseThrow(() -> new DistoveException(PARTICIPANT_NOT_FOUND));
-        Participant sender = participantRepository.findParticipantByUserId(senderUserId)
-                .orElseThrow(() -> new DistoveException(PARTICIPANT_NOT_FOUND));
+        WebRtcEndpoint incomingMediaEndpointFromYou = getIncomingMediaEndpointFromYou(me, sender);
+        me.getIncomingParticipants().put(senderUserId, new IncomingParticipant(senderUserId, incomingMediaEndpointFromYou));
 
-        WebRtcEndpoint incomingMediaEndpointFromYou = getIncomingMediaEndpointFromYou(participant, sender);
-        participant.getIncomingParticipants()
-                .put(senderUserId, newIncomingParticipant(senderUserId, incomingMediaEndpointFromYou));
-        webSocketSession.sendMessage(toJson(newSdpAnswerResponse(senderUserId, incomingMediaEndpointFromYou.processOffer(sdpOffer))));
+        SdpAnswerResponse sdpAnswerResponse = SdpAnswerResponse.of(senderUserId, incomingMediaEndpointFromYou.processOffer(sdpOffer));
+        sendMessage(webSocketSession, sdpAnswerResponse);
+
         incomingMediaEndpointFromYou.gatherCandidates();
-        participantRepository.save(participant.getUserId(), participant);
+        participantService.save(me);
+    }
+
+    public void sendIceCandidate(WebSocketSession webSocketSession, Long senderUserId, IceCandidate iceCandidateInfo) {
+        String candidate = iceCandidateInfo.getCandidate();
+        if (candidate.contains("UDP") && candidate.contains("host")) {
+            Participant me = participantService.findByWebSocketSession(webSocketSession);
+            if (me.getUserId().equals(senderUserId)) {
+                me.getMediaEndpoint().addIceCandidate(iceCandidateInfo);
+            } else {
+                me.getIncomingParticipants().get(senderUserId).getMediaEndpoint().addIceCandidate(iceCandidateInfo);
+            }
+        }
+    }
+
+    public void updateSetting(WebSocketSession webSocketSession, Boolean isCameraOn, Boolean isMicOn) throws IOException {
+        Participant me = participantService.findByWebSocketSession(webSocketSession);
+        List<Participant> participants = participantService.findAllByChannelId(me.getVoiceRoom().getChannelId());
+        me.updateVideoInfo(new VideoSetting(isCameraOn, isMicOn));
+        for (Participant participant : participants) {
+            if (!participant.equals(me)) {
+                UpdateSettingResponse updateSettingResponse = UpdateSettingResponse.of(me.getUserId(), new VideoSetting(isCameraOn, isMicOn));
+                sendMessage(participant.getWebSocketSession(), updateSettingResponse);
+            }
+        }
+    }
+
+    public void preDestroy() {
+        List<Participant> participants = participantService.findAll();
+        List<VoiceRoom> voiceRooms = voiceRoomService.findAll();
+
+        for (Participant participant : participants) {
+            participant.getMediaEndpoint().release();
+            for (IncomingParticipant incomingParticipant : participant.getIncomingParticipants().values()) {
+                incomingParticipant.getMediaEndpoint().release();
+            }
+        }
+        for (VoiceRoom voiceRoom : voiceRooms) {
+            voiceRoom.getPipeline().release();
+        }
+        participantService.deleteAll();
+        voiceRoomService.deleteAll();
+    }
+
+    private <T> void sendMessage(WebSocketSession webSocketSession, T object) throws IOException {
+        ObjectMapper mapper = new ObjectMapper();
+        String jsonInString = mapper.writeValueAsString(object);
+        webSocketSession.sendMessage(new TextMessage(jsonInString));
+    }
+
+    private List<UserResponse> getUsersByClient(List<Participant> participants) {
+        List<Long> userIds = participants.stream().map(Participant::getUserId).collect(Collectors.toList());
+        return userClient.getUsers(userIds.toString().replace("[", "").replace("]", ""));
     }
 
     private WebRtcEndpoint getIncomingMediaEndpointFromYou(Participant participant, Participant sender) {
-        if (participant.getUserId().equals(sender.getUserId())) {
-            return participant.getMediaEndpoint();
-        }
+        if (participant.getUserId().equals(sender.getUserId())) return participant.getMediaEndpoint();
 
         IncomingParticipant incomingParticipant = participant.getIncomingParticipants().get(sender.getUserId());
         if (incomingParticipant == null) {
-            WebRtcEndpoint incomingMediaEndpoint = new WebRtcEndpoint.Builder(participant.getRoom()
-                    .getPipeline()).build();
+            WebRtcEndpoint incomingMediaEndpoint = new WebRtcEndpoint.Builder(participant.getVoiceRoom().getPipeline()).build();
             incomingMediaEndpoint.addIceCandidateFoundListener(event -> {
-                if(event.getCandidate().getCandidate().contains("UDP")&&event.getCandidate().getCandidate().contains("host")){
+                if (event.getCandidate().getCandidate().contains("UDP") && event.getCandidate().getCandidate().contains("host")) {
                     try {
                         synchronized (participant.getWebSocketSession()) {
-                            participant.getWebSocketSession()
-                                    .sendMessage(toJson(newIceCandidateResponse(sender.getUserId(), event.getCandidate())));
+                            IceCandidateResponse iceCandidateResponse = IceCandidateResponse.of(sender.getUserId(), event.getCandidate());
+                            sendMessage(participant.getWebSocketSession(), iceCandidateResponse);
                         }
                     } catch (IOException e) {
                         log.debug(e.getMessage());
@@ -147,7 +177,7 @@ public class SignalingService {
                 }
 
             });
-            incomingParticipant = newIncomingParticipant(sender.getUserId(), incomingMediaEndpoint);
+            incomingParticipant = new IncomingParticipant(sender.getUserId(), incomingMediaEndpoint);
         }
 
         sender.getMediaEndpoint().connect(incomingParticipant.getMediaEndpoint());
@@ -156,84 +186,4 @@ public class SignalingService {
         return incomingParticipant.getMediaEndpoint();
     }
 
-
-    public void leaveRoom(WebSocketSession webSocketSession) throws IOException {
-        Participant participant = participantRepository.findParticipantByWebSocketSession(webSocketSession)
-                .orElseThrow(() -> new DistoveException(PARTICIPANT_NOT_FOUND));
-        participant.getMediaEndpoint().release();
-        Room room = roomRepository.findRoomByChannelId(participant.getRoom().getChannelId())
-                .orElseThrow(() -> new DistoveException(ROOM_NOT_FOUND));
-        presenceClient.updateUserPresence(participant.getUserId(), ServiceInfoType.VOICE_OFF.getType());
-
-        List<Participant> participants = participantRepository.findParticipantsByChannelId(room.getChannelId());
-
-        if (!participants.isEmpty()) {
-            for (Participant otherParticipant : participants) {
-                otherParticipant.getWebSocketSession()
-                        .sendMessage(toJson(newLeftRoomResponse(participant.getUserId())));
-                if (otherParticipant.getIncomingParticipants().containsKey(participant.getUserId())) {
-                    otherParticipant.getIncomingParticipants().get(participant.getUserId()).getMediaEndpoint()
-                            .release();
-                    otherParticipant.getIncomingParticipants().remove(participant.getUserId());
-                }
-            }
-        } else {
-            closeRoom(room);
-        }
-        participantRepository.deleteParticipant(participant);
-
-
-    }
-
-    public void closeRoom(Room room) {
-        room.getPipeline().release();
-        roomRepository.deleteByChannelId(room.getChannelId());
-    }
-
-    public void addIceCandidate(WebSocketSession webSocketSession, Long senderUserId, IceCandidate iceCandidateInfo) {
-        if(iceCandidateInfo.getCandidate().contains("udp")&& iceCandidateInfo.getCandidate().contains("host")){
-            Participant participant = participantRepository.findParticipantByWebSocketSession(webSocketSession)
-                    .orElseThrow(() -> new DistoveException(PARTICIPANT_NOT_FOUND));
-            Participant sender = participantRepository.findParticipantByUserId(senderUserId)
-                    .orElseThrow(() -> new DistoveException(PARTICIPANT_NOT_FOUND));
-            if (participant.getUserId().equals(senderUserId)) {
-                participant.getMediaEndpoint().addIceCandidate(iceCandidateInfo);
-            } else {
-                participant.getIncomingParticipants().get(senderUserId).getMediaEndpoint()
-                        .addIceCandidate(iceCandidateInfo);
-            }
-        }
-
-    }
-
-
-    public void updateVideoInfoRequest(WebSocketSession webSocketSession, Boolean isCameraOn, Boolean isMicOn) throws IOException {
-        Participant me = participantRepository.findParticipantByWebSocketSession(webSocketSession)
-                .orElseThrow(() -> new DistoveException(PARTICIPANT_NOT_FOUND));
-        List<Participant> participants = participantRepository.findParticipantsByChannelId(me.getRoom().getChannelId());
-        me.updateVideoInfoOfParticipant(VideoInfo.of(isCameraOn, isMicOn));
-        for (Participant participant : participants) {
-            if (!participant.equals(me)) {
-                participant.getWebSocketSession().sendMessage(toJson(UpdatedVideoInfoResponse.of(me.getUserId(),VideoInfo.of(isCameraOn,isMicOn))));
-            }
-        }
-
-    }
-
-    public void preDestroy() {
-        List<Participant> participants = participantRepository.findAll();
-        List<Room> rooms = roomRepository.findAll();
-
-        for (Participant participant : participants) {
-            participant.getMediaEndpoint().release();
-            for (IncomingParticipant incomingParticipant : participant.getIncomingParticipants().values()) {
-                incomingParticipant.getMediaEndpoint().release();
-            }
-        }
-        for (Room room : rooms) {
-            room.getPipeline().release();
-        }
-        participantRepository.deleteAllParticipant();
-        roomRepository.deleteAllRoom();
-    }
 }

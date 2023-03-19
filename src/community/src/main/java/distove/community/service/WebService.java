@@ -41,7 +41,7 @@ public class WebService {
         return CategoryInfoResponse.of(categoryId, new ArrayList<>(List.of(channelId)));
     }
 
-    public boolean checkIsMember(Long channelId, Long userId) {
+    public boolean isMember(Long channelId, Long userId) {
         Long serverId = channelRepository.findById(channelId).get().getCategory().getServer().getId();
         return memberRepository.existsByUserIdAndServerId(userId, serverId);
     }

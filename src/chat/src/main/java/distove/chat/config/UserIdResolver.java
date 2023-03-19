@@ -11,7 +11,6 @@ import org.springframework.web.method.support.ModelAndViewContainer;
 
 import javax.servlet.http.HttpServletRequest;
 
-@Slf4j
 @RequiredArgsConstructor
 @Component
 public class UserIdResolver implements HandlerMethodArgumentResolver {

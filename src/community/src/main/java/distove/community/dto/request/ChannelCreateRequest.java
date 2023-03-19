@@ -8,5 +8,4 @@ public class ChannelCreateRequest {
     private String name;
     private Long categoryId;
     private Integer channelTypeId;
-
 }

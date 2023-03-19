@@ -11,13 +11,13 @@ import org.springframework.beans.factory.annotation.Value;
 import org.springframework.stereotype.Service;
 
 import java.security.Key;
-import java.time.Duration;
 import java.util.Date;
 import java.util.HashMap;
 import java.util.Map;
+import java.util.Objects;
 
-import static distove.auth.exception.ErrorCode.JWT_EXPIRED;
-import static distove.auth.exception.ErrorCode.JWT_INVALID;
+import static distove.auth.exception.ErrorCode.JWT_EXPIRED_ERROR;
+import static distove.auth.exception.ErrorCode.JWT_INVALID_ERROR;
 
 @Slf4j
 @Service
@@ -27,10 +27,10 @@ public class JwtProvider {
     private final Key key;
 
     @Value("${jwt.access.token.valid.time}")
-    private long validTimeAccessToken;
+    private long accessTokenValidTime;
 
     @Value("${jwt.refresh.token.valid.time}")
-    private long validTimeRefreshToken;
+    private long refreshTokenValidTime;
 
     @Autowired
     public JwtProvider(@Value("${jwt.secret}") String secretKey) {
@@ -38,56 +38,52 @@ public class JwtProvider {
         this.key = Keys.hmacShaKeyFor(keyBytes);
     }
 
+    public String createAccessToken(Long userId) {
+        return createToken(userId, "AT", accessTokenValidTime);
+    }
 
+    public String createRefreshToken(Long userId) {
+        return createToken(userId, "RT", refreshTokenValidTime);
+    }
 
-    public String createToken(Long userId, String type) {
+    public String createToken(Long userId, String type, Long tokenValidTime) {
         Map<String, Object> headers = new HashMap<>();
         headers.put("alg", "HS256");
         Claims claims = Jwts.claims().setSubject("userId");
         claims.put("userId", userId);
 
         Date now = new Date();
-
-        if (type.equals("AT")) {
-            headers.put("type", "AT");
-            return Jwts.builder()
-                    .setHeader(headers)
-                    .setClaims(claims)
-                    .setIssuedAt(now)
-                    .setExpiration(new Date(now.getTime() + Duration.ofMinutes(validTimeAccessToken).toMillis()))
-                    .signWith(key, SignatureAlgorithm.HS256)
-                    .compact();
-        } else {
-            headers.put("type", "RT");
-            return Jwts.builder()
-                    .setHeader(headers)
-                    .setClaims(claims)
-                    .setIssuedAt(now)
-                    .setExpiration(new Date(now.getTime() + Duration.ofDays(validTimeRefreshToken).toMillis()))
-                    .signWith(key, SignatureAlgorithm.HS256)
-                    .compact();
-        }
+        headers.put("type", type);
+        return Jwts.builder()
+                .setHeader(headers)
+                .setClaims(claims)
+                .setIssuedAt(now)
+                .setExpiration(new Date(now.getTime() + tokenValidTime))
+                .signWith(key, SignatureAlgorithm.HS256)
+                .compact();
     }
 
-    public void validToken(String token) {
+    public void validateToken(String token) {
         try {
             Jwts.parserBuilder()
                     .setSigningKey(key)
                     .build()
                     .parseClaimsJws(token);
         } catch (ExpiredJwtException e) {
-            throw new DistoveException(JWT_EXPIRED);
+            throw new DistoveException(JWT_EXPIRED_ERROR);
         } catch (Exception e) {
-            throw new DistoveException(JWT_INVALID);
+            throw new DistoveException(JWT_INVALID_ERROR);
         }
     }
 
-    public String getTypeOfToken(String token) {
+    public void validateRefreshToken(String token) {
         Jws<Claims> jws = Jwts.parserBuilder()
                 .setSigningKey(key)
                 .build()
                 .parseClaimsJws(token);
-        return String.valueOf(jws.getHeader().get("type"));
+
+        String type = String.valueOf(jws.getHeader().get("type"));
+        if (!Objects.equals((type), "RT")) throw new DistoveException(JWT_INVALID_ERROR);
     }
 
     public Long getUserId(String token) throws DistoveException {

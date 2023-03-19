@@ -1,7 +1,7 @@
 package distove.community.dto.response;
 
+import distove.community.client.dto.UserResponse;
 import distove.community.entity.Member;
-import distove.community.web.UserResponse;
 import lombok.Builder;
 import lombok.Getter;
 

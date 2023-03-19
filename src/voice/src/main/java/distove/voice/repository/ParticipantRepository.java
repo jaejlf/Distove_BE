@@ -10,19 +10,21 @@ import java.util.Optional;
 
 @Repository
 public interface ParticipantRepository {
-    Optional<Participant> findParticipantByWebSocketSession(WebSocketSession webSocketSession);
 
-    Optional<Participant> findParticipantByUserId(Long userId);
+    Optional<Participant> findByWebSocketSession(WebSocketSession webSocketSession);
 
-    void deleteParticipant(Participant participant);
+    Optional<Participant> findByUserId(Long userId);
 
-    List<Participant> findParticipantsByChannelId(Long channelId);
-
-    void insert(Participant participant);
+    void add(Participant participant);
 
     void save(Long userId, Participant participant);
 
     List<Participant> findAll();
 
-    void deleteAllParticipant();
+    List<Participant> findAllByChannelId(Long channelId);
+
+    void delete(Participant participant);
+
+    void deleteAll();
+
 }

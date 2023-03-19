@@ -1,6 +1,6 @@
 package distove.presence.config;
 
-import distove.presence.dto.PresenceTime;
+import distove.presence.entity.PresenceTime;
 import distove.presence.service.RequestEventService;
 import distove.presence.enumerate.PresenceType;
 import distove.presence.repository.PresenceRepository;
@@ -18,9 +18,11 @@ import org.springframework.stereotype.Component;
 @RequiredArgsConstructor
 @Slf4j
 public class StompHandler implements ChannelInterceptor {
+
     private final UserConnectionRepository userConnectionRepository;
     private final PresenceRepository presenceRepository;
     private final RequestEventService requestEventService;
+
     @Override
     public Message<?> preSend(Message<?> message, MessageChannel channel) {
         StompHeaderAccessor accessor = StompHeaderAccessor.wrap(message);
@@ -28,18 +30,20 @@ public class StompHandler implements ChannelInterceptor {
         if (StompCommand.CONNECT.equals(accessor.getCommand())) {
             Long userId = Long.valueOf(accessor.getNativeHeader("userId").get(0).toString());
             String sessionId = accessor.getSessionId();
-            userConnectionRepository.addUserConnection(userId,sessionId);
+            userConnectionRepository.addUserConnection(userId, sessionId);
             presenceRepository.save(userId, PresenceTime.newPresenceTime(PresenceType.ONLINE.getPresence()));
-            requestEventService.requestSendNewUserConnection(userId,PresenceType.ONLINE);
+            requestEventService.requestSendNewUserConnection(userId, PresenceType.ONLINE);
         } else if (StompCommand.DISCONNECT.equals(accessor.getCommand())) {
             String sessionId = accessor.getSessionId();
             Long userId = userConnectionRepository.findUserIdBySessionId(sessionId);
-            if(userId!=null){
+            if (userId != null) {
                 userConnectionRepository.removeUserConnectionByUserId(userId);
-                requestEventService.requestSendNewUserConnection(userId,PresenceType.OFFLINE);
+                requestEventService.requestSendNewUserConnection(userId, PresenceType.OFFLINE);
             }
 
         }
+
         return message;
     }
+
 }

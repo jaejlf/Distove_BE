@@ -7,9 +7,6 @@ import lombok.extern.slf4j.Slf4j;
 import org.springframework.stereotype.Service;
 
 import java.util.ArrayList;
-import java.util.List;
-
-import static distove.chat.entity.Connection.newConnection;
 
 @Slf4j
 @RequiredArgsConstructor
@@ -20,18 +17,12 @@ public class ConnectionService {
 
     public void createConnection(Long serverId, Long channelId) {
         if (connectionRepository.findByChannelId(channelId).isPresent()) return;
-        Connection connection = newConnection(serverId, channelId, new ArrayList<>());
+        Connection connection = new Connection(serverId, channelId, new ArrayList<>());
         connectionRepository.save(connection);
     }
 
-    public void clear(Long channelId) {
-        connectionRepository.deleteAllByChannelId(channelId);
-    }
-
-    public void clearAll(List<Long> channelIds) {
-        for (Long channelId : channelIds) {
-            connectionRepository.deleteAllByChannelId(channelId);
-        }
+    public void deleteByChannelId(Long channelId) {
+        connectionRepository.deleteByChannelId(channelId);
     }
 
 }

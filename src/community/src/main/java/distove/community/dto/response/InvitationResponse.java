@@ -11,20 +11,21 @@ import java.time.LocalDateTime;
 @Builder
 @Getter
 public class InvitationResponse {
+
     private String nickname;
-    private String inviteCode;
-    private int remainingInviteCodeCount;
-    private LocalDateTime expiresAt;
-    private boolean inviter;
+    private String code;
+    private int count;
+    private LocalDateTime expiredAt;
+    private boolean hasAuthorized;
 
-
-    public static InvitationResponse of(Invitation invitation, String nickname, boolean inviter) {
+    public static InvitationResponse of(Invitation invitation, String nickname, boolean hasAuthorized) {
         return InvitationResponse.builder()
                 .nickname(nickname)
-                .inviteCode(invitation.getInviteCode())
-                .remainingInviteCodeCount(invitation.getRemainingInviteCodeCount())
-                .expiresAt(invitation.getExpiresAt())
-                .inviter(inviter)
+                .code(invitation.getCode())
+                .count(invitation.getCount())
+                .expiredAt(invitation.getExpiredAt())
+                .hasAuthorized(hasAuthorized)
                 .build();
     }
+
 }

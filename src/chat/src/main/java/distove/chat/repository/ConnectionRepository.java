@@ -7,7 +7,11 @@ import java.util.List;
 import java.util.Optional;
 
 public interface ConnectionRepository extends MongoRepository<Connection, String> {
+
     Optional<Connection> findByChannelId(Long channelId);
-    void deleteAllByChannelId(Long channelId);
+
+    void deleteByChannelId(Long channelId);
+
     List<Connection> findAllByServerId(Long serverId);
+
 }

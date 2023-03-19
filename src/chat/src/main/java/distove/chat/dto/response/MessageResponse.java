@@ -2,10 +2,8 @@ package distove.chat.dto.response;
 
 import com.fasterxml.jackson.annotation.JsonInclude;
 import distove.chat.entity.Message;
-import distove.chat.entity.Reaction;
 import distove.chat.enumerate.MessageType;
-import distove.chat.web.UserClient;
-import distove.chat.web.UserResponse;
+import distove.chat.client.dto.UserResponse;
 import lombok.Builder;
 import lombok.Getter;
 
@@ -13,7 +11,7 @@ import java.time.LocalDateTime;
 import java.util.List;
 import java.util.Objects;
 
-import static distove.chat.enumerate.MessageType.*;
+import static distove.chat.enumerate.MessageType.MessageStatus;
 
 @Getter
 @Builder
@@ -56,17 +54,6 @@ public class MessageResponse {
                 .replyInfo(replyInfo)
                 .hasAuthorized(Objects.equals(writer.getId(), userId))
                 .reactions(reactions)
-                .build();
-    }
-
-    public static MessageResponse ofSearching(Message message, UserResponse writer) {
-        return MessageResponse.builder()
-                .id(message.getId())
-                .type(message.getType())
-                .status(message.getStatus())
-                .content(message.getContent())
-                .createdAt(message.getCreatedAt())
-                .writer(writer)
                 .build();
     }
 

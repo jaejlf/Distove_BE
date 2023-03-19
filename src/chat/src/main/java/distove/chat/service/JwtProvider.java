@@ -10,8 +10,8 @@ import org.springframework.stereotype.Component;
 
 import java.security.Key;
 
-import static distove.chat.exception.ErrorCode.JWT_EXPIRED;
-import static distove.chat.exception.ErrorCode.JWT_INVALID;
+import static distove.chat.exception.ErrorCode.JWT_EXPIRED_ERROR;
+import static distove.chat.exception.ErrorCode.JWT_INVALID_ERROR;
 
 @Component
 public class JwtProvider {
@@ -30,9 +30,9 @@ public class JwtProvider {
                     .build()
                     .parseClaimsJws(token);
         } catch (ExpiredJwtException e) {
-            throw new DistoveException(JWT_EXPIRED);
+            throw new DistoveException(JWT_EXPIRED_ERROR);
         } catch (Exception e) {
-            throw new DistoveException(JWT_INVALID);
+            throw new DistoveException(JWT_INVALID_ERROR);
         }
     }
 

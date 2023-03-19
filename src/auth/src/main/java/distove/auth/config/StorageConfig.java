@@ -39,4 +39,5 @@ public class StorageConfig {
                 .withEndpointConfiguration(new AwsClientBuilder.EndpointConfiguration(endpoint, region))
                 .build();
     }
+
 }

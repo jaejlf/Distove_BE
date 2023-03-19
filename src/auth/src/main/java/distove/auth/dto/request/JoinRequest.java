@@ -9,6 +9,7 @@ import javax.validation.constraints.NotBlank;
 @Getter
 @Setter
 public class JoinRequest {
+
     @NotBlank(message = "이메일은 필수 입력값입니다.")
     private String email;
 
@@ -19,4 +20,5 @@ public class JoinRequest {
     private String nickname;
 
     private MultipartFile profileImg;
+
 }

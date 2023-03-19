@@ -1,5 +1,7 @@
 package distove.community.service;
 
+import distove.community.client.UserClient;
+import distove.community.client.dto.UserResponse;
 import distove.community.dto.response.MemberResponse;
 import distove.community.dto.response.RoleResponse;
 import distove.community.entity.Member;
@@ -9,8 +11,6 @@ import distove.community.exception.DistoveException;
 import distove.community.repository.MemberRepository;
 import distove.community.repository.MemberRoleRepository;
 import distove.community.repository.ServerRepository;
-import distove.community.web.UserClient;
-import distove.community.web.UserResponse;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.orm.ObjectOptimisticLockingFailureException;
@@ -23,7 +23,6 @@ import java.util.List;
 import java.util.Objects;
 import java.util.stream.Collectors;
 
-import static distove.community.entity.Member.newMember;
 import static distove.community.enumerate.DefaultRoleName.MEMBER;
 import static distove.community.enumerate.DefaultRoleName.OWNER;
 import static distove.community.exception.ErrorCode.*;
@@ -47,15 +46,11 @@ public class MemberService {
     public List<UserResponse> getUsersByServerId(Long serverId) {
         List<Member> members = memberRepository.findMembersByServerId(serverId);
         List<Long> userIds = members.stream().map(x -> x.getUserId()).collect(Collectors.toList());
-        List<UserResponse> users = userClient.getUsers(userIds.toString().replace("[", "").replace("]", ""));
-        return users;
+        return userClient.getUsers(userIds.toString().replace("[", "").replace("]", ""));
     }
-
 
     public List<RoleResponse.MemberInfo> getMemberWithRolesByServerId(Long userId, Long serverId) {
         checkServerExist(serverId);
-        Member curMember = memberRepository.findByUserIdAndServerId(userId, serverId)
-                .orElseThrow(() -> new DistoveException(MEMBER_NOT_FOUND));
 
         List<Member> members = getMembersByServerId(serverId);
         List<RoleResponse.MemberInfo> roleResponses = new ArrayList<>();
@@ -73,6 +68,7 @@ public class MemberService {
                     .isActive(isActive)
                     .build());
         }
+
         return roleResponses;
     }
 
@@ -96,7 +92,7 @@ public class MemberService {
         Server server = checkServerExist(serverId);
         MemberRole memberRole = memberRoleRepository.findByRoleNameAndServerId(MEMBER.getName(), serverId)
                 .orElseThrow(() -> new DistoveException(ROLE_NOT_FOUND));
-        memberRepository.save(newMember(server, userId, memberRole));
+        memberRepository.save(new Member(server, userId, memberRole));
     }
 
     public void updateMemberRole(Long serverId, Long roleId, Long targetUserId) {
@@ -144,4 +140,5 @@ public class MemberService {
     private boolean getIsActive(Long serverId, MemberRole role) {
         return !Objects.equals(role.getRoleName(), OWNER.getName()) || !checkOwnerIsUnique(serverId);
     }
+
 }

@@ -4,6 +4,7 @@ import distove.chat.dto.request.ReactionRequest;
 import distove.chat.dto.response.ReactionMessageResponse;
 import distove.chat.service.ReactionService;
 import lombok.RequiredArgsConstructor;
+import org.springframework.beans.factory.annotation.Value;
 import org.springframework.messaging.handler.annotation.DestinationVariable;
 import org.springframework.messaging.handler.annotation.Header;
 import org.springframework.messaging.handler.annotation.MessageMapping;
@@ -18,13 +19,15 @@ public class ReactionController {
     private final ReactionService reactionService;
     private final SimpMessagingTemplate simpMessagingTemplate;
 
+    @Value("${sub.destination}")
+    private String destination;
 
     @MessageMapping("/reaction/{channelId}")
     public void reactMessage(@Header("userId") Long userId,
                              @DestinationVariable Long channelId,
                              @Payload ReactionRequest reactionRequest) {
         ReactionMessageResponse result = reactionService.reactMessage(reactionRequest, userId);
-        simpMessagingTemplate.convertAndSend("/sub/" + channelId, result);
+        simpMessagingTemplate.convertAndSend(destination + channelId, result);
     }
 
 }

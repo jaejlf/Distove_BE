@@ -15,5 +15,6 @@ public class InvitationException extends RuntimeException {
         this.code = errorCode.getCode();
         this.message = errorCode.getMessage();
     }
+
 }
 

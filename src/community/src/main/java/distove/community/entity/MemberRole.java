@@ -34,13 +34,16 @@ public class MemberRole {
 
     public static List<MemberRole> createDefaultRoles(Server server) {
         List<MemberRole> memberRoles = new ArrayList<>();
-        memberRoles.add(MemberRole.builder().roleName(OWNER.getName())
+        memberRoles.add(MemberRole.builder()
+                .roleName(OWNER.getName())
                 .canDeleteServer(true).canManageServer(true).canManageChannel(true).canUpdateMemberRole(true)
                 .server(server).build());
-        memberRoles.add(MemberRole.builder().roleName(MANAGER.getName())
+        memberRoles.add(MemberRole.builder()
+                .roleName(MANAGER.getName())
                 .canDeleteServer(false).canManageServer(true).canManageChannel(true).canUpdateMemberRole(true)
                 .server(server).build());
-        memberRoles.add(MemberRole.builder().roleName(MEMBER.getName())
+        memberRoles.add(MemberRole.builder()
+                .roleName(MEMBER.getName())
                 .canDeleteServer(false).canManageServer(false).canManageChannel(false).canUpdateMemberRole(false)
                 .server(server).build());
         return memberRoles;

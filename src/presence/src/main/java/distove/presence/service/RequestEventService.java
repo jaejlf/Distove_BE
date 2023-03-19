@@ -3,7 +3,6 @@ package distove.presence.service;
 import distove.presence.enumerate.PresenceType;
 import distove.presence.event.SendNewUserConnectionEvent;
 import distove.presence.event.UpdateUserPresenceEvent;
-import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.stereotype.Service;
 
@@ -22,4 +21,5 @@ public class RequestEventService {
         log.info(">>>>> NEW - Data : userId " + userId + ", presenceType = " + presenceType);
         getEventQ(SendNewUserConnectionEvent.class).add(SendNewUserConnectionEvent.of(userId, presenceType));
     }
+
 }

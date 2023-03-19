@@ -26,7 +26,7 @@ public enum MessageType {
         CREATED, MODIFIED, DELETED, TYPING, REACTED;
     }
 
-    public static void checkStatusCanChanged(MessageType type, MessageStatus status) {
+    public static void validateTypeAndStatus(MessageType type, MessageStatus status) {
         if (!type.getStatus().contains(status)) throw new DistoveException(MESSAGE_TYPE_ERROR);
     }
 

@@ -72,23 +72,24 @@ public class ServerController {
 
     @PostMapping("/server/invitation/{serverId}")
     public ResponseEntity<Object> createInvitation(@RequestUser Long userId,
-                                                   @PathVariable ("serverId") Long serverId){
-        String inviteCode = invitationService.createInvitation(userId, serverId, days, count);
+                                                   @PathVariable("serverId") Long serverId) {
+        String inviteCode = invitationService.createInvitation(userId, serverId);
         return ResultResponse.success(HttpStatus.OK, "초대 코드 생성 성공", inviteCode);
     }
 
     @GetMapping("/server/invitations/{serverId}")
     public ResponseEntity<Object> listInvitations(@RequestUser Long userId,
-                                                  @PathVariable ("serverId") Long serverId) {
+                                                  @PathVariable("serverId") Long serverId) {
         List<InvitationResponse> invitations = invitationService.getInvitations(userId, serverId);
         return ResultResponse.success(HttpStatus.OK, "초대 리스트 조회 성공", invitations);
     }
 
     @DeleteMapping("/server/invitation/{inviteCode}")
     public ResponseEntity<Object> deleteInvitation(@RequestUser Long userId,
-                                                   @PathVariable ("inviteCode") String inviteCode) {
+                                                   @PathVariable("inviteCode") String inviteCode) {
         invitationService.deleteInvitation(userId, inviteCode);
         return ResultResponse.success(HttpStatus.OK, "초대 코드 삭제 성공", inviteCode);
 
     }
+
 }

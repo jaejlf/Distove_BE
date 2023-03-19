@@ -3,17 +3,18 @@ package distove.auth.controller;
 import distove.auth.config.RequestUser;
 import distove.auth.dto.request.JoinRequest;
 import distove.auth.dto.request.LoginRequest;
-import distove.auth.dto.request.UpdateNicknameRequest;
-import distove.auth.dto.request.UpdateProfileImgRequest;
-import distove.auth.dto.response.ResultResponse;
 import distove.auth.dto.response.LoginResponse;
+import distove.auth.dto.response.ResultResponse;
 import distove.auth.dto.response.UserResponse;
 import distove.auth.service.UserService;
 import lombok.AllArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
-import org.springframework.web.bind.annotation.*;
+import org.springframework.web.bind.annotation.ModelAttribute;
+import org.springframework.web.bind.annotation.PostMapping;
+import org.springframework.web.bind.annotation.RequestBody;
+import org.springframework.web.bind.annotation.RestController;
 
 import javax.servlet.http.HttpServletRequest;
 import javax.servlet.http.HttpServletResponse;
@@ -23,6 +24,7 @@ import javax.validation.Valid;
 @RestController
 @AllArgsConstructor
 public class UserController {
+
     private final UserService userService;
 
     @PostMapping("/join")
@@ -36,9 +38,10 @@ public class UserController {
     }
 
     @PostMapping("/login")
-    public ResponseEntity<Object> login(@RequestBody LoginRequest request, HttpServletResponse response) {
+    public ResponseEntity<Object> login(@Valid @RequestBody LoginRequest request, HttpServletResponse response) {
         LoginResponse loginResponse = userService.login(request);
-        response.addHeader("Set-Cookie", userService.setCookieOnLogin(loginResponse.getUser().getId()));
+        Long userId = loginResponse.getUser().getId();
+        response.addHeader("Set-Cookie", userService.createCookie(userId));
         return ResultResponse.success(
                 HttpStatus.CREATED,
                 "로그인",
@@ -51,27 +54,7 @@ public class UserController {
         UserResponse result = userService.logout(userId);
         return ResultResponse.success(
                 HttpStatus.OK,
-                "로그아웃 성공",
-                result
-        );
-    }
-
-    @PutMapping("/nickname")
-    public ResponseEntity<Object> updateUser(@RequestUser Long userId, @RequestBody UpdateNicknameRequest request) {
-        UserResponse result = userService.updateNickname(userId, request);
-        return ResultResponse.success(
-                HttpStatus.OK,
-                "닉네임 수정 성공",
-                result
-        );
-    }
-
-    @PutMapping("/profileimg")
-    public ResponseEntity<Object> updateProfileImg(@RequestUser Long userId, @ModelAttribute UpdateProfileImgRequest request) {
-        UserResponse result = userService.updateProfileImg(userId, request);
-        return ResultResponse.success(
-                HttpStatus.OK,
-                "프로필 사진 수정 성공",
+                "로그아웃",
                 result
         );
     }
@@ -79,11 +62,13 @@ public class UserController {
     @PostMapping("/reissue")
     public ResponseEntity<Object> reissue(HttpServletRequest request, HttpServletResponse response) {
         LoginResponse loginResponse = userService.reissue(request);
-        response.addHeader("Set-Cookie", userService.setCookieOnReissue(request));
+        Long userId = loginResponse.getUser().getId();
+        response.addHeader("Set-Cookie", userService.createCookie(userId));
         return ResultResponse.success(
                 HttpStatus.CREATED,
-                "액세스 토큰 재발급",
+                "토큰 재발급",
                 loginResponse
         );
     }
+
 }

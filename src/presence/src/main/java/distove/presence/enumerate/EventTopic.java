@@ -19,8 +19,6 @@ public enum EventTopic {
     UPDATE_PRESENCE(UpdateUserPresenceEvent.class, new EventQ<UpdateUserPresenceEvent>()),
     SEND_NEW_USER_CONNECTION(SendNewUserConnectionEvent.class, new EventQ<SendNewUserConnectionEvent>());
 
-
-
     private final Class<? extends Event> eventType;
     private final EventQ<? extends Event> eventQ;
 
