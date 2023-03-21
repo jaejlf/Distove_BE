@@ -1,7 +1,6 @@
 package distove.presence.handler;
 
 import distove.presence.entity.Presence;
-import distove.presence.enumerate.ServiceInfo;
 import distove.presence.event.UpdatePresenceEvent;
 import distove.presence.repository.ConnectionRepository;
 import distove.presence.repository.PresenceRepository;
@@ -14,6 +13,7 @@ import org.springframework.messaging.simp.stomp.StompHeaderAccessor;
 import org.springframework.messaging.support.ChannelInterceptor;
 import org.springframework.stereotype.Component;
 
+import static distove.presence.enumerate.PresenceType.OFFLINE;
 import static distove.presence.enumerate.PresenceType.ONLINE;
 import static distove.presence.event.EventTopic.getEventQ;
 import static org.springframework.messaging.simp.stomp.StompCommand.DISCONNECT;
@@ -35,11 +35,10 @@ public class StompHandler implements ChannelInterceptor {
             Long userId = Long.valueOf(accessor.getNativeHeader("userId").get(0).toString());
             connectionRepository.save(userId, sessionId);
             presenceRepository.save(userId, new Presence(ONLINE));
-            getEventQ(UpdatePresenceEvent.class).add(UpdatePresenceEvent.of(userId, ServiceInfo.CONNECT.getType()));
+            getEventQ(UpdatePresenceEvent.class).add(new UpdatePresenceEvent(userId, ONLINE.getType()));
         } else if (DISCONNECT.equals(accessor.getCommand())) {
             connectionRepository.findBySessionId(sessionId).ifPresent(userId -> {
-                connectionRepository.deleteByUserId(userId);
-                getEventQ(UpdatePresenceEvent.class).add(UpdatePresenceEvent.of(userId, ServiceInfo.DISCONNECT.getType()));
+                getEventQ(UpdatePresenceEvent.class).add(new UpdatePresenceEvent(userId, OFFLINE.getType()));
             });
         }
         return message;

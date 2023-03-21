@@ -15,8 +15,8 @@ public class WebController {
 
     @PostMapping("/web/update")
     void updateUserPresence(@RequestHeader Long userId,
-                            @RequestParam String serviceInfo) {
-        getEventQ(UpdatePresenceEvent.class).add(UpdatePresenceEvent.of(userId, serviceInfo));
+                            @RequestParam String type) {
+        getEventQ(UpdatePresenceEvent.class).add(new UpdatePresenceEvent(userId, type));
     }
 
 }

@@ -11,7 +11,7 @@ public class EventRunner {
     private final PresenceService presenceService;
 
     public void runUpdatePresence(UpdatePresenceEvent updatePresenceEvent){
-        presenceService.updatePresence(updatePresenceEvent.getUserId(), updatePresenceEvent.getServiceInfo());
+        presenceService.updatePresence(updatePresenceEvent.getUserId(), updatePresenceEvent.getType());
     }
 
 }

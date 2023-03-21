@@ -5,7 +5,6 @@ import distove.presence.client.dto.UserResponse;
 import distove.presence.dto.response.PresenceResponse;
 import distove.presence.entity.Presence;
 import distove.presence.enumerate.PresenceType;
-import distove.presence.enumerate.ServiceInfo;
 import distove.presence.repository.ConnectionRepository;
 import distove.presence.repository.PresenceRepository;
 import lombok.RequiredArgsConstructor;
@@ -22,10 +21,9 @@ import java.util.Map;
 import java.util.Objects;
 
 import static distove.presence.enumerate.PresenceType.*;
-import static distove.presence.enumerate.ServiceInfo.getServiceInfo;
 
-@Slf4j
 @Service
+@Slf4j
 @RequiredArgsConstructor
 public class PresenceService {
 
@@ -54,8 +52,12 @@ public class PresenceService {
     }
 
     public void updatePresence(Long userId, String type) {
-        ServiceInfo serviceInfo = getServiceInfo(type);
-        switch (serviceInfo) {
+        PresenceType presenceType = getPresenceType(type);
+        switch (presenceType) {
+            case ONLINE:
+                if (!presenceRepository.isAway(userId)) presenceRepository.deleteByUserId(userId);
+                else publishPresence(userId, ONLINE); // AWAY 상태였을 경우에만 publish
+                presenceRepository.save(userId, new Presence(ONLINE));
             case VOICE_ON:
                 if (!presenceRepository.isAway(userId)) presenceRepository.deleteByUserId(userId);
                 presenceRepository.save(userId, new Presence(VOICE_ON));
@@ -66,16 +68,9 @@ public class PresenceService {
                 presenceRepository.save(userId, new Presence(ONLINE)); // 화상 통화 종료 후 -> ONLINE 상태로 전환
                 publishPresence(userId, ONLINE);
                 break;
-            case CHAT:
-            case COMMUNITY:
+            case OFFLINE:
                 if (!presenceRepository.isAway(userId)) presenceRepository.deleteByUserId(userId);
-                else publishPresence(userId, ONLINE); // AWAY 상태였을 경우에만 publish
-                presenceRepository.save(userId, new Presence(ONLINE));
-                break;
-            case CONNECT:
-                publishPresence(userId, ONLINE);
-                break;
-            case DISCONNECT:
+                connectionRepository.deleteByUserId(userId);
                 publishPresence(userId, OFFLINE);
                 break;
             default:
@@ -104,7 +99,7 @@ public class PresenceService {
 
     private static boolean isInactive(Timestamp currentTime, Map<Long, Presence> presenceMap, Long userId) {
         return (currentTime.getTime() > (presenceMap.get(userId).getActiveAt().getTime() + 30000))
-                && !Objects.equals(presenceMap.get(userId).getPresenceType().getStatus(), VOICE_ON.getStatus());
+                && !Objects.equals(presenceMap.get(userId).getPresenceType().getType(), VOICE_ON.getType());
     }
 
     private void publishPresence(Long userId, PresenceType presenceType) {
