@@ -23,11 +23,11 @@ public class PresenceAspect {
     private final PresenceClient presenceClient;
     private final ParticipantService participantService;
 
-    @Pointcut("execution(* distove.voice.service.SignalingService.joinRoom())")
+    @Pointcut("execution(* distove.voice.handler.SignalingHandler.joinRoom())")
     public void joinRoomAspect() {
     }
 
-    @Pointcut("execution(* distove.voice.service.SignalingService.leaveRoom())")
+    @Pointcut("execution(* distove.voice.handler.SignalingHandler.leaveRoom())")
     public void leaveRoomAspect() {
     }
 

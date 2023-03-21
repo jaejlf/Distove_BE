@@ -1,8 +1,7 @@
 package distove.voice.config;
 
-import distove.voice.controller.SignalingController;
+import distove.voice.handler.SignalingHandler;
 import distove.voice.repository.ParticipantRepository;
-import distove.voice.service.SignalingService;
 import lombok.RequiredArgsConstructor;
 import org.springframework.context.annotation.Configuration;
 import org.springframework.web.socket.config.annotation.EnableWebSocket;
@@ -19,7 +18,7 @@ public class WebSocketConfig implements WebSocketConfigurer {
 
     @Override
     public void registerWebSocketHandlers(WebSocketHandlerRegistry registry) {
-        registry.addHandler(new SignalingController(signalingService), "/signaling")
+        registry.addHandler(new SignalingHandler(signalingService), "/signaling")
                 .setAllowedOrigins("http://localhost:3000")
                 .withSockJS();
     }
