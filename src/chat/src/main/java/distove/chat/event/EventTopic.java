@@ -1,9 +1,5 @@
-package distove.chat.enumerate;
+package distove.chat.event;
 
-import distove.chat.event.DeleteChannelEvent;
-import distove.chat.event.DeleteChannelsEvent;
-import distove.chat.event.Event;
-import distove.chat.event.EventQ;
 import distove.chat.exception.DistoveException;
 import lombok.AllArgsConstructor;
 import lombok.Getter;

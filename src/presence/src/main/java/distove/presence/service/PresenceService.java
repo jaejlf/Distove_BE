@@ -4,14 +4,13 @@ import distove.presence.client.CommunityClient;
 import distove.presence.client.dto.UserResponse;
 import distove.presence.dto.response.PresenceResponse;
 import distove.presence.entity.Presence;
-import distove.presence.entity.PresenceTime;
-import distove.presence.enumerate.PresenceStatus;
 import distove.presence.enumerate.PresenceType;
-import distove.presence.exception.DistoveException;
+import distove.presence.enumerate.ServiceInfo;
+import distove.presence.repository.ConnectionRepository;
 import distove.presence.repository.PresenceRepository;
-import distove.presence.repository.UserConnectionRepository;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
+import org.springframework.beans.factory.annotation.Value;
 import org.springframework.messaging.simp.SimpMessagingTemplate;
 import org.springframework.scheduling.annotation.Scheduled;
 import org.springframework.stereotype.Service;
@@ -20,9 +19,10 @@ import java.sql.Timestamp;
 import java.util.ArrayList;
 import java.util.List;
 import java.util.Map;
+import java.util.Objects;
 
-import static distove.presence.entity.PresenceTime.newPresenceTime;
-import static distove.presence.exception.ErrorCode.SERVICE_INFO_TYPE_ERROR;
+import static distove.presence.enumerate.PresenceType.*;
+import static distove.presence.enumerate.ServiceInfo.getServiceInfo;
 
 @Slf4j
 @Service
@@ -31,94 +31,86 @@ public class PresenceService {
 
     private final CommunityClient communityClient;
     private final PresenceRepository presenceRepository;
-    private final UserConnectionRepository userConnectionRepository;
+    private final ConnectionRepository connectionRepository;
     private final SimpMessagingTemplate simpMessagingTemplate;
 
-    public List<PresenceResponse> getMemberPresencesByServerId(Long serverId) {
+    @Value("${sub.destination}")
+    private String destination;
+
+    public List<PresenceResponse> getMemberPresences(Long serverId) {
         List<UserResponse> userResponses = communityClient.getUsersByServerId(serverId);
+
         List<PresenceResponse> presenceResponses = new ArrayList<>();
-
         for (UserResponse user : userResponses) {
-            Presence presence = null;
-            if (userConnectionRepository.isUserConnected(user.getId())) {
-                presence = presenceRepository.findPresenceByUserId(user.getId()).orElseGet(() -> newPresenceTime(PresenceType.AWAY.getPresence())).getPresence();
+            if (connectionRepository.isConnected(user.getId())) {
+                Presence presence = presenceRepository.findByUserId(user.getId())
+                        .orElseGet(() -> new Presence(AWAY));
+                presenceResponses.add(PresenceResponse.of(user, presence.getPresenceType()));
+            } else {
+                presenceResponses.add(PresenceResponse.of(user, new Presence(OFFLINE).getPresenceType()));
             }
-
-            presenceResponses.add(PresenceResponse.of(user.getId(), user.getNickname(), user.getProfileImgUrl(), presence != null ? presence : PresenceType.OFFLINE.getPresence()));
         }
-
         return presenceResponses;
     }
 
-    public void updateUserPresence(Long userId, String serviceInfo) {
+    public void updatePresence(Long userId, String type) {
+        ServiceInfo serviceInfo = getServiceInfo(type);
         switch (serviceInfo) {
-            case "voiceOn":
-                updateCallOnline(userId);
+            case VOICE_ON:
+                if (!presenceRepository.isAway(userId)) presenceRepository.deleteByUserId(userId);
+                presenceRepository.save(userId, new Presence(VOICE_ON));
+                publishPresence(userId, VOICE_ON);
                 break;
-            case "voiceOff":
-                updateCallEnded(userId);
-            case "chat":
-            case "community":
-                updateOnline(userId);
+            case VOICE_OFF:
+                presenceRepository.deleteByUserId(userId);
+                presenceRepository.save(userId, new Presence(ONLINE)); // 화상 통화 종료 후 -> ONLINE 상태로 전환
+                publishPresence(userId, ONLINE);
+                break;
+            case CHAT:
+            case COMMUNITY:
+                if (!presenceRepository.isAway(userId)) presenceRepository.deleteByUserId(userId);
+                else publishPresence(userId, ONLINE); // AWAY 상태였을 경우에만 publish
+                presenceRepository.save(userId, new Presence(ONLINE));
+                break;
+            case CONNECT:
+                publishPresence(userId, ONLINE);
+                break;
+            case DISCONNECT:
+                publishPresence(userId, OFFLINE);
                 break;
             default:
-                throw new DistoveException(SERVICE_INFO_TYPE_ERROR);
+                break;
         }
     }
 
-    private void updateOnline(Long userId) {
-        if (presenceRepository.isUserOnline(userId)) {
-            presenceRepository.removePresenceByUserId(userId);
-        } else {
-            sendUserPresence(userId, PresenceType.ONLINE);
-        }
-        presenceRepository.save(userId, newPresenceTime(PresenceType.ONLINE.getPresence()));
-
-    }
-
-    private void updateCallEnded(Long userId) {
-        presenceRepository.removePresenceByUserIdIfOffline(userId);
-    }
-
-    private void updateCallOnline(Long userId) {
-        sendUserPresence(userId, PresenceType.ONLINE_CALL);
-        if (presenceRepository.isUserOnline(userId)) {
-            presenceRepository.removePresenceByUserId(userId);
-        }
-        presenceRepository.save(userId, newPresenceTime(PresenceType.ONLINE_CALL.getPresence()));
-    }
-
-    public void sendUserPresence(Long userId, PresenceType presenceType) {
-        List<Long> serverIds = communityClient.getServerIdsByUserId(userId);
-        for (Long serverId : serverIds) {
-            simpMessagingTemplate.convertAndSend("/sub/" + serverId, PresenceResponse.update(userId, presenceType.getPresence()));
-        }
-    }
-
-    public void sendNewUserConnectionEvent(Long userId, PresenceType presenceType) {
-        List<Long> serverIds = communityClient.getServerIdsByUserId(userId);
-        for (Long serverId : serverIds) {
-            simpMessagingTemplate.convertAndSend("/sub/" + serverId, PresenceResponse.update(userId, presenceType.getPresence()));
-        }
-
-    }
-
-    @Scheduled(cron = "0/20 * * * * ?") // 1분
-    public void setInactiveUsersToAway() {
+    @Scheduled(cron = "0/20 * * * * ?")
+    public void updateInactiveUsersToAway() {
         Timestamp currentTime = new Timestamp(System.currentTimeMillis());
-        Map<Long, PresenceTime> presenceTimeMap = presenceRepository.findAll();
+        Map<Long, Presence> presenceMap = presenceRepository.findAll();
         List<Long> awayUserIds = new ArrayList<>();
-        for (Long userId : presenceTimeMap.keySet()) {
-            if ((currentTime.getTime() > (presenceTimeMap.get(userId).getActiveAt().getTime() + 30000)) && presenceTimeMap.get(userId).getPresence().getStatus() != PresenceStatus.ONLINE_CALL) {
+        for (Long userId : presenceMap.keySet()) {
+            if (isInactive(currentTime, presenceMap, userId)) {
                 List<Long> serverIds = communityClient.getServerIdsByUserId(userId);
                 for (Long serverId : serverIds) {
-                    simpMessagingTemplate.convertAndSend("/sub/" + serverId, PresenceResponse.update(userId, PresenceType.AWAY.getPresence()));
+                    simpMessagingTemplate.convertAndSend(destination + serverId, PresenceResponse.update(userId, AWAY));
                 }
                 awayUserIds.add(userId);
             }
         }
         for (Long awayUserId : awayUserIds) {
-            presenceRepository.removePresenceByUserId(awayUserId);
+            presenceRepository.deleteByUserId(awayUserId);
+        }
+    }
+
+    private static boolean isInactive(Timestamp currentTime, Map<Long, Presence> presenceMap, Long userId) {
+        return (currentTime.getTime() > (presenceMap.get(userId).getActiveAt().getTime() + 30000))
+                && !Objects.equals(presenceMap.get(userId).getPresenceType().getStatus(), VOICE_ON.getStatus());
+    }
+
+    private void publishPresence(Long userId, PresenceType presenceType) {
+        List<Long> serverIds = communityClient.getServerIdsByUserId(userId);
+        for (Long serverId : serverIds) {
+            simpMessagingTemplate.convertAndSend(destination + serverId, PresenceResponse.update(userId, presenceType));
         }
     }
 

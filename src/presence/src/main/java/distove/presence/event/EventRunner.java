@@ -10,12 +10,8 @@ public class EventRunner {
 
     private final PresenceService presenceService;
 
-    public void runUpdateUserPresence(UpdateUserPresenceEvent updateUserPresenceEvent){
-        presenceService.updateUserPresence(updateUserPresenceEvent.getUserId(),updateUserPresenceEvent.getServiceInfo());
-    }
-
-    public void runSendNewUserConnection(SendNewUserConnectionEvent sendNewUserConnectionEvent){
-        presenceService.sendNewUserConnectionEvent(sendNewUserConnectionEvent.getUserId(),sendNewUserConnectionEvent.getPresenceType());
+    public void runUpdatePresence(UpdatePresenceEvent updatePresenceEvent){
+        presenceService.updatePresence(updatePresenceEvent.getUserId(), updatePresenceEvent.getServiceInfo());
     }
 
 }

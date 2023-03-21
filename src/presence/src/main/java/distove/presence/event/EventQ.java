@@ -12,12 +12,11 @@ public class EventQ<T extends Event> {
 
     public void add(T event) {
         queue.offer(event);
-        log.info(">>>>> ADD " + event.getClass().getSimpleName() + " QUEUE SIZE = " + size());
     }
 
     public T remove() throws InterruptedException {
         while (queue.isEmpty()) {
-            Thread.sleep(1000); // WAIT_TIMEOUT : 5sec
+            Thread.sleep(1000);
         }
         return queue.poll();
     }

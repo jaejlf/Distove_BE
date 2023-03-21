@@ -1,4 +1,4 @@
-package distove.chat.client;
+package distove.chat.controller;
 
 import distove.chat.event.DeleteChannelEvent;
 import distove.chat.event.DeleteChannelsEvent;
@@ -8,7 +8,7 @@ import org.springframework.web.bind.annotation.*;
 
 import java.util.List;
 
-import static distove.chat.enumerate.EventTopic.getEventQ;
+import static distove.chat.event.EventTopic.getEventQ;
 
 @RestController
 @RequestMapping("/web")

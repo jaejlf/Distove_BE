@@ -10,6 +10,6 @@ public interface PresenceClient {
 
     @PostMapping("/presence/web/update")
     void updateUserPresence(@RequestHeader Long userId,
-                            @RequestParam String presenceType);
+                            @RequestParam String serviceInfo);
 
 }

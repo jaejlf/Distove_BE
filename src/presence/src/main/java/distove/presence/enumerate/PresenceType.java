@@ -1,6 +1,5 @@
 package distove.presence.enumerate;
 
-import distove.presence.entity.Presence;
 import lombok.AllArgsConstructor;
 import lombok.Getter;
 
@@ -8,11 +7,12 @@ import lombok.Getter;
 @AllArgsConstructor
 public enum PresenceType {
 
-    OFFLINE(new Presence(PresenceStatus.OFFLINE,"오프라인")),
-    ONLINE(new Presence(PresenceStatus.ONLINE,"온라인")),
-    ONLINE_CALL(new Presence(PresenceStatus.ONLINE_CALL,"화상통화 중")),
-    AWAY(new Presence(PresenceStatus.AWAY,"자리비움"));
+    OFFLINE("offline", "오프라인"),
+    ONLINE("online", "온라인"),
+    VOICE_ON("voiceOn", "화상통화 중"),
+    AWAY("away", "자리비움");
 
-    private final Presence presence;
+    private final String status;
+    private final String description;
 
 }

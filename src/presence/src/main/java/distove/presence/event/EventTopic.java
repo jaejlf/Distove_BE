@@ -1,10 +1,6 @@
-package distove.presence.enumerate;
+package distove.presence.event;
 
-import distove.presence.event.Event;
-import distove.presence.event.SendNewUserConnectionEvent;
-import distove.presence.event.UpdateUserPresenceEvent;
 import distove.presence.exception.DistoveException;
-import distove.presence.event.EventQ;
 import lombok.AllArgsConstructor;
 import lombok.Getter;
 
@@ -16,8 +12,7 @@ import static distove.presence.exception.ErrorCode.EVENT_HANDLE_ERROR;
 @AllArgsConstructor
 public enum EventTopic {
 
-    UPDATE_PRESENCE(UpdateUserPresenceEvent.class, new EventQ<UpdateUserPresenceEvent>()),
-    SEND_NEW_USER_CONNECTION(SendNewUserConnectionEvent.class, new EventQ<SendNewUserConnectionEvent>());
+    UPDATE_PRESENCE(UpdatePresenceEvent.class, new EventQ<UpdatePresenceEvent>());
 
     private final Class<? extends Event> eventType;
     private final EventQ<? extends Event> eventQ;

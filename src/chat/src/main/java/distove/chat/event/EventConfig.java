@@ -3,7 +3,7 @@ package distove.chat.event;
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
 
-import static distove.chat.enumerate.EventTopic.getEventQ;
+import static distove.chat.event.EventTopic.getEventQ;
 
 @Configuration
 public class EventConfig {
