@@ -16,24 +16,24 @@ public class VoiceRoomRepositoryImpl implements VoiceRoomRepository {
     public static final ConcurrentMap<Long, VoiceRoom> voiceRooms = new ConcurrentHashMap<>();
 
     @Override
-    public Optional<VoiceRoom> findByChannelId(Long channelId) {
-        return Optional.ofNullable(voiceRooms.get(channelId));
-    }
-
-    @Override
     public VoiceRoom save(VoiceRoom voiceRoom) {
         voiceRooms.put(voiceRoom.getChannelId(), voiceRoom);
         return voiceRoom;
     }
 
     @Override
-    public void deleteByChannelId(Long channelId) {
-        voiceRooms.remove(channelId);
+    public Optional<VoiceRoom> findByChannelId(Long channelId) {
+        return Optional.ofNullable(voiceRooms.get(channelId));
     }
 
     @Override
     public List<VoiceRoom> findAll() {
         return new ArrayList<>(voiceRooms.values());
+    }
+
+    @Override
+    public void deleteByChannelId(Long channelId) {
+        voiceRooms.remove(channelId);
     }
 
     @Override

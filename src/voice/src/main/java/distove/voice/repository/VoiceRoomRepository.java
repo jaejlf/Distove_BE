@@ -7,14 +7,14 @@ import java.util.Optional;
 
 public interface VoiceRoomRepository {
 
+    VoiceRoom save(VoiceRoom voiceRoom);
+
     Optional<VoiceRoom> findByChannelId(Long channelId);
+
+    List<VoiceRoom> findAll();
 
     void deleteByChannelId(Long channelId);
 
     void deleteAll();
-
-    VoiceRoom save(VoiceRoom voiceRoom);
-
-    List<VoiceRoom> findAll();
 
 }

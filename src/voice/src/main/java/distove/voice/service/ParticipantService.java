@@ -36,7 +36,7 @@ public class ParticipantService {
     public void join(Long userId, VoiceRoom voiceRoom, WebRtcEndpoint outgoingEndpoint, WebSocketSession session) {
         VideoSetting videoSetting = new VideoSetting(false, false);
         Participant me = new Participant(userId, voiceRoom, outgoingEndpoint, session, videoSetting);
-        participantRepository.add(me);
+        participantRepository.save(me);
         notifyNewParticipant(voiceRoom, videoSetting, me);
     }
 
@@ -60,7 +60,7 @@ public class ParticipantService {
     }
 
     public void save(Participant me) {
-        participantRepository.save(me.getUserId(), me);
+        participantRepository.save(me);
     }
 
     public List<Participant> findAll() {

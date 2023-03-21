@@ -29,12 +29,7 @@ public class ParticipantRepositoryImpl implements ParticipantRepository {
     }
 
     @Override
-    public void add(Participant participant) {
-        participants.put(participant.getUserId(), participant);
-    }
-
-    @Override
-    public void save(Long userId, Participant participant) {
+    public void save(Participant participant) {
         participants.put(participant.getUserId(), participant);
     }
 

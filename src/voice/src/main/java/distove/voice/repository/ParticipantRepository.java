@@ -12,9 +12,7 @@ public interface ParticipantRepository {
 
     Optional<Participant> findByUserId(Long userId);
 
-    void add(Participant participant);
-
-    void save(Long userId, Participant participant);
+    void save(Participant participant);
 
     List<Participant> findAll();
 
