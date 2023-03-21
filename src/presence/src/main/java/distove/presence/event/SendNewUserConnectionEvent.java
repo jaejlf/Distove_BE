@@ -11,7 +11,7 @@ public class SendNewUserConnectionEvent implements Event {
     private Long userId;
     private PresenceType presenceType;
 
-    public static SendNewUserConnectionEvent of(Long userId,PresenceType presenceType){
+    public static SendNewUserConnectionEvent of(Long userId, PresenceType presenceType) {
         return SendNewUserConnectionEvent.builder()
                 .userId(userId)
                 .presenceType(presenceType)

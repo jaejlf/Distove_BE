@@ -1,6 +1,7 @@
-package distove.presence.repository;
+package distove.presence.repository.impl;
 
 import distove.presence.entity.PresenceTime;
+import distove.presence.repository.PresenceRepository;
 import org.springframework.stereotype.Repository;
 
 import java.util.LinkedHashMap;
@@ -8,7 +9,7 @@ import java.util.Map;
 import java.util.Optional;
 
 @Repository
-public class MemoryPresenceRepository implements PresenceRepository{
+public class PresenceRepositoryImpl implements PresenceRepository {
     public static final Map<Long, PresenceTime> presences = new LinkedHashMap<>();
 
     @Override
@@ -17,28 +18,28 @@ public class MemoryPresenceRepository implements PresenceRepository{
     }
 
     @Override
-    public void removePresenceByUserId(Long userId){
+    public void removePresenceByUserId(Long userId) {
         presences.remove(userId);
     }
 
     @Override
-    public void removePresenceByUserIdIfOffline(Long userId){
+    public void removePresenceByUserIdIfOffline(Long userId) {
         presences.remove(userId);
     }
 
     @Override
-    public Map<Long,PresenceTime> findAll(){
+    public Map<Long, PresenceTime> findAll() {
         return presences;
     }
 
     @Override
-    public Boolean isUserOnline(Long userId){
+    public Boolean isUserOnline(Long userId) {
         return presences.containsKey(userId);
     }
 
     @Override
-    public void save(Long userId, PresenceTime presenceTime){
-        presences.put(userId,presenceTime);
+    public void save(Long userId, PresenceTime presenceTime) {
+        presences.put(userId, presenceTime);
     }
 
 }

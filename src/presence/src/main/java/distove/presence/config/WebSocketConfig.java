@@ -1,5 +1,6 @@
 package distove.presence.config;
 
+import distove.presence.handler.StompHandler;
 import lombok.RequiredArgsConstructor;
 import org.springframework.context.annotation.Configuration;
 import org.springframework.messaging.simp.config.ChannelRegistration;

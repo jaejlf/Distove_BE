@@ -4,7 +4,7 @@ import distove.presence.event.Event;
 import distove.presence.event.SendNewUserConnectionEvent;
 import distove.presence.event.UpdateUserPresenceEvent;
 import distove.presence.exception.DistoveException;
-import distove.presence.process.EventQ;
+import distove.presence.event.EventQ;
 import lombok.AllArgsConstructor;
 import lombok.Getter;
 

@@ -1,6 +1,5 @@
-package distove.presence.process;
+package distove.presence.event;
 
-import distove.presence.event.Event;
 import lombok.extern.slf4j.Slf4j;
 
 import java.util.function.Consumer;

@@ -1,5 +1,6 @@
 package distove.presence.client;
 
+import distove.presence.client.dto.UserResponse;
 import org.springframework.cloud.openfeign.FeignClient;
 import org.springframework.web.bind.annotation.GetMapping;
 import org.springframework.web.bind.annotation.RequestHeader;
@@ -11,9 +12,9 @@ import java.util.List;
 public interface UserClient {
 
     @GetMapping("/auth/web/user")
-    UserResponse getUser(@RequestHeader("userId") Long userId);
+    UserResponse getUser(@RequestHeader Long userId);
 
     @GetMapping("/auth/web/user/list")
-    List<UserResponse> getUsers(@RequestParam("userIds") String userIdsString);
+    List<UserResponse> getUsers(@RequestParam String userIds);
 
 }

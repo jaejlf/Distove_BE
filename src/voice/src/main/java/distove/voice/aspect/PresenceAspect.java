@@ -11,8 +11,8 @@ import org.aspectj.lang.annotation.Pointcut;
 import org.springframework.stereotype.Component;
 import org.springframework.web.socket.WebSocketSession;
 
-import static distove.voice.enumerate.PresenceType.VOICE_OFF;
-import static distove.voice.enumerate.PresenceType.VOICE_ON;
+import static distove.voice.enumerate.ServiceInfo.VOICE_OFF;
+import static distove.voice.enumerate.ServiceInfo.VOICE_ON;
 
 @Aspect
 @Component
@@ -36,7 +36,7 @@ public class PresenceAspect {
         log.info(">>>>> Presence 업데이트 -> VOICE ON");
 
         Participant participant = participantService.getByWebSocketSession(session);
-        presenceClient.updateUserPresence(participant.getUserId(), VOICE_ON.getMessage());
+        presenceClient.updateUserPresence(participant.getUserId(), VOICE_ON.getType());
     }
 
     @Before("leaveRoomAspect() && args(session,..)")
@@ -44,7 +44,7 @@ public class PresenceAspect {
         log.info(">>>>> Presence 업데이트 -> VOICE OFF");
 
         Participant participant = participantService.getByWebSocketSession(session);
-        presenceClient.updateUserPresence(participant.getUserId(), VOICE_OFF.getMessage());
+        presenceClient.updateUserPresence(participant.getUserId(), VOICE_OFF.getType());
     }
 
 }

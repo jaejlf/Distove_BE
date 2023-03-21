@@ -1,21 +1,17 @@
 package distove.presence.entity;
 
 import distove.presence.enumerate.PresenceStatus;
-import lombok.Builder;
 import lombok.Getter;
 
-@Builder
 @Getter
 public class Presence {
 
-    private PresenceStatus status;
-    private String description;
+    private final PresenceStatus status;
+    private final String description;
 
-    public static Presence newPresence(PresenceStatus status, String description){
-        return Presence.builder()
-                .status(status)
-                .description(description)
-                .build();
+    public Presence(PresenceStatus status, String description) {
+        this.status = status;
+        this.description = description;
     }
 
 }

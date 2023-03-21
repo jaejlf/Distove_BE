@@ -1,13 +1,12 @@
-package distove.presence.service;
+package distove.presence.event;
 
-import distove.presence.event.SendNewUserConnectionEvent;
-import distove.presence.event.UpdateUserPresenceEvent;
+import distove.presence.service.PresenceService;
 import lombok.RequiredArgsConstructor;
 import org.springframework.stereotype.Service;
 
 @Service
 @RequiredArgsConstructor
-public class EventService {
+public class EventRunner {
 
     private final PresenceService presenceService;
 

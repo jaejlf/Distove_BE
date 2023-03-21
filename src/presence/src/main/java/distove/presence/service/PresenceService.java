@@ -1,16 +1,15 @@
 package distove.presence.service;
 
+import distove.presence.client.CommunityClient;
+import distove.presence.client.dto.UserResponse;
+import distove.presence.dto.response.PresenceResponse;
 import distove.presence.entity.Presence;
 import distove.presence.entity.PresenceTime;
-import distove.presence.dto.response.PresenceResponse;
-import distove.presence.dto.response.PresenceUpdateResponse;
 import distove.presence.enumerate.PresenceStatus;
 import distove.presence.enumerate.PresenceType;
 import distove.presence.exception.DistoveException;
 import distove.presence.repository.PresenceRepository;
 import distove.presence.repository.UserConnectionRepository;
-import distove.presence.client.CommunityClient;
-import distove.presence.client.UserResponse;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.messaging.simp.SimpMessagingTemplate;
@@ -18,7 +17,9 @@ import org.springframework.scheduling.annotation.Scheduled;
 import org.springframework.stereotype.Service;
 
 import java.sql.Timestamp;
-import java.util.*;
+import java.util.ArrayList;
+import java.util.List;
+import java.util.Map;
 
 import static distove.presence.entity.PresenceTime.newPresenceTime;
 import static distove.presence.exception.ErrorCode.SERVICE_INFO_TYPE_ERROR;
@@ -90,14 +91,14 @@ public class PresenceService {
     public void sendUserPresence(Long userId, PresenceType presenceType) {
         List<Long> serverIds = communityClient.getServerIdsByUserId(userId);
         for (Long serverId : serverIds) {
-            simpMessagingTemplate.convertAndSend("/sub/" + serverId, PresenceUpdateResponse.of(userId, presenceType.getPresence()));
+            simpMessagingTemplate.convertAndSend("/sub/" + serverId, PresenceResponse.update(userId, presenceType.getPresence()));
         }
     }
 
     public void sendNewUserConnectionEvent(Long userId, PresenceType presenceType) {
         List<Long> serverIds = communityClient.getServerIdsByUserId(userId);
         for (Long serverId : serverIds) {
-            simpMessagingTemplate.convertAndSend("/sub/" + serverId, PresenceUpdateResponse.of(userId, presenceType.getPresence()));
+            simpMessagingTemplate.convertAndSend("/sub/" + serverId, PresenceResponse.update(userId, presenceType.getPresence()));
         }
 
     }
@@ -111,7 +112,7 @@ public class PresenceService {
             if ((currentTime.getTime() > (presenceTimeMap.get(userId).getActiveAt().getTime() + 30000)) && presenceTimeMap.get(userId).getPresence().getStatus() != PresenceStatus.ONLINE_CALL) {
                 List<Long> serverIds = communityClient.getServerIdsByUserId(userId);
                 for (Long serverId : serverIds) {
-                    simpMessagingTemplate.convertAndSend("/sub/" + serverId, PresenceUpdateResponse.of(userId, PresenceType.AWAY.getPresence()));
+                    simpMessagingTemplate.convertAndSend("/sub/" + serverId, PresenceResponse.update(userId, PresenceType.AWAY.getPresence()));
                 }
                 awayUserIds.add(userId);
             }

@@ -1,6 +1,6 @@
 package distove.presence.client;
 
-
+import distove.presence.client.dto.UserResponse;
 import org.springframework.cloud.openfeign.FeignClient;
 import org.springframework.web.bind.annotation.GetMapping;
 import org.springframework.web.bind.annotation.PathVariable;
@@ -12,9 +12,9 @@ import java.util.List;
 public interface CommunityClient {
 
     @GetMapping("/community/web/server/ids")
-    List<Long> getServerIdsByUserId(@RequestHeader("userId") Long userId);
+    List<Long> getServerIdsByUserId(@RequestHeader Long userId);
 
     @GetMapping("/community/web/server/{serverId}/users")
-    List<UserResponse> getUsersByServerId(@PathVariable("serverId") Long serverId);
+    List<UserResponse> getUsersByServerId(@PathVariable Long serverId);
 
 }

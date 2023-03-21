@@ -1,21 +1,22 @@
 package distove.presence.controller;
 
-import distove.presence.service.RequestEventService;
+import distove.presence.event.UpdateUserPresenceEvent;
 import lombok.RequiredArgsConstructor;
 import org.springframework.web.bind.annotation.PostMapping;
 import org.springframework.web.bind.annotation.RequestHeader;
 import org.springframework.web.bind.annotation.RequestParam;
 import org.springframework.web.bind.annotation.RestController;
 
-@RequiredArgsConstructor
+import static distove.presence.enumerate.EventTopic.getEventQ;
+
 @RestController
+@RequiredArgsConstructor
 public class WebController {
-    private final RequestEventService requestEventService;
 
     @PostMapping("/web/update")
-    void updateUserPresence(@RequestHeader("userId") Long userId,
-                            @RequestParam("serviceInfo") String serviceInfo){
-        requestEventService.requestUpdateUserPresence(userId,serviceInfo);
+    void updateUserPresence(@RequestHeader Long userId,
+                            @RequestParam String serviceInfo) {
+        getEventQ(UpdateUserPresenceEvent.class).add(UpdateUserPresenceEvent.of(userId, serviceInfo));
     }
 
 }

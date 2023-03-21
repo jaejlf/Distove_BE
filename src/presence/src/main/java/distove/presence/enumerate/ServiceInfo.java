@@ -1,17 +1,17 @@
-package distove.voice.enumerate;
+package distove.presence.enumerate;
 
 import lombok.AllArgsConstructor;
 import lombok.Getter;
 
 @Getter
 @AllArgsConstructor
-public enum PresenceType {
+public enum ServiceInfo {
 
     VOICE_ON("voiceOn"),
     VOICE_OFF("voiceOff"),
     CHAT("chat"),
     COMMUNITY("community");
 
-    private final String message;
+    private final String type;
 
 }
