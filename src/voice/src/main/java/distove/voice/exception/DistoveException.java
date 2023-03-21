@@ -17,4 +17,3 @@ public class DistoveException extends RuntimeException {
     }
 
 }
-

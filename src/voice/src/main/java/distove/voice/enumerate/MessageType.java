@@ -12,10 +12,10 @@ import static distove.voice.exception.ErrorCode.INVALID_MESSAGE_TYPE;
 @AllArgsConstructor
 public enum MessageType {
 
-    JOIN_ROOM("joinRoom"), // 방 입장
-    LEAVE_ROOM("leaveRoom"), // 방 나가기
+    JOIN("join"), // 방 입장
+    LEAVE("leave"), // 방 나가기
     SDP_OFFER("sdpOffer"), // SDP 정보 전송 - req
-    SEND_ICE_CANDIDATE("sendIceCandidate"), // ICE Candidate 정보 전송 - req
+    ON_ICE_CANDIDATE("sendIceCandidate"), // ICE Candidate 정보 전송 - req
     UPDATE_SETTING("updateSetting"), // 마이크 & 카메라 설정 변경
     RESET_ALL("resetAll"), // 모든 정보 초기화
 

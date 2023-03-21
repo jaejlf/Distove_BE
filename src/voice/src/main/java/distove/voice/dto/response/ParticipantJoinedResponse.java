@@ -11,7 +11,7 @@ import static distove.voice.enumerate.MessageType.PARTICIPANT_JOINED;
 @JsonAutoDetect(fieldVisibility = JsonAutoDetect.Visibility.ANY)
 public class ParticipantJoinedResponse {
 
-    private final String type = PARTICIPANT_JOINED.getMessage();
+    private final String message = PARTICIPANT_JOINED.getMessage();
     private final ParticipantResponse participant;
 
     public static ParticipantJoinedResponse of(UserResponse user, VideoSetting videoSetting) {

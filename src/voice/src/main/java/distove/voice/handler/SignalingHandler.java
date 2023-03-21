@@ -4,23 +4,25 @@ import com.fasterxml.jackson.databind.ObjectMapper;
 import com.google.gson.Gson;
 import com.google.gson.GsonBuilder;
 import com.google.gson.JsonObject;
-import distove.voice.client.UserClient;
-import distove.voice.client.dto.UserResponse;
 import distove.voice.dto.request.JoinRoomRequest;
 import distove.voice.dto.request.SdpOfferRequest;
 import distove.voice.dto.request.SendIceCandidateRequest;
 import distove.voice.dto.request.UpdateSettingRequest;
-import distove.voice.dto.response.*;
+import distove.voice.dto.response.IceCandidateResponse;
+import distove.voice.dto.response.ParticipantLeftResponse;
+import distove.voice.dto.response.SdpAnswerResponse;
+import distove.voice.dto.response.UpdateSettingResponse;
 import distove.voice.entity.IncomingParticipant;
 import distove.voice.entity.Participant;
-import distove.voice.entity.VideoSetting;
 import distove.voice.entity.VoiceRoom;
 import distove.voice.enumerate.MessageType;
 import distove.voice.service.ParticipantService;
 import distove.voice.service.VoiceRoomService;
+import distove.voice.util.MessageUtil;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.kurento.client.IceCandidate;
+import org.kurento.client.MediaPipeline;
 import org.kurento.client.WebRtcEndpoint;
 import org.springframework.stereotype.Component;
 import org.springframework.web.socket.CloseStatus;
@@ -28,12 +30,8 @@ import org.springframework.web.socket.TextMessage;
 import org.springframework.web.socket.WebSocketSession;
 import org.springframework.web.socket.handler.TextWebSocketHandler;
 
-import java.io.IOException;
-import java.util.ArrayList;
 import java.util.List;
-import java.util.Map;
 import java.util.concurrent.CopyOnWriteArrayList;
-import java.util.stream.Collectors;
 
 import static distove.voice.enumerate.MessageType.getMessageType;
 
@@ -42,36 +40,39 @@ import static distove.voice.enumerate.MessageType.getMessageType;
 @RequiredArgsConstructor
 public class SignalingHandler extends TextWebSocketHandler {
 
-    private final UserClient userClient;
     private final VoiceRoomService voiceRoomService;
     private final ParticipantService participantService;
+    private final MessageUtil messageUtil;
 
     private static final ObjectMapper mapper = new ObjectMapper();
     private static final Gson gson = new GsonBuilder().create();
     List<WebSocketSession> sessions = new CopyOnWriteArrayList<>();
 
+    private static final String UDP = "UDP";
+    private static final String HOST = "host";
+
     @Override
-    public void handleTextMessage(WebSocketSession session, TextMessage response) throws Exception {
-        final JsonObject jsonMessage = gson.fromJson(response.getPayload(), JsonObject.class);
+    public void handleTextMessage(WebSocketSession session, TextMessage textMessage) throws Exception {
+        final JsonObject jsonMessage = gson.fromJson(textMessage.getPayload(), JsonObject.class);
         MessageType message = getMessageType(jsonMessage.get("message").getAsString());
         switch (message) {
-            case JOIN_ROOM:
-                JoinRoomRequest joinRoomRequest = mapper.readValue(response.getPayload(), JoinRoomRequest.class);
-                joinRoom(joinRoomRequest.getUserId(), joinRoomRequest.getChannelId(), session);
+            case JOIN:
+                JoinRoomRequest joinRoomRequest = mapper.readValue(textMessage.getPayload(), JoinRoomRequest.class);
+                join(session, joinRoomRequest.getUserId(), joinRoomRequest.getChannelId());
                 break;
-            case LEAVE_ROOM:
-                leaveRoom(session);
+            case LEAVE:
+                leave(session);
                 break;
             case SDP_OFFER:
-                SdpOfferRequest sdpOfferRequest = mapper.readValue(response.getPayload(), SdpOfferRequest.class);
+                SdpOfferRequest sdpOfferRequest = mapper.readValue(textMessage.getPayload(), SdpOfferRequest.class);
                 sdpOffer(session, sdpOfferRequest.getUserId(), sdpOfferRequest.getSdpOffer());
                 break;
-            case SEND_ICE_CANDIDATE:
-                SendIceCandidateRequest sendIceCandidateRequest = mapper.readValue(response.getPayload(), SendIceCandidateRequest.class);
-                sendIceCandidate(session, sendIceCandidateRequest.getUserId(), sendIceCandidateRequest.getIceCandidate());
+            case ON_ICE_CANDIDATE:
+                SendIceCandidateRequest sendIceCandidateRequest = mapper.readValue(textMessage.getPayload(), SendIceCandidateRequest.class);
+                onIceCandidate(session, sendIceCandidateRequest.getUserId(), sendIceCandidateRequest.getIceCandidate());
                 break;
             case UPDATE_SETTING:
-                UpdateSettingRequest updateSettingRequest = mapper.readValue(response.getPayload(), UpdateSettingRequest.class);
+                UpdateSettingRequest updateSettingRequest = mapper.readValue(textMessage.getPayload(), UpdateSettingRequest.class);
                 updateSetting(session, updateSettingRequest.getIsCameraOn(), updateSettingRequest.getIsMicOn());
                 break;
             case RESET_ALL:
@@ -92,113 +93,70 @@ public class SignalingHandler extends TextWebSocketHandler {
         sessions.remove(session);
     }
 
-    private void joinRoom(Long userId, Long channelId, WebSocketSession session) throws IOException {
-        VoiceRoom voiceRoom = voiceRoomService.getByChannelId(channelId);
-        WebRtcEndpoint outgoingMediaEndpoint = new WebRtcEndpoint.Builder(voiceRoom.getPipeline()).build();
-        outgoingMediaEndpoint.addIceCandidateFoundListener(event -> {
-            String candidate = event.getCandidate().getCandidate();
-            if (candidate.contains("UDP") && candidate.contains("host")) {
-                try {
-                    synchronized (session) {
-                        IceCandidateResponse iceCandidateResponse = IceCandidateResponse.of(userId, event.getCandidate());
-                        sendMessage(session, iceCandidateResponse);
-                    }
-                } catch (IOException e) {
-                    log.debug(e.getMessage());
-                }
-            }
-        });
+    public void join(WebSocketSession session, Long userId, Long channelId) {
+        VoiceRoom voiceRoom = voiceRoomService.findByChannelId(channelId)
+                .orElseGet(() -> voiceRoomService.create(channelId));
 
-        VideoSetting videoSetting = new VideoSetting(false, false);
-        Participant me = new Participant(userId, voiceRoom, outgoingMediaEndpoint, session, videoSetting);
-        participantService.add(me);
-
-        List<Participant> participants = participantService.findAllByChannelId(voiceRoom.getChannelId());
-        List<UserResponse> userResponses = getUsersByClient(participants);
-        Map<Long, UserResponse> userResponsesMap = userResponses.stream().collect(Collectors.toMap(UserResponse::getId, x -> x));
-
-        UserResponse user = userClient.getUser(me.getUserId());
-        List<ParticipantResponse> participantResponses = new ArrayList<>();
-        for (Participant participant : participants) {
-            if (!participant.equals(me)) {
-                ParticipantJoinedResponse participantJoinedResponse = ParticipantJoinedResponse.of(user, videoSetting);
-                sendMessage(participant.getWebSocketSession(), participantJoinedResponse);
-
-                UserResponse otherParticipant = userResponsesMap.get(participant.getUserId());
-                participantResponses.add(ParticipantResponse.of(otherParticipant, participant.getVideoSetting()));
-            }
-        }
-        sendMessage(me.getWebSocketSession(), ExistingParticipantsResponse.of(participantResponses));
+        WebRtcEndpoint outgoingEndpoint = createEndpoint(userId, voiceRoom.getPipeline(), session);
+        participantService.join(userId, voiceRoom, outgoingEndpoint, session);
     }
 
-    private void leaveRoom(WebSocketSession session) throws IOException {
-        Participant me = participantService.findByWebSocketSession(session);
-        me.getMediaEndpoint().release();
-
-        VoiceRoom voiceRoom = voiceRoomService.findByParticipant(me);
+    public void leave(WebSocketSession session) {
+        Participant me = participantService.getByWebSocketSession(session);
         Long userId = me.getUserId();
+        Long channelId = me.getVoiceRoom().getChannelId();
 
-        List<Participant> participants = participantService.findAllByChannelId(voiceRoom.getChannelId());
-        if (!participants.isEmpty()) {
-            for (Participant participant : participants) {
-                sendMessage(participant.getWebSocketSession(), ParticipantLeftResponse.of(userId));
-                if (participant.getIncomingParticipants().containsKey(userId)) {
-                    participant.getIncomingParticipants().get(userId).getMediaEndpoint().release();
-                    participant.getIncomingParticipants().remove(userId);
-                }
-            }
-        } else {
-            voiceRoomService.close(voiceRoom);
-        }
-        participantService.delete(me);
+        participantService.leave(me);
+        deleteIncomingEndpoint(userId, channelId);
     }
 
-    private void sdpOffer(WebSocketSession session, Long senderUserId, String sdpOffer) throws IOException {
-        Participant me = participantService.findByWebSocketSession(session);
-        Participant sender = participantService.findByUserId(senderUserId);
+    public void sdpOffer(WebSocketSession session, Long senderUserId, String sdpOffer) {
+        Participant me = participantService.getByWebSocketSession(session);
+        Participant sender = participantService.getByUserId(senderUserId);
 
-        WebRtcEndpoint incomingMediaEndpointFromYou = getIncomingMediaEndpointFromYou(me, sender);
-        me.getIncomingParticipants().put(senderUserId, new IncomingParticipant(senderUserId, incomingMediaEndpointFromYou));
+        WebRtcEndpoint incomingEndpoint = getIncomingEndpoint(me, sender);
+        me.getIncomingParticipants().put(senderUserId, new IncomingParticipant(senderUserId, incomingEndpoint));
 
-        SdpAnswerResponse sdpAnswerResponse = SdpAnswerResponse.of(senderUserId, incomingMediaEndpointFromYou.processOffer(sdpOffer));
-        sendMessage(session, sdpAnswerResponse);
+        SdpAnswerResponse sdpAnswerResponse = SdpAnswerResponse.of(senderUserId, incomingEndpoint.processOffer(sdpOffer));
+        messageUtil.sendMessage(session, sdpAnswerResponse);
 
-        incomingMediaEndpointFromYou.gatherCandidates();
+        incomingEndpoint.gatherCandidates();
         participantService.save(me);
     }
 
-    private void sendIceCandidate(WebSocketSession session, Long senderUserId, IceCandidate iceCandidateInfo) {
+    public void onIceCandidate(WebSocketSession session, Long senderUserId, IceCandidate iceCandidateInfo) {
         String candidate = iceCandidateInfo.getCandidate();
-        if (candidate.contains("UDP") && candidate.contains("host")) {
-            Participant me = participantService.findByWebSocketSession(session);
-            if (me.getUserId().equals(senderUserId)) {
-                me.getMediaEndpoint().addIceCandidate(iceCandidateInfo);
+        Participant sender = participantService.getByUserId(senderUserId);
+        if (candidate.contains(UDP) && candidate.contains(HOST)) {
+            Participant me = participantService.getByWebSocketSession(session);
+            if (me.equals(sender)) {
+                me.getEndpoint().addIceCandidate(iceCandidateInfo);
             } else {
-                me.getIncomingParticipants().get(senderUserId).getMediaEndpoint().addIceCandidate(iceCandidateInfo);
+                me.getIncomingParticipants().get(sender.getUserId()).getEndpoint().addIceCandidate(iceCandidateInfo);
             }
         }
     }
 
-    private void updateSetting(WebSocketSession session, Boolean isCameraOn, Boolean isMicOn) throws IOException {
-        Participant me = participantService.findByWebSocketSession(session);
+    public void updateSetting(WebSocketSession session, Boolean isCameraOn, Boolean isMicOn) {
+        Participant me = participantService.getByWebSocketSession(session);
         List<Participant> participants = participantService.findAllByChannelId(me.getVoiceRoom().getChannelId());
-        me.updateVideoInfo(new VideoSetting(isCameraOn, isMicOn));
+        me.updateVideoSetting(isCameraOn, isMicOn);
         for (Participant participant : participants) {
             if (!participant.equals(me)) {
-                UpdateSettingResponse updateSettingResponse = UpdateSettingResponse.of(me.getUserId(), new VideoSetting(isCameraOn, isMicOn));
-                sendMessage(participant.getWebSocketSession(), updateSettingResponse);
+                UpdateSettingResponse updateSettingResponse = UpdateSettingResponse.of(me.getUserId(), me.getVideoSetting());
+                messageUtil.sendMessage(participant.getSession(), updateSettingResponse);
             }
         }
     }
 
-    private void preDestroy() {
+    public void preDestroy() {
         List<Participant> participants = participantService.findAll();
         List<VoiceRoom> voiceRooms = voiceRoomService.findAll();
 
         for (Participant participant : participants) {
-            participant.getMediaEndpoint().release();
+            participant.getEndpoint().release();
             for (IncomingParticipant incomingParticipant : participant.getIncomingParticipants().values()) {
-                incomingParticipant.getMediaEndpoint().release();
+                incomingParticipant.getEndpoint().release();
             }
         }
         for (VoiceRoom voiceRoom : voiceRooms) {
@@ -208,43 +166,53 @@ public class SignalingHandler extends TextWebSocketHandler {
         voiceRoomService.deleteAll();
     }
 
-    private <T> void sendMessage(WebSocketSession session, T object) throws IOException {
-        ObjectMapper mapper = new ObjectMapper();
-        String jsonInString = mapper.writeValueAsString(object);
-        session.sendMessage(new TextMessage(jsonInString));
-    }
-
-    private List<UserResponse> getUsersByClient(List<Participant> participants) {
-        List<Long> userIds = participants.stream().map(Participant::getUserId).collect(Collectors.toList());
-        return userClient.getUsers(userIds.toString().replace("[", "").replace("]", ""));
-    }
-
-    private WebRtcEndpoint getIncomingMediaEndpointFromYou(Participant participant, Participant sender) {
-        if (participant.getUserId().equals(sender.getUserId())) return participant.getMediaEndpoint();
-
-        IncomingParticipant incomingParticipant = participant.getIncomingParticipants().get(sender.getUserId());
-        if (incomingParticipant == null) {
-            WebRtcEndpoint incomingMediaEndpoint = new WebRtcEndpoint.Builder(participant.getVoiceRoom().getPipeline()).build();
-            incomingMediaEndpoint.addIceCandidateFoundListener(event -> {
-                if (event.getCandidate().getCandidate().contains("UDP") && event.getCandidate().getCandidate().contains("host")) {
-                    try {
-                        synchronized (participant.getWebSocketSession()) {
-                            IceCandidateResponse iceCandidateResponse = IceCandidateResponse.of(sender.getUserId(), event.getCandidate());
-                            sendMessage(participant.getWebSocketSession(), iceCandidateResponse);
-                        }
-                    } catch (IOException e) {
-                        log.debug(e.getMessage());
-                    }
+    private WebRtcEndpoint createEndpoint(Long userId, MediaPipeline pipeline, WebSocketSession session) {
+        WebRtcEndpoint endpoint = new WebRtcEndpoint.Builder(pipeline).build();
+        endpoint.addIceCandidateFoundListener(event -> {
+            String candidate = event.getCandidate().getCandidate();
+            if (candidate.contains(UDP) && candidate.contains(HOST)) {
+                synchronized (session) {
+                    IceCandidateResponse iceCandidateResponse = IceCandidateResponse.of(userId, event.getCandidate());
+                    messageUtil.sendMessage(session, iceCandidateResponse);
                 }
+            }
+        });
+        return endpoint;
+    }
 
+    private void deleteIncomingEndpoint(Long userId, Long channelId) {
+        List<Participant> participants = participantService.findAllByChannelId(channelId);
+        if (!participants.isEmpty()) {
+            for (Participant participant : participants) {
+                messageUtil.sendMessage(participant.getSession(), ParticipantLeftResponse.of(userId));
+                if (participant.getIncomingParticipants().containsKey(userId)) {
+                    participant.getIncomingParticipants().get(userId).getEndpoint().release();
+                    participant.getIncomingParticipants().remove(userId);
+                }
+            }
+        } else {
+            voiceRoomService.findByChannelId(channelId).ifPresent(voiceRoom -> {
+                voiceRoom.getPipeline().release();
+                voiceRoomService.delete(channelId);
             });
-            incomingParticipant = new IncomingParticipant(sender.getUserId(), incomingMediaEndpoint);
+        }
+    }
+
+    private WebRtcEndpoint getIncomingEndpoint(Participant me, Participant sender) {
+        if (me.getUserId().equals(sender.getUserId())) return me.getEndpoint();
+
+        IncomingParticipant incomingParticipant = me.getIncomingParticipants().get(sender.getUserId());
+        if (incomingParticipant == null) {
+            WebRtcEndpoint incomingEndpoint = createEndpoint(
+                    sender.getUserId(),
+                    me.getVoiceRoom().getPipeline(),
+                    me.getSession());
+            incomingParticipant = new IncomingParticipant(sender.getUserId(), incomingEndpoint);
         }
 
-        sender.getMediaEndpoint().connect(incomingParticipant.getMediaEndpoint());
-        incomingParticipant.getMediaEndpoint().gatherCandidates();
-
-        return incomingParticipant.getMediaEndpoint();
+        sender.getEndpoint().connect(incomingParticipant.getEndpoint());
+        incomingParticipant.getEndpoint().gatherCandidates();
+        return incomingParticipant.getEndpoint();
     }
 
 }

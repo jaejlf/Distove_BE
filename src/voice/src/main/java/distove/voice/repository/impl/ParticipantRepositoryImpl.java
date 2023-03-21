@@ -20,7 +20,7 @@ public class ParticipantRepositoryImpl implements ParticipantRepository {
     @Override
     public Optional<Participant> findByWebSocketSession(WebSocketSession webSocketSession) {
         return participants.values().stream()
-                .filter(participant -> participant.getWebSocketSession().equals(webSocketSession)).findAny();
+                .filter(participant -> participant.getSession().equals(webSocketSession)).findAny();
     }
 
     @Override

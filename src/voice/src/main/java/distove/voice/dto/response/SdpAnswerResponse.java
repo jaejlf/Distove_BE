@@ -9,7 +9,7 @@ import static distove.voice.enumerate.MessageType.SDP_ANSWER;
 @JsonAutoDetect(fieldVisibility = JsonAutoDetect.Visibility.ANY)
 public class SdpAnswerResponse {
 
-    private final String type = SDP_ANSWER.getMessage();
+    private final String message = SDP_ANSWER.getMessage();
     private final Long userId;
     private final String sdpAnswer;
 

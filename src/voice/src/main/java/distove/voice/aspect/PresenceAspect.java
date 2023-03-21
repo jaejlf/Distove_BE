@@ -23,27 +23,28 @@ public class PresenceAspect {
     private final PresenceClient presenceClient;
     private final ParticipantService participantService;
 
-    @Pointcut("execution(* distove.voice.handler.SignalingHandler.joinRoom())")
+    @Pointcut("execution(* distove.voice.handler.SignalingHandler.join())")
     public void joinRoomAspect() {
     }
 
-    @Pointcut("execution(* distove.voice.handler.SignalingHandler.leaveRoom())")
+    @Pointcut("execution(* distove.voice.handler.SignalingHandler.leave())")
     public void leaveRoomAspect() {
     }
 
-    @Before("joinRoomAspect() && args(userId,..)")
-    public void updatePresenceToVoiceOn(Long userId) {
+    @Before("joinRoomAspect() && args(session,..)")
+    public void updatePresenceToVoiceOn(WebSocketSession session) {
         log.info(">>>>> Presence 업데이트 -> VOICE ON");
 
-        presenceClient.updateUserPresence(userId, VOICE_ON.getType());
+        Participant participant = participantService.getByWebSocketSession(session);
+        presenceClient.updateUserPresence(participant.getUserId(), VOICE_ON.getMessage());
     }
 
-    @Before("leaveRoomAspect() && args(webSocketSession,..)")
-    public void updatePresenceToVoiceOff(WebSocketSession webSocketSession) {
+    @Before("leaveRoomAspect() && args(session,..)")
+    public void updatePresenceToVoiceOff(WebSocketSession session) {
         log.info(">>>>> Presence 업데이트 -> VOICE OFF");
 
-        Participant participant = participantService.findByWebSocketSession(webSocketSession);
-        presenceClient.updateUserPresence(participant.getUserId(), VOICE_OFF.getType());
+        Participant participant = participantService.getByWebSocketSession(session);
+        presenceClient.updateUserPresence(participant.getUserId(), VOICE_OFF.getMessage());
     }
 
 }

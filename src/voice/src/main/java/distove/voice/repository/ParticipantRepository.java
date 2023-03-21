@@ -7,7 +7,6 @@ import org.springframework.web.socket.WebSocketSession;
 import java.util.List;
 import java.util.Optional;
 
-
 @Repository
 public interface ParticipantRepository {
 

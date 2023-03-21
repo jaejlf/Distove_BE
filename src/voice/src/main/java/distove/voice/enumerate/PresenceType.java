@@ -12,6 +12,6 @@ public enum PresenceType {
     CHAT("chat"),
     COMMUNITY("community");
 
-    private final String type;
+    private final String message;
 
 }

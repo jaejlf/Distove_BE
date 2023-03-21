@@ -11,7 +11,7 @@ import static distove.voice.enumerate.MessageType.EXISTING_PARTICIPANTS;
 @JsonAutoDetect(fieldVisibility = JsonAutoDetect.Visibility.ANY)
 public class ExistingParticipantsResponse {
 
-    private final String type = EXISTING_PARTICIPANTS.getMessage();
+    private final String message = EXISTING_PARTICIPANTS.getMessage();
     private final List<ParticipantResponse> participants;
 
     public static ExistingParticipantsResponse of(List<ParticipantResponse> participants) {

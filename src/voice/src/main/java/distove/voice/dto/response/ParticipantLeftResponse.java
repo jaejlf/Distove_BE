@@ -9,7 +9,7 @@ import static distove.voice.enumerate.MessageType.PARTICIPANT_LEFT;
 @JsonAutoDetect(fieldVisibility = JsonAutoDetect.Visibility.ANY)
 public class ParticipantLeftResponse {
 
-    private final String type = PARTICIPANT_LEFT.getMessage();
+    private final String message = PARTICIPANT_LEFT.getMessage();
     private final Long userId;
 
     public static ParticipantLeftResponse of(Long userId) {
@@ -19,3 +19,4 @@ public class ParticipantLeftResponse {
     }
 
 }
+

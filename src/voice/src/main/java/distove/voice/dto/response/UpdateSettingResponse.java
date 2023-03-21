@@ -10,7 +10,7 @@ import static distove.voice.enumerate.MessageType.UPDATE_SETTING;
 @JsonAutoDetect(fieldVisibility = JsonAutoDetect.Visibility.ANY)
 public class UpdateSettingResponse {
 
-    private final String type = UPDATE_SETTING.getMessage();
+    private final String message = UPDATE_SETTING.getMessage();
     private Long userId;
     VideoSetting videoSetting;
 
