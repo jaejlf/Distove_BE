@@ -16,7 +16,6 @@ import org.springframework.stereotype.Component;
 import static distove.presence.enumerate.PresenceType.OFFLINE;
 import static distove.presence.enumerate.PresenceType.ONLINE;
 import static distove.presence.event.EventTopic.getEventQ;
-import static org.springframework.messaging.simp.stomp.StompCommand.DISCONNECT;
 
 @Component
 @RequiredArgsConstructor
@@ -36,11 +35,12 @@ public class StompHandler implements ChannelInterceptor {
             connectionRepository.save(userId, sessionId);
             presenceRepository.save(userId, new Presence(ONLINE));
             getEventQ(UpdatePresenceEvent.class).add(new UpdatePresenceEvent(userId, ONLINE.getType()));
-        } else if (DISCONNECT.equals(accessor.getCommand())) {
+        } else if (StompCommand.DISCONNECT.equals(accessor.getCommand())) {
             connectionRepository.findBySessionId(sessionId).ifPresent(userId -> {
                 getEventQ(UpdatePresenceEvent.class).add(new UpdatePresenceEvent(userId, OFFLINE.getType()));
             });
         }
+
         return message;
     }
 

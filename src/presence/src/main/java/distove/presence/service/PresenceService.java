@@ -14,11 +14,10 @@ import org.springframework.messaging.simp.SimpMessagingTemplate;
 import org.springframework.scheduling.annotation.Scheduled;
 import org.springframework.stereotype.Service;
 
-import java.sql.Timestamp;
+import java.time.LocalDateTime;
 import java.util.ArrayList;
 import java.util.List;
 import java.util.Map;
-import java.util.Objects;
 
 import static distove.presence.enumerate.PresenceType.*;
 
@@ -80,26 +79,22 @@ public class PresenceService {
 
     @Scheduled(cron = "0/20 * * * * ?")
     public void updateInactiveUsersToAway() {
-        Timestamp currentTime = new Timestamp(System.currentTimeMillis());
         Map<Long, Presence> presenceMap = presenceRepository.findAll();
-        List<Long> awayUserIds = new ArrayList<>();
         for (Long userId : presenceMap.keySet()) {
-            if (isInactive(currentTime, presenceMap, userId)) {
-                List<Long> serverIds = communityClient.getServerIdsByUserId(userId);
-                for (Long serverId : serverIds) {
-                    simpMessagingTemplate.convertAndSend(destination + serverId, PresenceResponse.update(userId, AWAY));
-                }
-                awayUserIds.add(userId);
+            Presence presence = presenceMap.get(userId);
+            if (isInactive(presence)) {
+                publishPresence(userId, AWAY);
+                presenceRepository.deleteByUserId(userId);
             }
-        }
-        for (Long awayUserId : awayUserIds) {
-            presenceRepository.deleteByUserId(awayUserId);
         }
     }
 
-    private static boolean isInactive(Timestamp currentTime, Map<Long, Presence> presenceMap, Long userId) {
-        return (currentTime.getTime() > (presenceMap.get(userId).getActiveAt().getTime() + 30000))
-                && !Objects.equals(presenceMap.get(userId).getPresenceType().getType(), VOICE_ON.getType());
+    private boolean isInactive(Presence presence) {
+        if (presence.getPresenceType().equals(VOICE_ON)) return false;
+
+        LocalDateTime now = LocalDateTime.now();
+        LocalDateTime activeAt = presence.getActiveAt();
+        return now.isAfter(activeAt.plusMinutes(10));
     }
 
     private void publishPresence(Long userId, PresenceType presenceType) {
