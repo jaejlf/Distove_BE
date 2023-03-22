@@ -11,8 +11,8 @@ import org.aspectj.lang.annotation.Pointcut;
 import org.springframework.stereotype.Component;
 import org.springframework.web.socket.WebSocketSession;
 
-import static distove.voice.enumerate.ServiceInfo.VOICE_OFF;
-import static distove.voice.enumerate.ServiceInfo.VOICE_ON;
+import static distove.voice.enumerate.PresenceType.VOICE_OFF;
+import static distove.voice.enumerate.PresenceType.VOICE_ON;
 
 @Aspect
 @Component
