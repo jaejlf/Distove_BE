@@ -20,9 +20,9 @@ import java.util.Map;
 
 import static distove.chat.exception.ErrorCode.CHANNEL_NOT_FOUND_ERROR;
 
+@Service
 @Slf4j
 @RequiredArgsConstructor
-@Service
 public class NotificationService {
 
     private final SimpMessagingTemplate simpMessagingTemplate;

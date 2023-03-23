@@ -21,10 +21,7 @@ public class PresenceController {
     @GetMapping("/server/{serverId}")
     public ResponseEntity<Object> getMemberPresences(@PathVariable Long serverId) {
         List<PresenceResponse> result = presenceService.getMemberPresences(serverId);
-        return ResultResponse.success(
-                HttpStatus.OK,
-                serverId + "번 서버의 멤버별 활동상태 조회",
-                result);
+        return ResultResponse.success(HttpStatus.OK, "전체 멤버 활동상태 조회", result);
     }
 
 }

@@ -1,6 +1,6 @@
 package distove.chat.config;
 
-import distove.chat.stomp.StompHandler;
+import distove.chat.handler.StompHandler;
 import lombok.RequiredArgsConstructor;
 import org.springframework.context.annotation.Configuration;
 import org.springframework.messaging.simp.config.ChannelRegistration;

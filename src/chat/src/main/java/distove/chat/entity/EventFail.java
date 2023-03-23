@@ -11,7 +11,7 @@ public class EventFail {
 
     @Id
     private String id;
-    private Event event;
+    private final Event event;
 
     public EventFail(Event event) {
         this.event = event;

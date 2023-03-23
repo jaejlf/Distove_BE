@@ -57,7 +57,7 @@ public class Message {
         this.content = content;
     }
 
-    public void addReplyInfo(String replyName, Long stUserId) {
+    public void createReplyInfo(String replyName, Long stUserId) {
         this.replyName = replyName;
         this.stUserId = stUserId;
     }

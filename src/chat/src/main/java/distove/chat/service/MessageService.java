@@ -21,16 +21,15 @@ import org.springframework.stereotype.Service;
 import java.util.*;
 import java.util.stream.Collectors;
 
-import static distove.chat.dto.response.PagedMessageResponse.UnreadInfo;
 import static distove.chat.entity.Message.newMessage;
 import static distove.chat.entity.Message.newReply;
 import static distove.chat.enumerate.MessageType.MessageStatus.*;
 import static distove.chat.enumerate.MessageType.*;
 import static distove.chat.exception.ErrorCode.*;
 
+@Service
 @Slf4j
 @RequiredArgsConstructor
-@Service
 public class MessageService {
 
     @Value("${message.page.size}")
@@ -109,7 +108,7 @@ public class MessageService {
 
     public MessageResponse createReply(Long userId, MessageRequest request) {
         Message parent = getMessage(request.getParentId());
-        parent.addReplyInfo(request.getReplyName(), userId);
+        parent.createReplyInfo(request.getReplyName(), userId);
         messageRepository.save(parent);
 
 
@@ -243,11 +242,11 @@ public class MessageService {
                 .orElseThrow(() -> new DistoveException(CHANNEL_NOT_FOUND_ERROR));
     }
 
-    private UnreadInfo getUnreadInfo(Long channelId, Member member) {
-        UnreadInfo unread = null;
+    private UnreadInfoResponse getUnreadInfo(Long channelId, Member member) {
+        UnreadInfoResponse unread = null;
         int unreadCount = messageRepository.countUnreadMessage(channelId, member.getLastReadAt());
         if (unreadCount > 0) {
-            unread = UnreadInfo.of(
+            unread = UnreadInfoResponse.of(
                     member.getLastReadAt(),
                     unreadCount,
                     messageRepository.findFirstUnreadMessage(channelId, member.getLastReadAt()).getId());
@@ -291,7 +290,7 @@ public class MessageService {
                 messages = messageRepository.findAllParentByChannelIdNext(channelId, getMessage(cursorId).getCreatedAt(), pageSize);
                 break;
             default:
-                throw new DistoveException(SCROLL_ERROR);
+                throw new DistoveException(SCROLL_REQUEST_ERROR);
         }
         return messages;
     }

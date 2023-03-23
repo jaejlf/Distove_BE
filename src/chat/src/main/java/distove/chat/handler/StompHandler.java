@@ -1,4 +1,4 @@
-package distove.chat.stomp;
+package distove.chat.handler;
 
 import distove.chat.enumerate.PresenceType;
 import distove.chat.client.PresenceClient;
@@ -24,7 +24,7 @@ public class StompHandler implements ChannelInterceptor {
 
         if (StompCommand.SEND.equals(accessor.getCommand())) {
             Long userId = Long.valueOf(accessor.getNativeHeader("userId").get(0).toString());
-            presenceClient.updateUserPresence(userId, PresenceType.CHAT.getType());
+            presenceClient.updateUserPresence(userId, PresenceType.ONLINE.getType());
         }
         return message;
     }

@@ -24,11 +24,9 @@ public class MessageResponse {
     private String content;
     private LocalDateTime createdAt;
     private UserResponse writer;
-    private Boolean hasAuthorized;
+    private boolean hasAuthorized;
     private ReplyInfoResponse replyInfo;
     private List<ReactionResponse> reactions;
-    private String profileImgUrl;
-    private String nickname;
 
     public static MessageResponse ofDefault(Message message, UserResponse writer, Long userId, List<ReactionResponse> reactions) {
         return MessageResponse.builder()

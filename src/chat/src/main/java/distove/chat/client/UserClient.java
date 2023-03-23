@@ -17,7 +17,4 @@ public interface UserClient {
     @GetMapping("/auth/web/user/list")
     List<UserResponse> getUsers(@RequestParam String userIds);
 
-    @GetMapping("/auth/web/user/nickname")
-    List<Long> getUserByNickname(@RequestParam String nickname);
-
 }

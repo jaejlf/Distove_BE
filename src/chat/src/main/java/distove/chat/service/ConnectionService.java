@@ -8,9 +8,9 @@ import org.springframework.stereotype.Service;
 
 import java.util.ArrayList;
 
+@Service
 @Slf4j
 @RequiredArgsConstructor
-@Service
 public class ConnectionService {
 
     private final ConnectionRepository connectionRepository;
