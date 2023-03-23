@@ -12,7 +12,6 @@ import distove.chat.repository.MessageRepository;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.stereotype.Service;
-import org.springframework.transaction.annotation.Transactional;
 
 import java.util.*;
 import java.util.stream.Collectors;
@@ -28,7 +27,6 @@ public class ReactionService {
     private final MessageRepository messageRepository;
     private final UserClient userClient;
 
-    @Transactional
     public ReactionMessageResponse reactMessage(ReactionRequest reactionRequest, Long userId) {
         String emoji = reactionRequest.getEmoji();
         Message message = messageRepository.findById(reactionRequest.getMessageId())

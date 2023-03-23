@@ -8,7 +8,9 @@ import distove.chat.dto.response.PagedMessageResponse;
 import distove.chat.dto.response.ResultResponse;
 import distove.chat.dto.response.TypedUserResponse;
 import distove.chat.enumerate.MessageType;
+import distove.chat.factory.PublishFactory;
 import distove.chat.service.MessageService;
+import distove.chat.service.PublishService;
 import lombok.RequiredArgsConstructor;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.http.HttpStatus;
@@ -26,6 +28,7 @@ public class MessageController {
 
     private final SimpMessagingTemplate simpMessagingTemplate;
     private final MessageService messageService;
+    private final PublishFactory publishFactory;
 
     @Value("${sub.destination}")
     private String destination;
@@ -34,6 +37,11 @@ public class MessageController {
     public void publishMessage(@Header("userId") Long userId,
                                @DestinationVariable Long channelId,
                                @Payload MessageRequest request) {
+
+        // 팩토리 적용 버전
+        PublishService publishService = publishFactory.getServiceByStatus(request.getStatus());
+        publishService.publishMessage(userId, channelId, request);
+
         MessageResponse result = messageService.publishMessage(userId, channelId, request);
         simpMessagingTemplate.convertAndSend(destination + channelId, result);
     }
