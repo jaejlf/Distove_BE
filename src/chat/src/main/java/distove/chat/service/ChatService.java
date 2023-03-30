@@ -1,6 +1,5 @@
 package distove.chat.service;
 
-import distove.chat.client.CommunityClient;
 import distove.chat.client.UserClient;
 import distove.chat.client.dto.UserResponse;
 import distove.chat.dto.request.MessageRequest;
@@ -51,12 +50,11 @@ public class ChatService {
     }
 
     public MessageResponse createThread(Long userId, Long channelId, MessageRequest request) {
-        Message parent = messageRepository.findByIdAndChannelId(request.getParentId(), channelId)
+        Message message = messageRepository.findByIdAndChannelId(request.getParentId(), channelId)
                 .orElseThrow(() -> new DistoveException(MESSAGE_NOT_FOUND));
-
-        parent.createThread(request.getThreadName(), userId);
-        messageRepository.save(parent);
-        return messageConverter.getMessageResponse(userId, parent);
+        message.createThread(request.getThreadName(), userId);
+        messageRepository.save(message);
+        return messageConverter.getMessageResponse(userId, message);
     }
 
 }

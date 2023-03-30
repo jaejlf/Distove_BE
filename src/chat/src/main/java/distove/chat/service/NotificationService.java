@@ -50,7 +50,7 @@ public class NotificationService {
         Map<String, Object> map = new HashMap<>();
         map.put("serverId", serverId);
 
-        String channelIdsString = channelIds.toString().replace("[", "").replace("]", "");
+        String channelIdsString = channelIds.toString().replaceAll("[\\[\\]]", "");
         List<CategoryInfoResponse> categoryInfoResponses = communityClient.getCategoryIds(channelIdsString);
 
         map.put("categories", categoryInfoResponses);

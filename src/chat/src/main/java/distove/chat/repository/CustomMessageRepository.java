@@ -66,7 +66,7 @@ public interface CustomMessageRepository {
             "{ '$match': " +
                     "{ 'parentId' : ?0 } }",
             "{ '$sort' : { 'createdAt' : -1 } }"})
-    List<Message> findAllRepliesByParentId(String parentId);
+    List<Message> findAllThreadsByParentId(String parentId);
 
     /*
     Unread

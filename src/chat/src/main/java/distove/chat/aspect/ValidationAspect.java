@@ -1,6 +1,7 @@
 package distove.chat.aspect;
 
 import distove.chat.dto.request.MessageRequest;
+import distove.chat.service.MessageService;
 import distove.chat.util.MemberValidator;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
@@ -18,6 +19,7 @@ import static distove.chat.enumerate.MessageType.validateTypeAndStatus;
 public class ValidationAspect {
 
     private final MemberValidator memberValidator;
+    private final MessageService messageService;
 
     @Pointcut("execution(* distove.chat.service.ChatService.publishMessage())")
     public void publishMessageAspect() {
@@ -25,6 +27,14 @@ public class ValidationAspect {
 
     @Pointcut("execution(* distove.chat.service.MessageService.getMessagesByChannelId())")
     public void getMessagesByChannelIdAspect() {
+    }
+
+    @Pointcut("execution(* distove.chat.service.MessageService.getThreadsByMessageId())")
+    public void getThreadsByMessageIdAspect() {
+    }
+
+    @Pointcut("execution(* distove.chat.service.MessageService.getThreadsByChannelId())")
+    public void getThreadsByChannelIdAspect() {
     }
 
     @Before("publishMessageAspect() && args(userId,channelId,request)")
@@ -35,6 +45,17 @@ public class ValidationAspect {
 
     @Before("getMessagesByChannelIdAspect() && args(userId,channelId)")
     public void validateMemberForGetMessages(Long userId, Long channelId) {
+        memberValidator.validateMember(userId, channelId);
+    }
+
+    @Before("getThreadsByMessageIdAspect() && args(userId,messageId)")
+    public void validateMemberForGetThreadsByMessageId(Long userId, String messageId) {
+        Long channelId = messageService.getMessage(messageId).getChannelId();
+        memberValidator.validateMember(userId, channelId);
+    }
+
+    @Before("getThreadsByChannelIdAspect() && args(userId,channelId)")
+    public void validateMemberForGetThreadsByChannelId(Long userId, Long channelId) {
         memberValidator.validateMember(userId, channelId);
     }
 

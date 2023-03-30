@@ -45,4 +45,20 @@ public class MessageResponse {
         return builder.build();
     }
 
+    @Getter
+    @Builder
+    public static class ReactionResponse {
+
+        private String emoji;
+        private List<UserResponse> users;
+
+        public static ReactionResponse of(String emoji, List<UserResponse> users) {
+            return ReactionResponse.builder()
+                    .emoji(emoji)
+                    .users(users)
+                    .build();
+        }
+
+    }
+
 }

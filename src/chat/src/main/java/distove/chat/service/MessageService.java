@@ -1,11 +1,9 @@
 package distove.chat.service;
 
 import distove.chat.client.UserClient;
-import distove.chat.client.dto.UserResponse;
 import distove.chat.dto.response.MessageResponse;
 import distove.chat.dto.response.PagedMessageResponse;
 import distove.chat.dto.response.ThreadInfoResponse;
-import distove.chat.dto.response.UnreadInfoResponse;
 import distove.chat.entity.Connection;
 import distove.chat.entity.Member;
 import distove.chat.entity.Message;
@@ -20,9 +18,15 @@ import org.springframework.beans.factory.annotation.Value;
 import org.springframework.stereotype.Service;
 
 import java.time.LocalDateTime;
-import java.util.*;
+import java.util.ArrayList;
+import java.util.List;
+import java.util.Objects;
+import java.util.Optional;
 
-import static distove.chat.exception.ErrorCode.*;
+import static distove.chat.dto.response.PagedMessageResponse.CursorInfoResponse;
+import static distove.chat.dto.response.PagedMessageResponse.UnreadInfoResponse;
+import static distove.chat.exception.ErrorCode.MESSAGE_NOT_FOUND;
+import static distove.chat.exception.ErrorCode.USER_NOT_FOUND_ERROR;
 
 @Service
 @Slf4j
@@ -31,7 +35,6 @@ public class MessageService {
 
     private final MessageRepository messageRepository;
     private final ConnectionRepository connectionRepository;
-    private final ChatService chatService;
     private final ConnectionService connectionService;
     private final MessageConverter messageConverter;
     private final UserClient userClient;
@@ -40,45 +43,61 @@ public class MessageService {
     private int pageSize;
 
     public PagedMessageResponse getMessagesByChannelId(Long userId, Long channelId, Integer scroll, String cursorId) {
-        Connection connection = connectionService.getConnection(channelId);
-        List<Member> members = connection.getMembers();
-        Member member = members.stream()
-                .filter(x -> x.getUserId().equals(userId))
-                .findFirst()
-                .orElseGet(() -> {
-                    Member newMember = saveMember(userId, connection, members);
-                    chatService.publishWelcomeMessage(userId, channelId);
-                    return newMember;
-                });
-
-//        Optional<Integer> scrollOptional = Optional.ofNullable(scroll);
-
-//        if (scroll == null) notificationService.publishAllNotification(userId, connection.getServerId()); // 안읽메 알림 PUSH
-
+        Member member = connectionService.getOrCreateMember(userId, channelId);
         List<Message> messages = getMessagesByCursor(channelId, scroll, cursorId);
-        Map<String, String> cursorIdInfo = getCursorIdInfo(channelId, messages);
-        //        Collections.reverse(messageResponses); -> 메시지 뒤지버야햄
-        return PagedMessageResponse.ofDefault(
-                getUnreadInfo(channelId, member),
-                messageConverter.getMessageResponses(userId, messages),
-                cursorIdInfo);
+
+        List<MessageResponse> messageResponses = messageConverter.getMessageResponses(userId, messages);
+        UnreadInfoResponse unread = getUnreadInfo(channelId, member);
+        CursorInfoResponse cursorInfo = getCursorInfo(channelId, messages);
+
+        return PagedMessageResponse.ofDefault(messageResponses, unread, cursorInfo);
     }
 
-    public List<MessageResponse> getParentByChannelId(Long userId, Long channelId) {
-        connectionService.validateChannel(channelId);
+    public PagedMessageResponse getThreadsByMessageId(Long userId, String messageId) {
+        List<Message> messages = messageRepository.findAllThreadsByParentId(messageId);
+        List<MessageResponse> messageResponses = messageConverter.getMessageResponses(userId, messages);
+        ThreadInfoResponse threadInfo = getThreadInfo(getMessage(messageId));
+        return PagedMessageResponse.ofChild(messageResponses, threadInfo);
+    }
+
+    public List<MessageResponse> getThreadsByChannelId(Long userId, Long channelId) {
+        List<Message> messages = messageRepository.findAllByChannelIdAndThreadNameIsNotNull(channelId);
+        return messageConverter.getMessageResponses(userId, messages);
+    }
+
+    private UnreadInfoResponse getUnreadInfo(Long channelId, Member member) {
+        LocalDateTime lastReadAt = member.getLastReadAt();
+
+        int unreadCount = messageRepository.countUnreadMessage(channelId, lastReadAt);
+        if (unreadCount > 0) {
+            return UnreadInfoResponse.of(
+                    lastReadAt,
+                    unreadCount,
+                    messageRepository.findFirstUnreadMessage(channelId, lastReadAt).getId());
+        }
         return null;
-//        return messageRepository.findAllByChannelIdAndReplyNameIsNotNull(channelId)
-//                .stream()
-//                .map(x -> MessageResponse.of(x, userClient.getUser(x.getUserId()), userId, getReplyInfo(x), x.getReactions() != null ?
-//                        getReactions(x.getReactions(), Optional.empty()) : null))
-//                .collect(Collectors.toList());
     }
 
-    public PagedMessageResponse getRepliesByParentId(Long userId, String parentId) {
-        List<Message> messages = messageRepository.findAllRepliesByParentId(parentId);
-        ThreadInfoResponse replyInfo = getReplyInfo(getMessage(parentId));
-        return PagedMessageResponse.ofChild(replyInfo, messageConverter.getMessageResponses(userId, messages));
+    private CursorInfoResponse getCursorInfo(Long channelId, List<Message> messages) {
+        String previousCursorId = null;
+        String nextCursorId = null;
+
+        if (!messages.isEmpty()) {
+            Optional<Message> previousCursor = messageRepository.findPreviousByCursor(channelId, messages.get(messages.size() - 1).getCreatedAt());
+            Optional<Message> nextCursor = messageRepository.findNextByCursor(channelId, messages.get(0).getCreatedAt());
+            if (previousCursor.isPresent()) previousCursorId = previousCursor.get().getId();
+            if (nextCursor.isPresent()) nextCursorId = nextCursor.get().getId();
+        }
+
+        return CursorInfoResponse.of(previousCursorId, nextCursorId);
     }
+
+    public Message getMessage(String messageId) {
+        return messageRepository.findById(messageId)
+                .orElseThrow(() -> new DistoveException(MESSAGE_NOT_FOUND));
+    }
+
+    /////////////////
 
     public void unsubscribeChannel(Long userId, Long channelId) {
         Connection connection = connectionService.getConnection(channelId);
@@ -96,42 +115,12 @@ public class MessageService {
         updateLastReadAt(userId, connection, members);
     }
 
-    private ThreadInfoResponse getReplyInfo(Message message) {
-        Long stUserId = message.getThreadStarterId();
-        UserResponse stUser = userClient.getUser(stUserId);
-        return null;
-//        return ThreadInfoResponse.of(
-//                message.getThreadName(),
-//                stUser.getId(),
-//                stUser.getNickname(),
-//                stUser.getProfileImgUrl()
-//        );
+    private ThreadInfoResponse getThreadInfo(Message message) {
+        return ThreadInfoResponse.of(
+                message.getThreadName(),
+                userClient.getUser(message.getThreadStarterId()));
     }
 
-    private Message getMessage(String messageId) {
-        return messageRepository.findById(messageId)
-                .orElseThrow(() -> new DistoveException(MESSAGE_NOT_FOUND));
-    }
-
-    private Member saveMember(Long userId, Connection connection, List<Member> members) {
-        Member member = new Member(userId);
-        members.add(member);
-        connection.updateMembers(members);
-        connectionRepository.save(connection);
-        return member;
-    }
-
-    private UnreadInfoResponse getUnreadInfo(Long channelId, Member member) {
-        UnreadInfoResponse unread = null;
-        int unreadCount = messageRepository.countUnreadMessage(channelId, member.getLastReadAt());
-        if (unreadCount > 0) {
-            unread = UnreadInfoResponse.of(
-                    member.getLastReadAt(),
-                    unreadCount,
-                    messageRepository.findFirstUnreadMessage(channelId, member.getLastReadAt()).getId());
-        }
-        return unread;
-    }
 
     private void updateLastReadAt(Long userId, Connection connection, List<Member> members) {
         members.replaceAll(x -> Objects.equals(x.getUserId(), userId) ? new Member(userId) : x);
@@ -158,20 +147,5 @@ public class MessageService {
         return messages;
     }
 
-    private Map<String, String> getCursorIdInfo(Long channelId, List<Message> messages) {
-        Map<String, String> cursorIdInfo = new HashMap<>();
-        String previousCursorId = null;
-        String nextCursorId = null;
-
-        if (!messages.isEmpty()) {
-            Message previousCursor = messageRepository.findPreviousByCursor(channelId, messages.get(messages.size() - 1).getCreatedAt()).orElse(null);
-            Message nextCursor = messageRepository.findNextByCursor(channelId, messages.get(0).getCreatedAt()).orElse(null);
-            previousCursorId = previousCursor != null ? previousCursor.getId() : null;
-            nextCursorId = nextCursor != null ? nextCursor.getId() : null;
-        }
-        cursorIdInfo.put("previousCursorId", previousCursorId);
-        cursorIdInfo.put("nextCursorId", nextCursorId);
-        return cursorIdInfo;
-    }
 
 }
