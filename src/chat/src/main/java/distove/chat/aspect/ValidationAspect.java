@@ -22,23 +22,11 @@ public class ValidationAspect {
     private final MessageService messageService;
 
     /**
-     * when : 특정 채널의 메시지 리스트 최초 조회 시 (scroll = DEFAULT)
-     * then : notifyUnreadOfChannels -> 모든 채널의 알림 정보 업데이트
+     * when : 메시지 발행 시
+     * then : 멤버 & 메시지 유효성 검사
      */
     @Pointcut("execution(* distove.chat.service.ChatService.publishMessage())")
     public void publishMessageAspect() {
-    }
-
-    @Pointcut("execution(* distove.chat.service.MessageService.getMessagesByChannelId())")
-    public void getMessagesByChannelIdAspect() {
-    }
-
-    @Pointcut("execution(* distove.chat.service.MessageService.getThreadsByMessageId())")
-    public void getThreadsByMessageIdAspect() {
-    }
-
-    @Pointcut("execution(* distove.chat.service.MessageService.getThreadsByChannelId())")
-    public void getThreadsByChannelIdAspect() {
     }
 
     @Before("publishMessageAspect() && args(userId,channelId,request)")
@@ -47,9 +35,25 @@ public class ValidationAspect {
         validateTypeAndStatus(request.getType(), request.getStatus());
     }
 
+    /**
+     * when : 특정 채널의 메시지 리스트 조회 시
+     * then : 멤버 유효성 검사
+     */
+    @Pointcut("execution(* distove.chat.service.MessageService.getMessagesByChannelId())")
+    public void getMessagesByChannelIdAspect() {
+    }
+
     @Before("getMessagesByChannelIdAspect() && args(userId,channelId)")
     public void validateMemberForGetMessages(Long userId, Long channelId) {
         memberValidator.validateMember(userId, channelId);
+    }
+
+    /**
+     * when : 메시지의 스레드 메시지 리스트 조회 시
+     * then : 멤버 유효성 검사
+     */
+    @Pointcut("execution(* distove.chat.service.MessageService.getThreadsByMessageId())")
+    public void getThreadsByMessageIdAspect() {
     }
 
     @Before("getThreadsByMessageIdAspect() && args(userId,messageId)")
@@ -57,6 +61,15 @@ public class ValidationAspect {
         Long channelId = messageService.getMessage(messageId).getChannelId();
         memberValidator.validateMember(userId, channelId);
     }
+
+    /**
+     * when : 채널의 스레드 메시지 리스트 조회 시
+     * then : 멤버 유효성 검사
+     */
+    @Pointcut("execution(* distove.chat.service.MessageService.getThreadsByChannelId())")
+    public void getThreadsByChannelIdAspect() {
+    }
+
 
     @Before("getThreadsByChannelIdAspect() && args(userId,channelId)")
     public void validateMemberForGetThreadsByChannelId(Long userId, Long channelId) {

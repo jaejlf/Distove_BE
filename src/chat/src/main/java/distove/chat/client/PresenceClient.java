@@ -9,7 +9,7 @@ import org.springframework.web.bind.annotation.RequestParam;
 public interface PresenceClient {
 
     @PostMapping("/presence/web/update")
-    void updateUserPresence(@RequestHeader("userId") Long userId,
-                            @RequestParam("presenceType") String presenceType);
+    void updatePresence(@RequestHeader("userId") Long userId,
+                        @RequestParam("presenceType") String presenceType);
 
 }

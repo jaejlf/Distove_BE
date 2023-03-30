@@ -20,14 +20,18 @@ public class PresenceAspect {
 
     private final PresenceClient presenceClient;
 
+    /**
+     * when : 메시지 전송 이벤트 발생 시
+     * then : presence 업데이트를 위한 feign 호출
+     */
     @Before("execution(public * org.springframework.messaging.support.ChannelInterceptor.preSend(..))")
-    public void updateUserPresence(JoinPoint joinPoint) throws Throwable {
+    public void updateUserPresenceAspect(JoinPoint joinPoint) throws Throwable {
         Message<?> message = (Message<?>) joinPoint.getArgs()[0];
         StompHeaderAccessor accessor = StompHeaderAccessor.wrap(message);
 
         if (StompCommand.SEND.equals(accessor.getCommand())) {
             Long userId = Long.valueOf(accessor.getNativeHeader("userId").get(0).toString());
-            presenceClient.updateUserPresence(userId, PresenceType.ONLINE.getType());
+            presenceClient.updatePresence(userId, PresenceType.ONLINE.getType());
         }
     }
 
