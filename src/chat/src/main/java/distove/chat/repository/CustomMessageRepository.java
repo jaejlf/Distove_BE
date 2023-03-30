@@ -10,16 +10,16 @@ import java.util.Optional;
 
 public interface CustomMessageRepository {
 
-    /*
-    Parent
-    */
+    /**
+     * Message
+     */
     @Aggregation(pipeline = {
             "{ '$match': { " +
                     "'channelId' : ?0," +
                     "'parentId' : null } }",
             "{ '$sort' : { 'createdAt' : -1 } }",
             "{ '$limit' : ?1 }"})
-    List<Message> findAllParentByChannelId(Long channelId, int pageSize);
+    List<Message> findAllByChannelId(Long channelId, int pageSize);
 
     @Aggregation(pipeline = {
             "{ '$match': { " +
@@ -29,7 +29,7 @@ public interface CustomMessageRepository {
             "{ '$sort' : { 'createdAt' : 1 } }",
             "{ '$limit' : ?2 }",
             "{ '$sort' : { 'createdAt' : -1 } }"})
-    List<Message> findAllParentByChannelIdNext(Long channelId, LocalDateTime cursorCreatedAt, int pageSize);
+    List<Message> findAllByChannelIdNext(Long channelId, LocalDateTime cursorCreatedAt, int pageSize);
 
     @Aggregation(pipeline = {
             "{ '$match': { " +
@@ -38,7 +38,7 @@ public interface CustomMessageRepository {
                     "'createdAt' : { $lte :  ?1} } }",
             "{ '$sort' : { 'createdAt' : -1 } }",
             "{ '$limit' : ?2 }"})
-    List<Message> findAllParentByChannelIdPrevious(Long channelId, LocalDateTime cursorCreatedAt, int pageSize);
+    List<Message> findAllByChannelIdPrevious(Long channelId, LocalDateTime cursorCreatedAt, int pageSize);
 
     @Aggregation(pipeline = {
             "{ '$match': { " +
@@ -59,18 +59,18 @@ public interface CustomMessageRepository {
             "{ '$limit' : 1 }"})
     Optional<Message> findPreviousByCursor(Long channelId, LocalDateTime cursorCreatedAt);
 
-    /*
-    Reply
-    */
+    /**
+     * Thread
+     */
     @Aggregation(pipeline = {
             "{ '$match': " +
                     "{ 'parentId' : ?0 } }",
             "{ '$sort' : { 'createdAt' : -1 } }"})
     List<Message> findAllThreadsByParentId(String parentId);
 
-    /*
-    Unread
-    */
+    /**
+     * Unread
+     */
     @Query(value = "{ 'channelId' : ?0, 'createdAt' : { '$gt' : ?1 }, 'parentId' : null }", sort = "{ 'createdAt' : -1 }", count = true)
     int countUnreadMessage(Long channelId, LocalDateTime latestConnectedAt);
 

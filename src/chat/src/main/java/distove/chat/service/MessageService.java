@@ -18,15 +18,11 @@ import org.springframework.beans.factory.annotation.Value;
 import org.springframework.stereotype.Service;
 
 import java.time.LocalDateTime;
-import java.util.ArrayList;
-import java.util.List;
-import java.util.Objects;
-import java.util.Optional;
+import java.util.*;
 
 import static distove.chat.dto.response.PagedMessageResponse.CursorInfoResponse;
 import static distove.chat.dto.response.PagedMessageResponse.UnreadInfoResponse;
 import static distove.chat.exception.ErrorCode.MESSAGE_NOT_FOUND;
-import static distove.chat.exception.ErrorCode.USER_NOT_FOUND_ERROR;
 
 @Service
 @Slf4j
@@ -65,6 +61,36 @@ public class MessageService {
         return messageConverter.getMessageResponses(userId, messages);
     }
 
+    public void readAllMessages(Long userId, Long channelId) {
+        Connection connection = connectionService.getConnection(channelId);
+        List<Member> members = connection.getMembers();
+        updateLastReadAt(userId, connection, members);
+    }
+
+    public Message getMessage(String messageId) {
+        return messageRepository.findById(messageId)
+                .orElseThrow(() -> new DistoveException(MESSAGE_NOT_FOUND));
+    }
+
+    private List<Message> getMessagesByCursor(Long channelId, Integer scroll, String cursorId) {
+        ScrollDirection scrollDirection = ScrollDirection.getScrollDirection(scroll);
+        LocalDateTime createdAt = getMessage(cursorId).getCreatedAt();
+
+        List<Message> messages = new ArrayList<>();
+        switch (scrollDirection) {
+            case DEFAULT:
+                messages = messageRepository.findAllByChannelId(channelId, pageSize);
+                break;
+            case DOWN:
+                messages = messageRepository.findAllByChannelIdPrevious(channelId, createdAt, pageSize);
+                break;
+            case UP:
+                messages = messageRepository.findAllByChannelIdNext(channelId, createdAt, pageSize);
+                break;
+        }
+        return messages;
+    }
+
     private UnreadInfoResponse getUnreadInfo(Long channelId, Member member) {
         LocalDateTime lastReadAt = member.getLastReadAt();
 
@@ -92,60 +118,28 @@ public class MessageService {
         return CursorInfoResponse.of(previousCursorId, nextCursorId);
     }
 
-    public Message getMessage(String messageId) {
-        return messageRepository.findById(messageId)
-                .orElseThrow(() -> new DistoveException(MESSAGE_NOT_FOUND));
-    }
-
-    /////////////////
-
-    public void unsubscribeChannel(Long userId, Long channelId) {
-        Connection connection = connectionService.getConnection(channelId);
-        List<Member> members = connection.getMembers();
-        Member member = members.stream()
-                .filter(x -> x.getUserId().equals(userId)).findFirst()
-                .orElseThrow(() -> new DistoveException(USER_NOT_FOUND_ERROR));
-
-        if (getUnreadInfo(channelId, member) == null) updateLastReadAt(userId, connection, members);
-    }
-
-    public void readAllUnreadMessages(Long userId, Long channelId) {
-        Connection connection = connectionService.getConnection(channelId);
-        List<Member> members = connection.getMembers();
-        updateLastReadAt(userId, connection, members);
-    }
-
     private ThreadInfoResponse getThreadInfo(Message message) {
         return ThreadInfoResponse.of(
                 message.getThreadName(),
                 userClient.getUser(message.getThreadStarterId()));
     }
 
-
     private void updateLastReadAt(Long userId, Connection connection, List<Member> members) {
-        members.replaceAll(x -> Objects.equals(x.getUserId(), userId) ? new Member(userId) : x);
-        connection.updateMembers(members);
+        members.stream()
+                .filter(member -> Objects.equals(member.getUserId(), userId))
+                .findFirst()
+                .ifPresent(member -> connection.updateMembers(Collections.singletonList(new Member(userId))));
         connectionRepository.save(connection);
     }
 
-    private List<Message> getMessagesByCursor(Long channelId, Integer scroll, String cursorId) {
-        ScrollDirection scrollDirection = ScrollDirection.getScrollDirection(scroll);
-        LocalDateTime createdAt = getMessage(cursorId).getCreatedAt();
-
-        List<Message> messages = new ArrayList<>();
-        switch (scrollDirection) {
-            case DEFAULT:
-                messages = messageRepository.findAllParentByChannelId(channelId, pageSize);
-                break;
-            case DOWN:
-                messages = messageRepository.findAllParentByChannelIdPrevious(channelId, createdAt, pageSize);
-                break;
-            case UP:
-                messages = messageRepository.findAllParentByChannelIdNext(channelId, createdAt, pageSize);
-                break;
-        }
-        return messages;
-    }
-
+    //    public void unsubscribeChannel(Long userId, Long channelId) {
+//        Connection connection = connectionService.getConnection(channelId);
+//        List<Member> members = connection.getMembers();
+//        Member member = members.stream()
+//                .filter(x -> x.getUserId().equals(userId)).findFirst()
+//                .orElseThrow(() -> new DistoveException(USER_NOT_FOUND_ERROR));
+//
+//        if (getUnreadInfo(channelId, member) == null) updateLastReadAt(userId, connection, members);
+//    }
 
 }

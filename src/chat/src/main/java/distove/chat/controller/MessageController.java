@@ -4,9 +4,7 @@ import distove.chat.config.RequestUser;
 import distove.chat.dto.response.MessageResponse;
 import distove.chat.dto.response.PagedMessageResponse;
 import distove.chat.dto.response.ResultResponse;
-import distove.chat.service.ConnectionService;
 import distove.chat.service.MessageService;
-import distove.chat.service.NotificationService;
 import lombok.RequiredArgsConstructor;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
@@ -19,8 +17,6 @@ import java.util.List;
 public class MessageController {
 
     private final MessageService messageService;
-    private final ConnectionService connectionService;
-    private final NotificationService notificationService;
 
     /**
      * 특정 채널의 메시지 리스트 조회
@@ -39,7 +35,7 @@ public class MessageController {
 
 //        if (scroll == null) notificationService.publishAllNotification(userId, connection.getServerId()); // 안읽메 알림 PUSH
         PagedMessageResponse result = messageService.getMessagesByChannelId(userId, channelId, scroll, cursorId);
-        return ResultResponse.success(HttpStatus.OK, "특정 채널의 메시지 리스트 조회", result);
+        return ResultResponse.success(HttpStatus.OK, "채널의 메시지 리스트 조회", result);
     }
 
     /**
@@ -51,7 +47,7 @@ public class MessageController {
     public ResponseEntity<Object> getRepliesByParentId(@RequestUser Long userId,
                                                        @PathVariable String messageId) {
         PagedMessageResponse result = messageService.getThreadsByMessageId(userId, messageId);
-        return ResultResponse.success(HttpStatus.OK, "특정 메시지의 스레드 메시지 리스트 조회", result);
+        return ResultResponse.success(HttpStatus.OK, "메시지의 스레드 메시지 리스트 조회", result);
     }
 
     /**
@@ -61,21 +57,24 @@ public class MessageController {
     public ResponseEntity<Object> getParentByChannelId(@RequestUser Long userId,
                                                        @PathVariable Long channelId) {
         List<MessageResponse> result = messageService.getThreadsByChannelId(userId, channelId);
-        return ResultResponse.success(HttpStatus.OK, "특정 채널의 스레드 메시지 리스트 조회", result);
+        return ResultResponse.success(HttpStatus.OK, "채널의 스레드 메시지 리스트 조회", result);
     }
 
-    @PatchMapping("/unsubscribe/{channelId}")
-    public ResponseEntity<Object> unsubscribeChannel(@RequestUser Long userId,
-                                                     @PathVariable Long channelId) {
-        messageService.unsubscribeChannel(userId, channelId);
-        return ResultResponse.success(HttpStatus.OK, "채널 구독 해제", null);
-    }
-
+    /**
+     * 특정 채널에 존재하는 '안 읽은 메시지' 모두 읽음 처리
+     */
     @PatchMapping("/read/all/{channelId}")
     public ResponseEntity<Object> readAllUnreadMessages(@RequestUser Long userId,
                                                         @PathVariable Long channelId) {
-        messageService.readAllUnreadMessages(userId, channelId);
+        messageService.readAllMessages(userId, channelId);
         return ResultResponse.success(HttpStatus.OK, "안읽메 모두 읽음", null);
     }
+
+//    @PatchMapping("/unsubscribe/{channelId}")
+//    public ResponseEntity<Object> unsubscribeChannel(@RequestUser Long userId,
+//                                                     @PathVariable Long channelId) {
+//        messageService.unsubscribeChannel(userId, channelId);
+//        return ResultResponse.success(HttpStatus.OK, "채널 구독 해제", null);
+//    }
 
 }
