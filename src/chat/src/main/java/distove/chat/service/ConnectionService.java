@@ -49,6 +49,10 @@ public class ConnectionService {
                 .orElseThrow(() -> new DistoveException(CHANNEL_NOT_FOUND_ERROR));
     }
 
+    public List<Connection> getConnectionsByServerId(Long serverId) {
+        return connectionRepository.findAllByServerId(serverId);
+    }
+
     public void validateChannel(Long channelId) {
         getConnection(channelId);
     }

@@ -28,7 +28,7 @@ public class SubscribeEventListener implements ApplicationListener<SessionSubscr
         if (headerAccessor.containsNativeHeader("userId")) {
             Long userId = Long.parseLong(requireNonNull(headerAccessor.getNativeHeader("userId")).get(0));
             Long serverId = Long.parseLong(requireNonNull(headerAccessor.getDestination()).split("/")[3]);
-            notificationService.publishAllNotification(userId, serverId);
+            notificationService.notifyUnreadOfChannels(userId, serverId);
         }
     }
 

@@ -16,7 +16,7 @@ public class NotificationController {
     @MessageMapping("/chat/server/{serverId}")
     public void publishNotification(@Header("userId") Long userId,
                                     @DestinationVariable Long serverId) {
-        notificationService.publishAllNotification(userId, serverId);
+        notificationService.notifyUnreadOfChannels(userId, serverId);
     }
 
 }

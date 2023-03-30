@@ -1,12 +1,10 @@
 package distove.chat.service;
 
-import distove.chat.entity.Connection;
-import distove.chat.entity.Member;
-import distove.chat.exception.DistoveException;
-import distove.chat.repository.ConnectionRepository;
-import distove.chat.repository.MessageRepository;
-import distove.chat.client.dto.CategoryInfoResponse;
 import distove.chat.client.CommunityClient;
+import distove.chat.client.dto.CategoryInfoResponse;
+import distove.chat.dto.response.NotificationResponse;
+import distove.chat.entity.Connection;
+import distove.chat.repository.MessageRepository;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.beans.factory.annotation.Value;
@@ -14,11 +12,7 @@ import org.springframework.messaging.simp.SimpMessagingTemplate;
 import org.springframework.stereotype.Service;
 
 import java.util.ArrayList;
-import java.util.HashMap;
 import java.util.List;
-import java.util.Map;
-
-import static distove.chat.exception.ErrorCode.CHANNEL_NOT_FOUND_ERROR;
 
 @Service
 @Slf4j
@@ -26,45 +20,41 @@ import static distove.chat.exception.ErrorCode.CHANNEL_NOT_FOUND_ERROR;
 public class NotificationService {
 
     private final SimpMessagingTemplate simpMessagingTemplate;
-    private final ConnectionRepository connectionRepository;
+    private final ConnectionService connectionService;
     private final MessageRepository messageRepository;
     private final CommunityClient communityClient;
 
     @Value("${sub.destination}")
     private String destination;
 
-    public void publishAllNotification(Long userId, Long serverId) {
-        List<Long> channelIds = new ArrayList<>();
-        List<Connection> connections = connectionRepository.findAllByServerId(serverId);
-        for (Connection connection : connections) {
-            List<Member> members = connection.getMembers();
-            Member member = members.stream()
-                    .filter(x -> x.getUserId().equals(userId)).findFirst()
-                    .orElse(null);
-            if (member != null) {
-                int unreadCount = messageRepository.countUnreadMessage(connection.getChannelId(), member.getLastReadAt());
-                if (unreadCount > 0) channelIds.add(connection.getChannelId());
-            }
-        }
-
-        Map<String, Object> map = new HashMap<>();
-        map.put("serverId", serverId);
-
-        String channelIdsString = channelIds.toString().replaceAll("[\\[\\]]", "");
-        List<CategoryInfoResponse> categoryInfoResponses = communityClient.getCategoryIds(channelIdsString);
-
-        map.put("categories", categoryInfoResponses);
-        simpMessagingTemplate.convertAndSend(destination + "server/" + serverId + "/" + userId, map);
+    public void notifyUnreadOfChannels(Long userId, Long serverId) {
+        List<Long> channelIds = getAllChannelsInServer(userId, serverId);
+        List<CategoryInfoResponse> categoryInfoResponses = communityClient.getCategoryIds(
+                channelIds.toString().replaceAll("[\\[\\]]", ""));
+        NotificationResponse notification = NotificationResponse.ofUnreads(serverId, categoryInfoResponses);
+        simpMessagingTemplate.convertAndSend(destination + "server/" + serverId + "/" + userId, notification);
     }
 
-    public void publishNotification(Long channelId) {
-        Long serverId = connectionRepository.findByChannelId(channelId)
-                .orElseThrow(() -> new DistoveException(CHANNEL_NOT_FOUND_ERROR)).getServerId();
+    public void notifyNewMessage(Long channelId) {
+        Long serverId = connectionService.getConnection(channelId).getServerId();
+        NotificationResponse notification = NotificationResponse.ofNewMessage(serverId, communityClient.getCategoryId(channelId));
+        simpMessagingTemplate.convertAndSend(destination + "server/" + serverId, notification);
+    }
 
-        Map<String, Object> map = new HashMap<>();
-        map.put("serverId", serverId);
-        map.put("category", communityClient.getCategoryId(channelId));
-        simpMessagingTemplate.convertAndSend(destination + "server/" + serverId, map);
+    private List<Long> getAllChannelsInServer(Long userId, Long serverId) {
+        List<Long> channelIds = new ArrayList<>();
+        List<Connection> connections = connectionService.getConnectionsByServerId(serverId);
+        for (Connection connection : connections) {
+            connection.getMembers().stream()
+                    .filter(x -> x.getUserId().equals(userId)).findFirst()
+                    .ifPresent(m -> {
+                        int unreadCount = messageRepository.countUnreadMessage(connection.getChannelId(), m.getLastReadAt());
+                        if (unreadCount > 0) {
+                            channelIds.add(connection.getChannelId());
+                        }
+                    });
+        }
+        return channelIds;
     }
 
 }
