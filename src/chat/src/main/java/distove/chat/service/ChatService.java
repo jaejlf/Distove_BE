@@ -12,11 +12,9 @@ import distove.chat.entity.Message;
 import distove.chat.entity.Reaction;
 import distove.chat.exception.DistoveException;
 import distove.chat.factory.MessageFactory;
-import distove.chat.repository.ConnectionRepository;
 import distove.chat.repository.MessageRepository;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
-import org.springframework.beans.factory.annotation.Value;
 import org.springframework.stereotype.Service;
 
 import java.util.List;
@@ -34,17 +32,10 @@ import static distove.chat.exception.ErrorCode.USER_NOT_FOUND_ERROR;
 @RequiredArgsConstructor
 public class ChatService {
 
-    @Value("${message.page.size}")
-    private int pageSize;
-
-    private final StorageService storageService;
-    private final NotificationService notificationService;
     private final MessageRepository messageRepository;
-    private final ConnectionRepository connectionRepository;
+    private final MessageFactory messageFactory;
     private final UserClient userClient;
     private final CommunityClient communityClient;
-
-    private final MessageFactory messageFactory;
 
     public MessageResponse publishMessage(Long userId, Long channelId, MessageRequest request) {
         if (!communityClient.isMember(channelId, userId)) throw new DistoveException(USER_NOT_FOUND_ERROR);

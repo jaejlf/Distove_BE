@@ -9,6 +9,10 @@ import org.springframework.stereotype.Service;
 @RequiredArgsConstructor
 public class MessageService {
 //
+
+//    @Value("${message.page.size}")
+//    private int pageSize;
+
 //    public PagedMessageResponse getMessagesByChannelId(Long userId, Long channelId, Integer scroll, String cursorId) {
 //        if (!communityClient.isMember(channelId, userId)) throw new DistoveException(USER_NOT_FOUND_ERROR);
 //        Connection connection = checkChannelExist(channelId);
