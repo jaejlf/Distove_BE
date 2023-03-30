@@ -12,7 +12,7 @@ public interface MessageRepository extends MongoRepository<Message, String>, Cus
 
     List<Message> findAllByParentId(String parentId);
 
-    List<Message> findAllByChannelIdAndReplyNameIsNotNull(Long channelId);
+    List<Message> findAllByChannelIdAndThreadNameIsNotNull(Long channelId);
 
     void deleteAllByParentId(String parentId);
 

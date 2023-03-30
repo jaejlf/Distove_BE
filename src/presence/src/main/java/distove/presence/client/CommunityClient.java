@@ -12,9 +12,9 @@ import java.util.List;
 public interface CommunityClient {
 
     @GetMapping("/community/web/server/ids")
-    List<Long> getServerIdsByUserId(@RequestHeader Long userId);
+    List<Long> getServerIdsByUserId(@RequestHeader("userId") Long userId);
 
     @GetMapping("/community/web/server/{serverId}/users")
-    List<UserResponse> getUsersByServerId(@PathVariable Long serverId);
+    List<UserResponse> getUsersByServerId(@PathVariable("serverId") Long serverId);
 
 }

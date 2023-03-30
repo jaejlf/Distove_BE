@@ -12,12 +12,12 @@ import java.util.List;
 public interface CommunityClient {
 
     @GetMapping("/community/web/category/list")
-    List<CategoryInfoResponse> getCategoryIds(@RequestParam String channelIdsString);
+    List<CategoryInfoResponse> getCategoryIds(@RequestParam("channelIds") String channelIds);
 
     @GetMapping("/community/web/category")
-    CategoryInfoResponse getCategoryId(@RequestParam Long channelId);
+    CategoryInfoResponse getCategoryId(@RequestParam("channelId") Long channelId);
 
     @GetMapping("/community/web/channel/{channelId}/member")
-    boolean isMember(@PathVariable Long channelId, @RequestParam Long userId);
+    boolean isMember(@PathVariable("channelId") Long channelId, @RequestParam("userId") Long userId);
 
 }

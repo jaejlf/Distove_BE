@@ -12,9 +12,9 @@ import java.util.List;
 public interface UserClient {
 
     @GetMapping("/auth/web/user")
-    UserResponse getUser(@RequestHeader Long userId);
+    UserResponse getUser(@RequestHeader("userId") Long userId);
 
     @GetMapping("/auth/web/user/list")
-    List<UserResponse> getUsers(@RequestParam String userIds);
+    List<UserResponse> getUsers(@RequestParam("userIds") String userIds);
 
 }

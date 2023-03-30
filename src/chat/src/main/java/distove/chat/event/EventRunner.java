@@ -23,7 +23,7 @@ public class EventRunner {
     public void runDeleteChannel(DeleteChannelEvent event) {
         try {
             connectionService.deleteByChannelId(event.getChannelId());
-            chatService.deleteByChannelId(event.getChannelId());
+//            chatService.deleteByChannelId(event.getChannelId());
         } catch (Exception e) {
             eventFailRepository.save(new EventFail(event));
             throw new DistoveException(EVENT_HANDLE_ERROR);
@@ -34,7 +34,7 @@ public class EventRunner {
         try {
             for (Long channelId : event.getChannelIds()) {
                 connectionService.deleteByChannelId(channelId);
-                chatService.deleteByChannelId(channelId);
+//                chatService.deleteByChannelId(channelId);
             }
         } catch (Exception e) {
             eventFailRepository.save(new EventFail(event));
