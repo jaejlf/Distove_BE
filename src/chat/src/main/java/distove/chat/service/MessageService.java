@@ -132,7 +132,7 @@ public class MessageService {
         connectionRepository.save(connection);
     }
 
-    //    public void unsubscribeChannel(Long userId, Long channelId) {
+//    public void unsubscribeChannel(Long userId, Long channelId) {
 //        Connection connection = connectionService.getConnection(channelId);
 //        List<Member> members = connection.getMembers();
 //        Member member = members.stream()

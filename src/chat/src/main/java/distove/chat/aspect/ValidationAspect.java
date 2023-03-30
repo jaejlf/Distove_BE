@@ -21,6 +21,10 @@ public class ValidationAspect {
     private final MemberValidator memberValidator;
     private final MessageService messageService;
 
+    /**
+     * when : 특정 채널의 메시지 리스트 최초 조회 시 (scroll = DEFAULT)
+     * then : notifyUnreadOfChannels -> 모든 채널의 알림 정보 업데이트
+     */
     @Pointcut("execution(* distove.chat.service.ChatService.publishMessage())")
     public void publishMessageAspect() {
     }
