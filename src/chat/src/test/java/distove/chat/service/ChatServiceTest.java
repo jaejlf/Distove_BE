@@ -4,7 +4,7 @@ import distove.chat.dto.request.MessageRequest;
 import distove.chat.dto.response.MessageResponse;
 import distove.chat.dto.response.PagedMessageResponse;
 import distove.chat.dto.response.ThreadInfoResponse;
-import distove.chat.dto.response.TypedUserResponse;
+import distove.chat.dto.response.TypingUserResponse;
 import distove.chat.entity.Connection;
 import distove.chat.entity.Message;
 import distove.chat.exception.DistoveException;
@@ -117,10 +117,10 @@ class ChatServiceTest extends CommonServiceTest {
         given(userClient.getUser(any())).willReturn(dummyUser);
 
         // when
-        TypedUserResponse result = chatService.publishTypedUser(userId);
+        TypingUserResponse result = chatService.publishTypingUser(userId);
 
         //then
-        TypedUserResponse expected = TypedUserResponse.builder()
+        TypingUserResponse expected = TypingUserResponse.builder()
                 .type(TEXT)
                 .status(TYPING)
                 .content(dummyUser.getNickname())

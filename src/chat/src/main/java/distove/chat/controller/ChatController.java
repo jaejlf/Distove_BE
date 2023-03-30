@@ -4,7 +4,7 @@ import distove.chat.config.RequestUser;
 import distove.chat.dto.request.FileUploadRequest;
 import distove.chat.dto.request.MessageRequest;
 import distove.chat.dto.response.MessageResponse;
-import distove.chat.dto.response.TypedUserResponse;
+import distove.chat.dto.response.TypingUserResponse;
 import distove.chat.service.ChatService;
 import distove.chat.service.StorageService;
 import lombok.RequiredArgsConstructor;
@@ -67,7 +67,7 @@ public class ChatController {
      */
     @MessageMapping("/chat/typing/{channelId}")
     public void publishTypedUser(@Header("userId") Long userId, @DestinationVariable Long channelId) {
-        TypedUserResponse result = chatService.publishTypedUser(userId);
+        TypingUserResponse result = chatService.publishTypingUser(userId);
         simpMessagingTemplate.convertAndSend(destination + channelId, result);
     }
 
@@ -112,8 +112,8 @@ public class ChatController {
      * 스레드 채널에서 '작성 중'인 유저
      */
     @MessageMapping("/thread/typing/{parentId}")
-    public void publishThreadTypedUser(@Header("userId") Long userId, @DestinationVariable String parentId) {
-        TypedUserResponse result = chatService.publishTypedUser(userId);
+    public void publishThreadTypingUser(@Header("userId") Long userId, @DestinationVariable String parentId) {
+        TypingUserResponse result = chatService.publishTypingUser(userId);
         simpMessagingTemplate.convertAndSend(destination + parentId, result);
     }
 

@@ -4,7 +4,7 @@ import distove.chat.enumerate.MessageType;
 import lombok.Builder;
 import lombok.Getter;
 
-import static distove.chat.enumerate.MessageType.MessageStatus;
+import static distove.chat.enumerate.MessageType.*;
 import static distove.chat.enumerate.MessageType.MessageStatus.CREATED;
 
 @Getter
@@ -25,6 +25,14 @@ public class MessageRequest {
                 .status(CREATED)
                 .content(content)
                 .parentId(parentId)
+                .build();
+    }
+
+    public static MessageRequest ofWelcome(String content) {
+        return MessageRequest.builder()
+                .type(WELCOME)
+                .status(CREATED)
+                .content(content)
                 .build();
     }
 

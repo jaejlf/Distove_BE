@@ -5,50 +5,49 @@ import distove.chat.client.UserClient;
 import distove.chat.client.dto.UserResponse;
 import distove.chat.dto.request.MessageRequest;
 import distove.chat.dto.response.MessageResponse;
-import distove.chat.dto.response.ReactionResponse;
-import distove.chat.dto.response.ThreadInfoResponse;
-import distove.chat.dto.response.TypedUserResponse;
+import distove.chat.dto.response.TypingUserResponse;
 import distove.chat.entity.Message;
-import distove.chat.entity.Reaction;
 import distove.chat.exception.DistoveException;
 import distove.chat.factory.MessageFactory;
 import distove.chat.repository.MessageRepository;
+import distove.chat.util.MessageConverter;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
+import org.springframework.beans.factory.annotation.Value;
+import org.springframework.messaging.simp.SimpMessagingTemplate;
 import org.springframework.stereotype.Service;
 
-import java.util.List;
-import java.util.Map;
-import java.util.Optional;
-import java.util.Set;
-import java.util.stream.Collectors;
-
-import static distove.chat.enumerate.MessageType.validateTypeAndStatus;
 import static distove.chat.exception.ErrorCode.MESSAGE_NOT_FOUND;
-import static distove.chat.exception.ErrorCode.USER_NOT_FOUND_ERROR;
 
 @Service
 @Slf4j
 @RequiredArgsConstructor
 public class ChatService {
 
+    private final SimpMessagingTemplate simpMessagingTemplate;
     private final MessageRepository messageRepository;
     private final MessageFactory messageFactory;
+    private final MessageConverter messageConverter;
     private final UserClient userClient;
-    private final CommunityClient communityClient;
+
+    @Value("${sub.destination}")
+    private String destination;
 
     public MessageResponse publishMessage(Long userId, Long channelId, MessageRequest request) {
-        if (!communityClient.isMember(channelId, userId)) throw new DistoveException(USER_NOT_FOUND_ERROR);
-        validateTypeAndStatus(request.getType(), request.getStatus());
-
         MessageGenerator messageGenerator = messageFactory.getServiceByStatus(request.getStatus());
         Message message = messageGenerator.createMessage(userId, channelId, request);
-        return getMessageResponse(userId, message);
+        return messageConverter.getMessageResponse(userId, message);
     }
 
-    public TypedUserResponse publishTypedUser(Long userId) {
-        UserResponse typedUser = userClient.getUser(userId);
-        return TypedUserResponse.of(typedUser.getNickname());
+    public TypingUserResponse publishTypingUser(Long userId) {
+        UserResponse typingUser = userClient.getUser(userId);
+        return TypingUserResponse.of(typingUser.getNickname());
+    }
+
+    public void publishWelcomeMessage(Long userId, Long channelId) {
+        UserResponse user = userClient.getUser(userId);
+        MessageResponse result = publishMessage(userId, channelId, MessageRequest.ofWelcome(user.getNickname()));
+        simpMessagingTemplate.convertAndSend(destination + channelId, result);
     }
 
     public MessageResponse createThread(Long userId, Long channelId, MessageRequest request) {
@@ -57,32 +56,7 @@ public class ChatService {
 
         parent.createThread(request.getThreadName(), userId);
         messageRepository.save(parent);
-        return getMessageResponse(userId, parent);
-    }
-
-    private MessageResponse getMessageResponse(Long userId, Message parent) {
-        UserResponse writer = userClient.getUser(userId);
-        List<ReactionResponse> reactions = getReactions(parent.getReactions());
-        Optional<ThreadInfoResponse> threadInfo = Optional.ofNullable(parent.getThreadName())
-                .map(threadName -> ThreadInfoResponse.of(threadName, userClient.getUser(parent.getThreadStarterId())));
-
-        return MessageResponse.of(parent, writer, userId, reactions, threadInfo);
-    }
-
-    public List<ReactionResponse> getReactions(List<Reaction> reactions) {
-        Set<Long> userIds = reactions.stream()
-                .flatMap(reaction -> reaction.getUserIds().stream())
-                .collect(Collectors.toSet());
-
-        List<UserResponse> users = userClient.getUsers(userIds.toString().replaceAll("[\\[\\]]", ""));
-        Map<Long, UserResponse> userResponseMap = users.stream().collect(Collectors.toMap(UserResponse::getId, u -> u));
-        return reactions.stream()
-                .map(reaction -> ReactionResponse.of(
-                        reaction.getEmoji(),
-                        reaction.getUserIds().stream()
-                                .map(userResponseMap::get)
-                                .collect(Collectors.toList())))
-                .collect(Collectors.toList());
+        return messageConverter.getMessageResponse(userId, parent);
     }
 
 }

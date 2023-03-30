@@ -33,16 +33,12 @@ public class PresenceAspect {
 
     @Before("joinRoomAspect() && args(session,..)")
     public void updatePresenceToVoiceOn(WebSocketSession session) {
-        log.info(">>>>> Presence 업데이트 -> VOICE ON");
-
         Participant participant = participantService.getByWebSocketSession(session);
         presenceClient.updateUserPresence(participant.getUserId(), VOICE_ON.getType());
     }
 
     @Before("leaveRoomAspect() && args(session,..)")
     public void updatePresenceToVoiceOff(WebSocketSession session) {
-        log.info(">>>>> Presence 업데이트 -> VOICE OFF");
-
         Participant participant = participantService.getByWebSocketSession(session);
         presenceClient.updateUserPresence(participant.getUserId(), VOICE_OFF.getType());
     }

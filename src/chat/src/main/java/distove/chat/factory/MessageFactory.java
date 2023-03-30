@@ -7,6 +7,7 @@ import lombok.RequiredArgsConstructor;
 import org.springframework.stereotype.Component;
 
 import static distove.chat.enumerate.MessageType.MessageStatus;
+import static distove.chat.enumerate.MessageType.WELCOME;
 import static distove.chat.exception.ErrorCode.MESSAGE_TYPE_ERROR;
 
 @Component

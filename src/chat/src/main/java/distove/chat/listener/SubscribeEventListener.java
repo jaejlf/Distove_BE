@@ -23,6 +23,8 @@ public class SubscribeEventListener implements ApplicationListener<SessionSubscr
     @Override
     public void onApplicationEvent(SessionSubscribeEvent event) {
         StompHeaderAccessor headerAccessor = StompHeaderAccessor.wrap(event.getMessage());
+        String topic = headerAccessor.getDestination();
+
         if (headerAccessor.containsNativeHeader("userId")) {
             Long userId = Long.parseLong(requireNonNull(headerAccessor.getNativeHeader("userId")).get(0));
             Long serverId = Long.parseLong(requireNonNull(headerAccessor.getDestination()).split("/")[3]);

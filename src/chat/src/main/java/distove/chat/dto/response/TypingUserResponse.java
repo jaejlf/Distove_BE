@@ -9,14 +9,14 @@ import static distove.chat.enumerate.MessageType.MessageStatus.*;
 
 @Getter
 @Builder
-public class TypedUserResponse {
+public class TypingUserResponse {
 
     private MessageType type;
     private MessageStatus status;
     private String content;
 
-    public static TypedUserResponse of(String nickname) {
-        return TypedUserResponse.builder()
+    public static TypingUserResponse of(String nickname) {
+        return TypingUserResponse.builder()
                 .type(TEXT)
                 .status(TYPING)
                 .content(nickname)
