@@ -1,7 +1,7 @@
 package distove.chat.factory;
 
 import distove.chat.exception.DistoveException;
-import distove.chat.service.PublishService;
+import distove.chat.service.MessageService;
 import distove.chat.service.impl.*;
 import lombok.RequiredArgsConstructor;
 import org.springframework.stereotype.Component;
@@ -19,7 +19,7 @@ public class PublishFactory {
     private final ReactedStatusService reactedStatusService;
     private final TypingStatusService typingStatusService;
 
-    public PublishService getServiceByStatus(MessageStatus status) {
+    public MessageService getServiceByStatus(MessageStatus status) {
         switch (status) {
             case CREATED:
                 return createdStatusService;

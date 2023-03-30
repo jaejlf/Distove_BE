@@ -4,7 +4,7 @@ import distove.chat.dto.request.MessageRequest;
 import distove.chat.entity.Message;
 import distove.chat.enumerate.MessageType;
 import distove.chat.repository.MessageRepository;
-import distove.chat.service.PublishService;
+import distove.chat.service.MessageService;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.stereotype.Service;
@@ -16,7 +16,7 @@ import static distove.chat.enumerate.MessageType.MessageStatus.CREATED;
 @Service
 @Slf4j
 @RequiredArgsConstructor
-public class CreatedStatusService implements PublishService {
+public class CreatedStatusService implements MessageService {
 
     private final MessageRepository messageRepository;
 

@@ -27,10 +27,10 @@ import static org.mockito.ArgumentMatchers.any;
 import static org.mockito.BDDMockito.given;
 
 @DisplayName("Message 서비스 테스트")
-class MessageServiceTest extends CommonServiceTest {
+class ChatServiceTest extends CommonServiceTest {
 
     @Autowired
-    private MessageService messageService;
+    private ChatService chatService;
 
     @DisplayName("메시지 전송")
     @Nested
@@ -49,7 +49,7 @@ class MessageServiceTest extends CommonServiceTest {
             given(communityClient.isMember(any(), any())).willReturn(true);
 
             // when
-            MessageResponse result = messageService.publishMessage(userId, channelId, request);
+            MessageResponse result = chatService.publishMessage(userId, channelId, request);
 
             // then
             MessageResponse expected = MessageResponse.builder()
@@ -83,7 +83,7 @@ class MessageServiceTest extends CommonServiceTest {
             given(communityClient.isMember(any(), any())).willReturn(true);
 
             // when & then
-            assertThatThrownBy(() -> messageService.publishMessage(userId, channelId, request))
+            assertThatThrownBy(() -> chatService.publishMessage(userId, channelId, request))
                     .isInstanceOf(DistoveException.class)
                     .hasMessageContaining("잘못된 메시지 타입입니다.");
         }
@@ -102,7 +102,7 @@ class MessageServiceTest extends CommonServiceTest {
             given(communityClient.isMember(any(), any())).willReturn(true);
 
             // when & then
-            assertThatThrownBy(() -> messageService.publishMessage(userId, channelId, request))
+            assertThatThrownBy(() -> chatService.publishMessage(userId, channelId, request))
                     .isInstanceOf(DistoveException.class)
                     .hasMessageContaining("수정/삭제 권한이 없습니다.");
         }
@@ -117,7 +117,7 @@ class MessageServiceTest extends CommonServiceTest {
         given(userClient.getUser(any())).willReturn(dummyUser);
 
         // when
-        TypedUserResponse result = messageService.publishTypedUser(userId);
+        TypedUserResponse result = chatService.publishTypedUser(userId);
 
         //then
         TypedUserResponse expected = TypedUserResponse.builder()
@@ -148,7 +148,7 @@ class MessageServiceTest extends CommonServiceTest {
             given(communityClient.isMember(any(), any())).willReturn(true);
 
             // when
-            PagedMessageResponse result = messageService.getMessagesByChannelId(userId, channelId, null, null);
+            PagedMessageResponse result = chatService.getMessagesByChannelId(userId, channelId, null, null);
 
             // then
             MessageResponse expected = MessageResponse.builder()
@@ -178,7 +178,7 @@ class MessageServiceTest extends CommonServiceTest {
             given(communityClient.isMember(any(), any())).willReturn(true);
 
             // when & then
-            assertThatThrownBy(() -> messageService.getMessagesByChannelId(userId, channelId, null, null))
+            assertThatThrownBy(() -> chatService.getMessagesByChannelId(userId, channelId, null, null))
                     .isInstanceOf(DistoveException.class)
                     .hasMessageContaining("존재하지 않는 채널입니다.");
         }
@@ -204,7 +204,7 @@ class MessageServiceTest extends CommonServiceTest {
             given(userClient.getUser(any())).willReturn(dummyUser);
 
             // when
-            MessageResponse result = messageService.createReply(userId, request);
+            MessageResponse result = chatService.createReply(userId, request);
 
             // then
             MessageResponse expected = MessageResponse.builder()
@@ -234,7 +234,7 @@ class MessageServiceTest extends CommonServiceTest {
             given(userClient.getUser(any())).willReturn(dummyUser);
 
             // when & then
-            assertThatThrownBy(() -> messageService.createReply(userId, request))
+            assertThatThrownBy(() -> chatService.createReply(userId, request))
                     .isInstanceOf(DistoveException.class)
                     .hasMessageContaining("존재하지 않는 메시지입니다.");
         }
@@ -255,7 +255,7 @@ class MessageServiceTest extends CommonServiceTest {
 
             given(userClient.getUser(any())).willReturn(dummyUser);
             given(communityClient.isMember(any(), any())).willReturn(true);
-            messageService.publishMessage(userId, channelId, request);
+            chatService.publishMessage(userId, channelId, request);
 
             // given
             Long targetId = unreadMember.getUserId();
@@ -265,7 +265,7 @@ class MessageServiceTest extends CommonServiceTest {
                     .orElse(null).getLastReadAt();
 
             // when
-            messageService.unsubscribeChannel(10L, channelId);
+            chatService.unsubscribeChannel(10L, channelId);
 
             // then
             LocalDateTime after = unreadMember.getLastReadAt();
@@ -279,7 +279,7 @@ class MessageServiceTest extends CommonServiceTest {
             Long userId = 99L;
 
             // when & then
-            assertThatThrownBy(() -> messageService.unsubscribeChannel(userId, channelId))
+            assertThatThrownBy(() -> chatService.unsubscribeChannel(userId, channelId))
                     .isInstanceOf(DistoveException.class)
                     .hasMessageContaining("존재하지 않는 유저입니다.");
         }

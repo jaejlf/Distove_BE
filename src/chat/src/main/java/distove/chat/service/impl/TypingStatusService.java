@@ -2,11 +2,11 @@ package distove.chat.service.impl;
 
 import distove.chat.dto.request.MessageRequest;
 import distove.chat.entity.Message;
-import distove.chat.service.PublishService;
+import distove.chat.service.MessageService;
 import org.springframework.stereotype.Service;
 
 @Service
-public class TypingStatusService implements PublishService {
+public class TypingStatusService implements MessageService {
 
     @Override
     public Message publishMessage(Long userId, Long channelId, MessageRequest request) {
