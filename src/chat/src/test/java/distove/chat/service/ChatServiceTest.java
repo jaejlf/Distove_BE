@@ -3,7 +3,7 @@ package distove.chat.service;
 import distove.chat.dto.request.MessageRequest;
 import distove.chat.dto.response.MessageResponse;
 import distove.chat.dto.response.PagedMessageResponse;
-import distove.chat.dto.response.ReplyInfoResponse;
+import distove.chat.dto.response.ThreadInfoResponse;
 import distove.chat.dto.response.TypedUserResponse;
 import distove.chat.entity.Connection;
 import distove.chat.entity.Message;
@@ -204,22 +204,22 @@ class ChatServiceTest extends CommonServiceTest {
             given(userClient.getUser(any())).willReturn(dummyUser);
 
             // when
-            MessageResponse result = chatService.createReply(userId, request);
+            MessageResponse result = chatService.createThread(userId, request);
 
             // then
             MessageResponse expected = MessageResponse.builder()
-                    .replyInfo(ReplyInfoResponse.of(
-                            request.getReplyName(),
+                    .threadInfo(ThreadInfoResponse.of(
+                            request.getThreadName(),
                             dummyUser.getId(),
                             dummyUser.getNickname(),
                             dummyUser.getProfileImgUrl()))
                     .build();
 
             assertAll(
-                    () -> assertThat(result.getReplyInfo().getReplyName()).isEqualTo(expected.getReplyInfo().getReplyName()),
-                    () -> assertThat(result.getReplyInfo().getStUserId()).isEqualTo(expected.getReplyInfo().getStUserId()),
-                    () -> assertThat(result.getReplyInfo().getNickname()).isEqualTo(expected.getReplyInfo().getNickname()),
-                    () -> assertThat(result.getReplyInfo().getProfileImgUrl()).isEqualTo(expected.getReplyInfo().getProfileImgUrl())
+                    () -> assertThat(result.getThreadInfo().getThreadName()).isEqualTo(expected.getThreadInfo().getThreadName()),
+                    () -> assertThat(result.getThreadInfo().getStUserId()).isEqualTo(expected.getThreadInfo().getStUserId()),
+                    () -> assertThat(result.getThreadInfo().getNickname()).isEqualTo(expected.getThreadInfo().getNickname()),
+                    () -> assertThat(result.getThreadInfo().getProfileImgUrl()).isEqualTo(expected.getThreadInfo().getProfileImgUrl())
             );
         }
 
@@ -234,7 +234,7 @@ class ChatServiceTest extends CommonServiceTest {
             given(userClient.getUser(any())).willReturn(dummyUser);
 
             // when & then
-            assertThatThrownBy(() -> chatService.createReply(userId, request))
+            assertThatThrownBy(() -> chatService.createThread(userId, request))
                     .isInstanceOf(DistoveException.class)
                     .hasMessageContaining("존재하지 않는 메시지입니다.");
         }

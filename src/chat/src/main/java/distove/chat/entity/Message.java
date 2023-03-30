@@ -7,9 +7,11 @@ import nonapi.io.github.classgraph.json.Id;
 import org.springframework.data.mongodb.core.mapping.Document;
 
 import java.time.LocalDateTime;
+import java.util.ArrayList;
 import java.util.List;
 
 import static distove.chat.enumerate.MessageType.MessageStatus;
+import static distove.chat.enumerate.MessageType.MessageStatus.CREATED;
 
 @Getter
 @Builder
@@ -24,31 +26,23 @@ public class Message {
     private MessageStatus status;
     private String content;
     private LocalDateTime createdAt;
-    private String replyName;
-    private Long stUserId;
-    private String parentId;
     private List<Reaction> reactions;
 
-    public static Message newMessage(Long channelId, Long userId, MessageType type, MessageStatus status, String content) {
-        return Message.builder()
-                .channelId(channelId)
-                .userId(userId)
-                .type(type)
-                .status(status)
-                .content(content)
-                .createdAt(LocalDateTime.now())
-                .build();
-    }
+    // 스레드 메시지
+    private String threadName;
+    private Long threadStarterId;
+    private String parentId;
 
-    public static Message newReply(Long channelId, Long userId, MessageType type, MessageStatus status, String content, String parentId) {
+    public static Message newMessage(Long channelId, Long userId, MessageType type, String content, String parentId) {
         return Message.builder()
                 .channelId(channelId)
                 .userId(userId)
                 .type(type)
-                .status(status)
+                .status(CREATED)
                 .content(content)
-                .parentId(parentId)
                 .createdAt(LocalDateTime.now())
+                .reactions(new ArrayList<>())
+                .parentId(parentId)
                 .build();
     }
 
@@ -57,9 +51,9 @@ public class Message {
         this.content = content;
     }
 
-    public void createReplyInfo(String replyName, Long stUserId) {
-        this.replyName = replyName;
-        this.stUserId = stUserId;
+    public void createThread(String threadName, Long threadStarterId) {
+        this.threadName = threadName;
+        this.threadStarterId = threadStarterId;
     }
 
     public void updateReaction(List<Reaction> reactions) {

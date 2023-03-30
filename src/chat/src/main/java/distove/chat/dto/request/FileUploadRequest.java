@@ -1,5 +1,6 @@
 package distove.chat.dto.request;
 
+import distove.chat.enumerate.MessageType;
 import lombok.AllArgsConstructor;
 import lombok.Getter;
 import lombok.NoArgsConstructor;
@@ -12,5 +13,6 @@ import org.springframework.web.multipart.MultipartFile;
 @AllArgsConstructor
 public class FileUploadRequest {
     private MultipartFile file;
+    private MessageType type;
     private String parentId;
 }

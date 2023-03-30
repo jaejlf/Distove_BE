@@ -1,15 +1,16 @@
 package distove.chat.dto.response;
 
 import com.fasterxml.jackson.annotation.JsonInclude;
+import distove.chat.client.dto.UserResponse;
 import distove.chat.entity.Message;
 import distove.chat.enumerate.MessageType;
-import distove.chat.client.dto.UserResponse;
 import lombok.Builder;
 import lombok.Getter;
 
 import java.time.LocalDateTime;
 import java.util.List;
 import java.util.Objects;
+import java.util.Optional;
 
 import static distove.chat.enumerate.MessageType.MessageStatus;
 
@@ -25,11 +26,11 @@ public class MessageResponse {
     private LocalDateTime createdAt;
     private UserResponse writer;
     private boolean hasAuthorized;
-    private ReplyInfoResponse replyInfo;
     private List<ReactionResponse> reactions;
+    private ThreadInfoResponse threadInfo;
 
-    public static MessageResponse ofDefault(Message message, UserResponse writer, Long userId, List<ReactionResponse> reactions) {
-        return MessageResponse.builder()
+    public static MessageResponse of(Message message, UserResponse writer, Long userId, List<ReactionResponse> reactions, Optional<ThreadInfoResponse> threadInfo) {
+        MessageResponseBuilder builder = MessageResponse.builder()
                 .id(message.getId())
                 .type(message.getType())
                 .status(message.getStatus())
@@ -37,22 +38,11 @@ public class MessageResponse {
                 .createdAt(message.getCreatedAt())
                 .writer(writer)
                 .hasAuthorized(Objects.equals(writer.getId(), userId))
-                .reactions(reactions)
-                .build();
-    }
+                .reactions(reactions);
 
-    public static MessageResponse ofParent(Message message, UserResponse writer, Long userId, ReplyInfoResponse replyInfo, List<ReactionResponse> reactions) {
-        return MessageResponse.builder()
-                .id(message.getId())
-                .type(message.getType())
-                .status(message.getStatus())
-                .content(message.getContent())
-                .createdAt(message.getCreatedAt())
-                .writer(writer)
-                .replyInfo(replyInfo)
-                .hasAuthorized(Objects.equals(writer.getId(), userId))
-                .reactions(reactions)
-                .build();
+        threadInfo.ifPresent(builder::threadInfo);
+
+        return builder.build();
     }
 
 }

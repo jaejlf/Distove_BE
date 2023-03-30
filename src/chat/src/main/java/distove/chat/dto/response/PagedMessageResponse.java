@@ -13,7 +13,7 @@ import java.util.Map;
 public class PagedMessageResponse {
 
     private UnreadInfoResponse unread;
-    private ReplyInfoResponse replyInfo;
+    private ThreadInfoResponse threadInfo;
     private String previousCursorId;
     private String nextCursorId;
     private List<MessageResponse> messages;
@@ -27,9 +27,9 @@ public class PagedMessageResponse {
                 .build();
     }
 
-    public static PagedMessageResponse ofChild(ReplyInfoResponse replyInfo, List<MessageResponse> messages) {
+    public static PagedMessageResponse ofChild(ThreadInfoResponse threadInfo, List<MessageResponse> messages) {
         return PagedMessageResponse.builder()
-                .replyInfo(replyInfo)
+                .threadInfo(threadInfo)
                 .messages(messages)
                 .build();
     }

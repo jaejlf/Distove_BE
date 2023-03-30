@@ -35,7 +35,7 @@ function disconnect() {
 
 function sendName() {
     if (!$("#parentId").val()) {
-        if (!$("#replyName").val()) {
+        if (!$("#threadName").val()) {
             stompClient.send($("#pub").val(), {'userId': $("#userId").val()}, JSON.stringify(
                 {
                     'type': $("#type").val(),
@@ -52,12 +52,12 @@ function sendName() {
                     'status': $("#status").val(),
                     'content': $("#content").val(),
                     'messageId': $("#messageId").val(),
-                    'replyName': $("#replyName").val(),
+                    'threadName': $("#threadName").val(),
                 }
             ));
         }
     } else {
-        if (!$("#replyName").val()) {
+        if (!$("#threadName").val()) {
             stompClient.send($("#pub").val(), {'userId': $("#userId").val()}, JSON.stringify(
                 {
                     'type': $("#type").val(),
@@ -75,7 +75,7 @@ function sendName() {
                     'status': $("#status").val(),
                     'content': $("#content").val(),
                     'messageId': $("#messageId").val(),
-                    'replyName': $("#replyName").val(),
+                    'threadName': $("#threadName").val(),
                     'parentId': $("#parentId").val(),
 
                 }
