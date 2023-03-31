@@ -25,6 +25,7 @@ public class ChatService {
 
     private final SimpMessagingTemplate simpMessagingTemplate;
     private final MessageRepository messageRepository;
+    private final ConnectionService connectionService;
     private final MessageFactory messageFactory;
     private final MessageConverter messageConverter;
     private final UserClient userClient;
@@ -49,12 +50,14 @@ public class ChatService {
         simpMessagingTemplate.convertAndSend(destination + channelId, result);
     }
 
-    public MessageResponse createThread(Long userId, Long channelId, MessageRequest request) {
+    public void createThread(Long userId, Long channelId, MessageRequest request) {
         Message message = messageRepository.findByIdAndChannelId(request.getParentId(), channelId)
                 .orElseThrow(() -> new DistoveException(MESSAGE_NOT_FOUND));
         message.createThread(request.getThreadName(), userId);
         messageRepository.save(message);
-        return messageConverter.getMessageResponse(userId, message);
+
+        MessageResponse threadMessage = messageConverter.getMessageResponse(userId, message);
+        simpMessagingTemplate.convertAndSend(destination + channelId, threadMessage);
     }
 
 }

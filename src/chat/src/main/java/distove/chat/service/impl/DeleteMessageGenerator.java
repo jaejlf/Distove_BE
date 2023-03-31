@@ -24,6 +24,9 @@ public class DeleteMessageGenerator implements MessageGenerator {
     private final MessageRepository messageRepository;
     private final StorageService storageService;
 
+    /**
+     * 메시지 삭제
+     */
     @Override
     public Message createMessage(Long userId, Long channelId, MessageRequest request) {
         String messageId = request.getMessageId();

@@ -63,8 +63,15 @@ public class MessageService {
 
     public void readAllMessages(Long userId, Long channelId) {
         Connection connection = connectionService.getConnection(channelId);
-        List<Member> members = connection.getMembers();
-        updateLastReadAt(userId, connection, members);
+        updateLastReadAt(userId, connection);
+    }
+
+    public void unsubscribeChannel(Long userId, Long channelId) {
+        Connection connection = connectionService.getConnection(channelId);
+        Member member = connectionService.getMember(userId, channelId);
+
+        // 안읽메가 없을 경우, '마지막으로 읽은 시간' 업데이트
+        if (getUnreadInfo(channelId, member) == null) updateLastReadAt(userId, connection);
     }
 
     public Message getMessage(String messageId) {
@@ -124,22 +131,13 @@ public class MessageService {
                 userClient.getUser(message.getThreadStarterId()));
     }
 
-    private void updateLastReadAt(Long userId, Connection connection, List<Member> members) {
+    private void updateLastReadAt(Long userId, Connection connection) {
+        List<Member> members = connection.getMembers();
         members.stream()
-                .filter(member -> Objects.equals(member.getUserId(), userId))
+                .filter(x -> Objects.equals(x.getUserId(), userId))
                 .findFirst()
-                .ifPresent(member -> connection.updateMembers(Collections.singletonList(new Member(userId))));
+                .ifPresent(x -> connection.updateMembers(Collections.singletonList(new Member(userId))));
         connectionRepository.save(connection);
     }
-
-//    public void unsubscribeChannel(Long userId, Long channelId) {
-//        Connection connection = connectionService.getConnection(channelId);
-//        List<Member> members = connection.getMembers();
-//        Member member = members.stream()
-//                .filter(x -> x.getUserId().equals(userId)).findFirst()
-//                .orElseThrow(() -> new DistoveException(USER_NOT_FOUND_ERROR));
-//
-//        if (getUnreadInfo(channelId, member) == null) updateLastReadAt(userId, connection, members);
-//    }
 
 }

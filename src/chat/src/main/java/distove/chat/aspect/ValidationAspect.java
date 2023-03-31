@@ -21,14 +21,26 @@ public class ValidationAspect {
     private final MemberValidator memberValidator;
     private final MessageService messageService;
 
-    /**
-     * when : 메시지 발행 시
-     * then : 멤버 & 메시지 유효성 검사
-     */
     @Pointcut("execution(* distove.chat.service.ChatService.publishMessage())")
     public void publishMessageAspect() {
     }
 
+    @Pointcut("execution(* distove.chat.service.MessageService.getMessagesByChannelId())")
+    public void getMessagesByChannelIdAspect() {
+    }
+
+    @Pointcut("execution(* distove.chat.service.MessageService.getThreadsByMessageId())")
+    public void getThreadsByMessageIdAspect() {
+    }
+
+    @Pointcut("execution(* distove.chat.service.MessageService.getThreadsByChannelId())")
+    public void getThreadsByChannelIdAspect() {
+    }
+
+    /**
+     * @when 메시지 발행 시
+     * @then 멤버 & 메시지 유효성 검사
+     */
     @Before("publishMessageAspect() && args(userId,channelId,request)")
     public void validateMemberForPublishMessage(Long userId, Long channelId, MessageRequest request) {
         memberValidator.validateMember(userId, channelId);
@@ -36,26 +48,18 @@ public class ValidationAspect {
     }
 
     /**
-     * when : 특정 채널의 메시지 리스트 조회 시
-     * then : 멤버 유효성 검사
+     * @when 특정 채널의 메시지 리스트 조회 시
+     * @then 멤버 유효성 검사
      */
-    @Pointcut("execution(* distove.chat.service.MessageService.getMessagesByChannelId())")
-    public void getMessagesByChannelIdAspect() {
-    }
-
     @Before("getMessagesByChannelIdAspect() && args(userId,channelId)")
     public void validateMemberForGetMessages(Long userId, Long channelId) {
         memberValidator.validateMember(userId, channelId);
     }
 
     /**
-     * when : 메시지의 스레드 메시지 리스트 조회 시
-     * then : 멤버 유효성 검사
+     * @when 메시지의 스레드 메시지 리스트 조회 시
+     * @then 멤버 유효성 검사
      */
-    @Pointcut("execution(* distove.chat.service.MessageService.getThreadsByMessageId())")
-    public void getThreadsByMessageIdAspect() {
-    }
-
     @Before("getThreadsByMessageIdAspect() && args(userId,messageId)")
     public void validateMemberForGetThreadsByMessageId(Long userId, String messageId) {
         Long channelId = messageService.getMessage(messageId).getChannelId();
@@ -63,14 +67,9 @@ public class ValidationAspect {
     }
 
     /**
-     * when : 채널의 스레드 메시지 리스트 조회 시
-     * then : 멤버 유효성 검사
+     * @when 채널의 스레드 메시지 리스트 조회 시
+     * @then 멤버 유효성 검사
      */
-    @Pointcut("execution(* distove.chat.service.MessageService.getThreadsByChannelId())")
-    public void getThreadsByChannelIdAspect() {
-    }
-
-
     @Before("getThreadsByChannelIdAspect() && args(userId,channelId)")
     public void validateMemberForGetThreadsByChannelId(Long userId, Long channelId) {
         memberValidator.validateMember(userId, channelId);

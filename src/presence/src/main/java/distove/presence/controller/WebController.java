@@ -14,8 +14,8 @@ import static distove.presence.event.EventTopic.getEventQ;
 public class WebController {
 
     @PostMapping("/web/update")
-    void updateUserPresence(@RequestHeader Long userId,
-                            @RequestParam String type) {
+    void updatePresence(@RequestHeader Long userId,
+                        @RequestParam String type) {
         getEventQ(UpdatePresenceEvent.class).add(new UpdatePresenceEvent(userId, type));
     }
 

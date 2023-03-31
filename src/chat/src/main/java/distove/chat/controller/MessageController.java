@@ -20,20 +20,16 @@ public class MessageController {
 
     /**
      * 특정 채널의 메시지 리스트 조회
-     * * if 채널 최초 접속 시 -> 멤버 정보를 생성하고 WELCOME 메시지 publish
-     * * if DEFAULT 스크롤일 경우 -> 전체 채널의 알림 publish
      *
-     * @param scroll   : DEFAULT(-1), DOWN(0), UP(1)
-     * @param cursorId : DOWN/UP 스크롤일 경우의 커서 메시지 id
-     * @return : UnreadInfo, CursorInfo, MessageResponses
+     * @param scroll   DEFAULT(-1), DOWN(0), UP(1)
+     * @param cursorId DOWN/UP 스크롤일 경우의 커서 메시지 id
+     * @aspect notifyUnreadOfChannels
      */
     @GetMapping("/list/{channelId}")
     public ResponseEntity<Object> getMessagesByChannelId(@RequestUser Long userId,
                                                          @PathVariable Long channelId,
                                                          @RequestParam(required = false) Integer scroll,
                                                          @RequestParam(required = false) String cursorId) {
-
-//        if (scroll == null) notificationService.publishAllNotification(userId, connection.getServerId()); // 안읽메 알림 PUSH
         PagedMessageResponse result = messageService.getMessagesByChannelId(userId, channelId, scroll, cursorId);
         return ResultResponse.success(HttpStatus.OK, "채널의 메시지 리스트 조회", result);
     }
@@ -70,11 +66,14 @@ public class MessageController {
         return ResultResponse.success(HttpStatus.OK, "안읽메 모두 읽음", null);
     }
 
-//    @PatchMapping("/unsubscribe/{channelId}")
-//    public ResponseEntity<Object> unsubscribeChannel(@RequestUser Long userId,
-//                                                     @PathVariable Long channelId) {
-//        messageService.unsubscribeChannel(userId, channelId);
-//        return ResultResponse.success(HttpStatus.OK, "채널 구독 해제", null);
-//    }
+    /**
+     * 채널 구독 해제 -> '마지막으로 읽은 시간' 업데이트
+     */
+    @PatchMapping("/unsubscribe/{channelId}")
+    public ResponseEntity<Object> unsubscribeChannel(@RequestUser Long userId,
+                                                     @PathVariable Long channelId) {
+        messageService.unsubscribeChannel(userId, channelId);
+        return ResultResponse.success(HttpStatus.OK, "채널 구독 해제", null);
+    }
 
 }

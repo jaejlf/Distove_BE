@@ -20,6 +20,9 @@ public class ModifyMessageGenerator implements MessageGenerator {
 
     private final MessageRepository messageRepository;
 
+    /**
+     * 메시지 수정
+     */
     @Override
     public Message createMessage(Long userId, Long channelId, MessageRequest request) {
         String messageId = request.getMessageId();

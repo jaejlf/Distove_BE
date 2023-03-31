@@ -25,22 +25,26 @@ public class NotificationAspect {
     private final NotificationService notificationService;
     private final ConnectionService connectionService;
 
-    /**
-     * when : 새로운 메시지 발행 시
-     * then : notifyNewMessage -> 새로운 메시지 발행 알림
-     */
     @Pointcut("execution(* distove.chat.service.impl.CreateMessageGenerator.createMessage())")
     public void createMessageAspect() {
     }
 
+    @Pointcut("execution(* distove.chat.controller.MessageController.getMessagesByChannelId())")
+    public void getMessagesByChannelIdAspect() {
+    }
+
+    /**
+     * @when 새로운 메시지 발행 시
+     * @then notifyNewMessage -> 새로운 메시지 발행 알림
+     */
     @After("createMessageAspect() && args(channelId)")
     public void notifyNewMessage(Long channelId) {
         notificationService.notifyNewMessage(channelId);
     }
 
     /**
-     * when : 서버 구독 이벤트 발생 시
-     * then : notifyUnreadOfChannels -> 모든 채널의 알림 정보 업데이트
+     * @when 서버 구독 이벤트 발생 시
+     * @then notifyUnreadOfChannels -> 모든 채널의 알림 정보 업데이트
      */
     @Before("execution(public * org.springframework.messaging.support.ChannelInterceptor.preSend(..))")
     public void notifyUnreadsOfChannelAspect(JoinPoint joinPoint) throws Throwable {
@@ -57,13 +61,9 @@ public class NotificationAspect {
     }
 
     /**
-     * when : 특정 채널의 메시지 리스트 최초 조회 시 (scroll = DEFAULT)
-     * then : notifyUnreadOfChannels -> 모든 채널의 알림 정보 업데이트
+     * @when 특정 채널의 메시지 리스트 최초 조회 시 (scroll = DEFAULT)
+     * @then notifyUnreadOfChannels -> 모든 채널의 알림 정보 업데이트
      */
-    @Pointcut("execution(* distove.chat.controller.MessageController.getMessagesByChannelId())")
-    public void getMessagesByChannelIdAspect() {
-    }
-
     @Before("getMessagesByChannelIdAspect() && args(userId, channelId, scroll,..)")
     public void notifyUnreadOfChannels(Long userId, Long channelId, Integer scroll) {
         Long serverId = connectionService.getConnection(channelId).getServerId();

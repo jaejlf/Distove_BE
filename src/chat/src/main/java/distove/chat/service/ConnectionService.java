@@ -12,6 +12,7 @@ import java.util.ArrayList;
 import java.util.List;
 
 import static distove.chat.exception.ErrorCode.CHANNEL_NOT_FOUND_ERROR;
+import static distove.chat.exception.ErrorCode.USER_NOT_FOUND_ERROR;
 
 @Service
 @Slf4j
@@ -34,6 +35,15 @@ public class ConnectionService {
                 });
     }
 
+    public Member getMember(Long userId, Long channelId) {
+        Connection connection = getConnection(channelId);
+        List<Member> members = connection.getMembers();
+        return members.stream()
+                .filter(x -> x.getUserId().equals(userId))
+                .findFirst()
+                .orElseThrow(() -> new DistoveException(USER_NOT_FOUND_ERROR));
+    }
+
     public void createConnection(Long serverId, Long channelId) {
         if (connectionRepository.findByChannelId(channelId).isPresent()) return;
         Connection connection = new Connection(serverId, channelId, new ArrayList<>());
@@ -51,10 +61,6 @@ public class ConnectionService {
 
     public List<Connection> getConnectionsByServerId(Long serverId) {
         return connectionRepository.findAllByServerId(serverId);
-    }
-
-    public void validateChannel(Long channelId) {
-        getConnection(channelId);
     }
 
     private Member saveMember(Long userId, Connection connection, List<Member> members) {

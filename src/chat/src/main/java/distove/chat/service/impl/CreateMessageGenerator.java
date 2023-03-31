@@ -16,6 +16,11 @@ public class CreateMessageGenerator implements MessageGenerator {
 
     private final MessageRepository messageRepository;
 
+    /**
+     * 메시지 생성
+     *
+     * @aspect notifyNewMessage
+     */
     @Override
     public Message createMessage(Long userId, Long channelId, MessageRequest request) {
         MessageType type = request.getType();

@@ -19,6 +19,9 @@ public class ReactMessageGenerator implements MessageGenerator {
 
     private final MessageRepository messageRepository;
 
+    /**
+     * 메시지 반응하기
+     */
     @Override
     public Message createMessage(Long userId, Long channelId, MessageRequest request) {
         String messageId = request.getMessageId();

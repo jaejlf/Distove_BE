@@ -81,13 +81,7 @@ public class ChatController {
     public void publishThreadMessage(@Header("userId") Long userId,
                                      @DestinationVariable Long channelId,
                                      @Payload MessageRequest request) {
-
-        // 스레드 시작
-        if (request.getThreadName() != null) {
-            MessageResponse threadMessage = chatService.createThread(userId, channelId, request);
-            simpMessagingTemplate.convertAndSend(destination + channelId, threadMessage);
-        }
-
+        if (request.getThreadName() != null) chatService.createThread(userId, channelId, request); // 최초 스레드 시작
         MessageResponse result = chatService.publishMessage(userId, channelId, request);
         simpMessagingTemplate.convertAndSend(destination + request.getParentId(), result);
     }
