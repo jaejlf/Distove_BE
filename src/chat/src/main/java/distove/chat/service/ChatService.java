@@ -25,7 +25,6 @@ public class ChatService {
 
     private final SimpMessagingTemplate simpMessagingTemplate;
     private final MessageRepository messageRepository;
-    private final ConnectionService connectionService;
     private final MessageFactory messageFactory;
     private final MessageConverter messageConverter;
     private final UserClient userClient;
