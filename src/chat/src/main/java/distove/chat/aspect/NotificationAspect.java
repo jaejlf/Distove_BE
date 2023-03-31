@@ -35,7 +35,7 @@ public class NotificationAspect {
 
     /**
      * @when 새로운 메시지 발행 시
-     * @then notifyNewMessage -> 새로운 메시지 발행 알림
+     * @then notifyNewMessage
      */
     @After("createMessageAspect() && args(channelId)")
     public void notifyNewMessage(Long channelId) {
@@ -44,7 +44,7 @@ public class NotificationAspect {
 
     /**
      * @when 서버 구독 이벤트 발생 시
-     * @then notifyUnreadOfChannels -> 모든 채널의 알림 정보 업데이트
+     * @then notifyUnreadOfChannels
      */
     @Before("execution(public * org.springframework.messaging.support.ChannelInterceptor.preSend(..))")
     public void notifyUnreadsOfChannelAspect(JoinPoint joinPoint) throws Throwable {
@@ -54,15 +54,15 @@ public class NotificationAspect {
         if (StompCommand.SUBSCRIBE.equals(accessor.getCommand())) {
             if (accessor.containsNativeHeader("userId")) {
                 Long userId = Long.parseLong(requireNonNull(accessor.getNativeHeader("userId")).get(0));
-                Long serverId = Long.parseLong(requireNonNull(accessor.getDestination()).split("/")[3]);
+                Long serverId = Long.parseLong(requireNonNull(accessor.getDestination()).split("/")[4]);
                 notificationService.notifyUnreadOfChannels(userId, serverId);
             }
         }
     }
 
     /**
-     * @when 특정 채널의 메시지 리스트 최초 조회 시 (scroll = DEFAULT)
-     * @then notifyUnreadOfChannels -> 모든 채널의 알림 정보 업데이트
+     * @when 채널 이동 시 (= 특정 채널의 메시지 리스트 최초 조회 시)
+     * @then notifyUnreadOfChannels
      */
     @Before("getMessagesByChannelIdAspect() && args(userId, channelId, scroll,..)")
     public void notifyUnreadOfChannels(Long userId, Long channelId, Integer scroll) {

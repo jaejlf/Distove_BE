@@ -37,6 +37,8 @@ public class ChatController {
      *
      * @param request * MessageType : TEXT
      *                * MessageStatus : CREATED, MODIFIED, DELETED, REACTED
+     * @PUBLISH /pub/chat/message/:channelId
+     * @SUBSCRIBE /sub/:channelId
      */
     @MessageMapping("/chat/message/{channelId}")
     public void publishMessage(@Header("userId") Long userId,
@@ -51,6 +53,8 @@ public class ChatController {
      *
      * @param request * MessageType : IMAGE, FILE, VIDEO
      *                * MessageStatus : CREATED
+     * @POST /chat/file/:channelId
+     * @SUBSCRIBE /sub/:channelId
      */
     @PostMapping("/chat/file/{channelId}")
     public void publishFile(@RequestUser Long userId,
@@ -64,6 +68,9 @@ public class ChatController {
 
     /**
      * 일반 채널에서 '작성 중'인 유저
+     *
+     * @PUBLISH /pub/chat/typing/:channelId
+     * @SUBSCRIBE /sub/:channelId
      */
     @MessageMapping("/chat/typing/{channelId}")
     public void publishTypedUser(@Header("userId") Long userId, @DestinationVariable Long channelId) {
@@ -76,6 +83,8 @@ public class ChatController {
      *
      * @param request * MessageType : TEXT
      *                * MessageStatus : CREATED, MODIFIED, DELETED, REACTED
+     * @PUBLISH /pub/thread/message/:channelId
+     * @SUBSCRIBE /sub/:parentId
      */
     @MessageMapping("/thread/message/{channelId}")
     public void publishThreadMessage(@Header("userId") Long userId,
@@ -91,6 +100,8 @@ public class ChatController {
      *
      * @param request * MessageType : IMAGE, FILE, VIDEO
      *                * MessageStatus : CREATED
+     * @POST /thread/file/:channelId
+     * @SUBSCRIBE /sub/:parentId
      */
     @PostMapping("/thread/file/{channelId}")
     public void publishThreadFile(@RequestUser Long userId,
@@ -104,6 +115,9 @@ public class ChatController {
 
     /**
      * 스레드 채널에서 '작성 중'인 유저
+     *
+     * @PUBLISH /pub/thread/typing/:parentId
+     * @SUBSCRIBE /sub/:parentId
      */
     @MessageMapping("/thread/typing/{parentId}")
     public void publishThreadTypingUser(@Header("userId") Long userId, @DestinationVariable String parentId) {

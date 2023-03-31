@@ -27,6 +27,13 @@ public class NotificationService {
     @Value("${sub.destination}")
     private String destination;
 
+    /**
+     * 모든 채널의 알림 정보 업데이트
+     *
+     * @when 서버 구독 이벤트 발생 시
+     * @when 채널 이동 시
+     * @SUBSCRIBE /sub/notification/server/:serverId
+     */
     public void notifyUnreadOfChannels(Long userId, Long serverId) {
         List<Long> channelIds = getAllChannelsInServer(userId, serverId);
         List<CategoryInfoResponse> categoryInfoResponses = communityClient.getCategoryIds(
@@ -35,6 +42,11 @@ public class NotificationService {
         simpMessagingTemplate.convertAndSend(destination + "server/" + serverId + "/" + userId, notification);
     }
 
+    /**
+     * 새로운 메시지 발행 알림
+     *
+     * @SUBSCRIBE /sub/notification/server/:serverId
+     */
     public void notifyNewMessage(Long channelId) {
         Long serverId = connectionService.getConnection(channelId).getServerId();
         NotificationResponse notification = NotificationResponse.ofNewMessage(serverId, communityClient.getCategoryId(channelId));
