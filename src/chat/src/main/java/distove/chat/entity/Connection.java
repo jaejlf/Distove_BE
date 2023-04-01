@@ -4,6 +4,7 @@ import lombok.Getter;
 import nonapi.io.github.classgraph.json.Id;
 import org.springframework.data.mongodb.core.mapping.Document;
 
+import java.time.LocalDateTime;
 import java.util.List;
 
 @Getter
@@ -24,6 +25,19 @@ public class Connection {
 
     public void updateMembers(List<Member> members) {
         this.members = members;
+    }
+
+    @Getter
+    public static class Member {
+
+        private final Long userId;
+        private final LocalDateTime lastReadAt;
+
+        public Member(Long userId) {
+            this.userId = userId;
+            this.lastReadAt = LocalDateTime.now();
+        }
+
     }
 
 }

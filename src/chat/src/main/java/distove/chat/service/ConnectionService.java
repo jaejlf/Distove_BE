@@ -1,7 +1,6 @@
 package distove.chat.service;
 
 import distove.chat.entity.Connection;
-import distove.chat.entity.Member;
 import distove.chat.exception.DistoveException;
 import distove.chat.repository.ConnectionRepository;
 import lombok.RequiredArgsConstructor;
@@ -11,6 +10,7 @@ import org.springframework.stereotype.Service;
 import java.util.ArrayList;
 import java.util.List;
 
+import static distove.chat.entity.Connection.*;
 import static distove.chat.exception.ErrorCode.CHANNEL_NOT_FOUND_ERROR;
 import static distove.chat.exception.ErrorCode.USER_NOT_FOUND_ERROR;
 

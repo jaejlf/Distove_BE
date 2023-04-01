@@ -5,14 +5,13 @@ import distove.chat.client.dto.UserResponse;
 import distove.chat.dto.response.MessageResponse;
 import distove.chat.dto.response.ThreadInfoResponse;
 import distove.chat.entity.Message;
-import distove.chat.entity.Reaction;
 import lombok.RequiredArgsConstructor;
 
 import java.util.*;
 import java.util.stream.Collectors;
 
 import static distove.chat.dto.response.MessageResponse.ReactionResponse;
-import static distove.chat.dto.response.MessageResponse.of;
+import static distove.chat.entity.Message.*;
 
 @RequiredArgsConstructor
 public class MessageConverter {
@@ -25,7 +24,7 @@ public class MessageConverter {
         Optional<ThreadInfoResponse> threadInfo = Optional.ofNullable(message.getThreadName()).map(threadName ->
                 ThreadInfoResponse.of(threadName, userClient.getUser(message.getThreadStarterId())));
 
-        return of(message, writer, userId, reactions, threadInfo);
+        return MessageResponse.of(message, writer, userId, reactions, threadInfo);
     }
 
     public List<MessageResponse> getMessageResponses(Long userId, List<Message> messages) {

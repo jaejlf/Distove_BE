@@ -5,7 +5,6 @@ import distove.chat.dto.response.MessageResponse;
 import distove.chat.dto.response.PagedMessageResponse;
 import distove.chat.dto.response.ThreadInfoResponse;
 import distove.chat.entity.Connection;
-import distove.chat.entity.Member;
 import distove.chat.entity.Message;
 import distove.chat.enumerate.ScrollDirection;
 import distove.chat.exception.DistoveException;
@@ -22,6 +21,7 @@ import java.util.*;
 
 import static distove.chat.dto.response.PagedMessageResponse.CursorInfoResponse;
 import static distove.chat.dto.response.PagedMessageResponse.UnreadInfoResponse;
+import static distove.chat.entity.Connection.*;
 import static distove.chat.exception.ErrorCode.MESSAGE_NOT_FOUND;
 
 @Service

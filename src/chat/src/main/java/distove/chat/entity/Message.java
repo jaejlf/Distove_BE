@@ -60,4 +60,17 @@ public class Message {
         this.reactions = reactions;
     }
 
+    @Getter
+    public static class Reaction {
+
+        private final String emoji;
+        private final List<Long> userIds;
+
+        public Reaction(String emoji, List<Long> userIds) {
+            this.emoji = emoji;
+            this.userIds = userIds;
+        }
+
+    }
+
 }

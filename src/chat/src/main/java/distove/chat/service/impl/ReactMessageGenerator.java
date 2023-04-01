@@ -2,15 +2,16 @@ package distove.chat.service.impl;
 
 import distove.chat.dto.request.MessageRequest;
 import distove.chat.entity.Message;
-import distove.chat.entity.Reaction;
 import distove.chat.exception.DistoveException;
 import distove.chat.repository.MessageRepository;
 import distove.chat.service.MessageGenerator;
 import lombok.RequiredArgsConstructor;
 import org.springframework.stereotype.Service;
 
-import java.util.*;
+import java.util.List;
+import java.util.Objects;
 
+import static distove.chat.entity.Message.*;
 import static distove.chat.exception.ErrorCode.MESSAGE_NOT_FOUND;
 
 @Service
