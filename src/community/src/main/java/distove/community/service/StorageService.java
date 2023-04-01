@@ -16,7 +16,7 @@ import java.io.IOException;
 import java.io.InputStream;
 import java.util.UUID;
 
-import static distove.community.exception.ErrorCode.IMAGE_UPLOAD_FAILED;
+import static distove.community.exception.ErrorCode.FILE_UPLOAD_ERROR;
 
 @RequiredArgsConstructor
 @Service
@@ -47,7 +47,7 @@ public class StorageService {
             amazonS3Client.putObject(new PutObjectRequest(bucket, fileName, inputStream, objectMetadata)
                     .withCannedAcl(CannedAccessControlList.PublicRead));
         } catch (IOException e) {
-            throw new DistoveException(IMAGE_UPLOAD_FAILED);
+            throw new DistoveException(FILE_UPLOAD_ERROR);
         }
         return url + fileName;
     }
