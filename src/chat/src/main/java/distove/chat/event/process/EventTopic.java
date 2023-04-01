@@ -1,5 +1,6 @@
-package distove.chat.event;
+package distove.chat.event.process;
 
+import distove.chat.event.*;
 import distove.chat.exception.DistoveException;
 import lombok.AllArgsConstructor;
 import lombok.Getter;
@@ -13,7 +14,9 @@ import static distove.chat.exception.ErrorCode.EVENT_HANDLE_ERROR;
 public enum EventTopic {
 
     DEL_CHANNEL(DeleteChannelEvent.class, new EventQ<DeleteChannelEvent>()),
-    DEL_CHANNELS(DeleteChannelsEvent.class, new EventQ<DeleteChannelsEvent>());
+    DEL_CHANNELS(DeleteChannelsEvent.class, new EventQ<DeleteChannelsEvent>()),
+    NOTIFY_UNREADS(NotifyUnreadsEvent.class, new EventQ<NotifyUnreadsEvent>()),
+    NOTIFY_NEW_MESSAGE(NotifyNewMessageEvent.class, new EventQ<NotifyNewMessageEvent>());
 
     private final Class<? extends Event> eventType;
     private final EventQ<? extends Event> eventQ;

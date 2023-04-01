@@ -8,7 +8,7 @@ import org.springframework.web.bind.annotation.*;
 
 import java.util.List;
 
-import static distove.chat.event.EventTopic.getEventQ;
+import static distove.chat.event.process.EventTopic.getEventQ;
 
 @RestController
 @RequestMapping("/web")

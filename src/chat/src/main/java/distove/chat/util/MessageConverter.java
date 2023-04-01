@@ -6,6 +6,7 @@ import distove.chat.dto.response.MessageResponse;
 import distove.chat.dto.response.ThreadInfoResponse;
 import distove.chat.entity.Message;
 import lombok.RequiredArgsConstructor;
+import org.springframework.stereotype.Component;
 
 import java.util.*;
 import java.util.stream.Collectors;
@@ -13,6 +14,7 @@ import java.util.stream.Collectors;
 import static distove.chat.dto.response.MessageResponse.ReactionResponse;
 import static distove.chat.entity.Message.*;
 
+@Component
 @RequiredArgsConstructor
 public class MessageConverter {
 

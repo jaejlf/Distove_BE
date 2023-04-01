@@ -1,7 +1,8 @@
 package distove.chat.aspect;
 
+import distove.chat.event.NotifyNewMessageEvent;
+import distove.chat.event.NotifyUnreadsEvent;
 import distove.chat.service.ConnectionService;
-import distove.chat.service.NotificationService;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.aspectj.lang.JoinPoint;
@@ -14,6 +15,7 @@ import org.springframework.messaging.simp.stomp.StompCommand;
 import org.springframework.messaging.simp.stomp.StompHeaderAccessor;
 import org.springframework.stereotype.Component;
 
+import static distove.chat.event.process.EventTopic.getEventQ;
 import static java.util.Objects.requireNonNull;
 
 @Aspect
@@ -22,7 +24,7 @@ import static java.util.Objects.requireNonNull;
 @RequiredArgsConstructor
 public class NotificationAspect {
 
-    private final NotificationService notificationService;
+//    private final NotificationService notificationService;
     private final ConnectionService connectionService;
 
     @Pointcut("execution(* distove.chat.service.impl.CreateMessageGenerator.createMessage())")
@@ -39,7 +41,7 @@ public class NotificationAspect {
      */
     @After("createMessageAspect() && args(channelId)")
     public void notifyNewMessage(Long channelId) {
-        notificationService.notifyNewMessage(channelId);
+        getEventQ(NotifyNewMessageEvent.class).add(new NotifyNewMessageEvent(channelId));
     }
 
     /**
@@ -55,7 +57,7 @@ public class NotificationAspect {
             if (accessor.containsNativeHeader("userId")) {
                 Long userId = Long.parseLong(requireNonNull(accessor.getNativeHeader("userId")).get(0));
                 Long serverId = Long.parseLong(requireNonNull(accessor.getDestination()).split("/")[4]);
-                notificationService.notifyUnreadOfChannels(userId, serverId);
+                getEventQ(NotifyUnreadsEvent.class).add(new NotifyUnreadsEvent(userId, serverId));
             }
         }
     }
@@ -67,7 +69,7 @@ public class NotificationAspect {
     @Before("getMessagesByChannelIdAspect() && args(userId, channelId, scroll,..)")
     public void notifyUnreadOfChannels(Long userId, Long channelId, Integer scroll) {
         Long serverId = connectionService.getConnection(channelId).getServerId();
-        if (scroll == null) notificationService.notifyUnreadOfChannels(userId, serverId);
+        if (scroll == null) getEventQ(NotifyUnreadsEvent.class).add(new NotifyUnreadsEvent(userId, serverId));
     }
 
 }
