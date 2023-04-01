@@ -1,9 +1,10 @@
-package distove.presence.event;
+package distove.presence.event.process;
 
+import distove.presence.event.UpdatePresenceEvent;
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
 
-import static distove.presence.event.EventTopic.getEventQ;
+import static distove.presence.event.process.EventTopic.getEventQ;
 
 @Configuration
 public class EventConfig {

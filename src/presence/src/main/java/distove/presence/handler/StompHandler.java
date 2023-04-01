@@ -15,7 +15,7 @@ import org.springframework.stereotype.Component;
 
 import static distove.presence.enumerate.PresenceType.OFFLINE;
 import static distove.presence.enumerate.PresenceType.ONLINE;
-import static distove.presence.event.EventTopic.getEventQ;
+import static distove.presence.event.process.EventTopic.getEventQ;
 
 @Component
 @RequiredArgsConstructor

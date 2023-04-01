@@ -7,7 +7,7 @@ import org.springframework.web.bind.annotation.RequestHeader;
 import org.springframework.web.bind.annotation.RequestParam;
 import org.springframework.web.bind.annotation.RestController;
 
-import static distove.presence.event.EventTopic.getEventQ;
+import static distove.presence.event.process.EventTopic.getEventQ;
 
 @RestController
 @RequiredArgsConstructor

@@ -1,5 +1,6 @@
-package distove.presence.event;
+package distove.presence.event.process;
 
+import distove.presence.event.UpdatePresenceEvent;
 import distove.presence.service.PresenceService;
 import lombok.RequiredArgsConstructor;
 import org.springframework.stereotype.Service;

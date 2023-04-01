@@ -22,7 +22,7 @@ public class PresenceAspect {
 
     /**
      * @when 메시지 SEND 이벤트 발생 시
-     * @then presence 업데이트를 위한 feign 호출
+     * @then 활동상태 업데이트를 위한 feign 호출
      */
     @Before("execution(public * org.springframework.messaging.support.ChannelInterceptor.preSend(..))")
     public void updateUserPresenceAspect(JoinPoint joinPoint) throws Throwable {

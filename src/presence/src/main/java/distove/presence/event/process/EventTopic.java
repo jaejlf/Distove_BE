@@ -1,5 +1,7 @@
-package distove.presence.event;
+package distove.presence.event.process;
 
+import distove.presence.event.Event;
+import distove.presence.event.UpdatePresenceEvent;
 import distove.presence.exception.DistoveException;
 import lombok.AllArgsConstructor;
 import lombok.Getter;

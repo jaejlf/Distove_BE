@@ -31,12 +31,20 @@ public class PresenceAspect {
     public void leaveRoomAspect() {
     }
 
+    /**
+     * @when 화상 통화 시작
+     * @then 활동상태 업데이트를 위한 feign 호출
+     */
     @Before("joinRoomAspect() && args(session,..)")
     public void updatePresenceToVoiceOn(WebSocketSession session) {
         Participant participant = participantService.getByWebSocketSession(session);
         presenceClient.updateUserPresence(participant.getUserId(), VOICE_ON.getType());
     }
 
+    /**
+     * @when 화상 통화 종료
+     * @then 활동상태 업데이트를 위한 feign 호출
+     */
     @Before("leaveRoomAspect() && args(session,..)")
     public void updatePresenceToVoiceOff(WebSocketSession session) {
         Participant participant = participantService.getByWebSocketSession(session);
