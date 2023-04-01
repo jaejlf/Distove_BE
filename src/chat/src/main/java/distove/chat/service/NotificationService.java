@@ -32,14 +32,14 @@ public class NotificationService {
      *
      * @when 서버 구독 이벤트 발생 시
      * @when 채널 이동 시
-     * @subscribe /sub/notification/server/:serverId
+     * @subscribe /sub/notification/server/:serverId/to/:userId
      */
     public void notifyUnreadOfChannels(Long userId, Long serverId) {
         List<Long> channelIds = getAllChannelsInServer(userId, serverId);
         List<CategoryInfoResponse> categoryInfoResponses = communityClient.getCategoryIds(
                 channelIds.toString().replaceAll("[\\[\\]]", ""));
         NotificationResponse notification = NotificationResponse.ofUnreads(serverId, categoryInfoResponses);
-        simpMessagingTemplate.convertAndSend(destination + "server/" + serverId + "/" + userId, notification);
+        simpMessagingTemplate.convertAndSend(destination + "server/" + serverId + "/to/" + userId, notification);
     }
 
     /**
