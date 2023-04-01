@@ -4,7 +4,7 @@ import distove.chat.client.CommunityClient;
 import distove.chat.exception.DistoveException;
 import lombok.RequiredArgsConstructor;
 
-import static distove.chat.exception.ErrorCode.USER_NOT_FOUND_ERROR;
+import static distove.chat.exception.ErrorCode.MEMBER_NOT_FOUND_ERROR;
 
 @RequiredArgsConstructor
 public class MemberValidator {
@@ -12,7 +12,7 @@ public class MemberValidator {
     private final CommunityClient communityClient;
 
     public void validateMember(Long userId, Long channelId) {
-        if (!communityClient.isMember(channelId, userId)) throw new DistoveException(USER_NOT_FOUND_ERROR);
+        if (!communityClient.isMember(channelId, userId)) throw new DistoveException(MEMBER_NOT_FOUND_ERROR);
     }
 
 }

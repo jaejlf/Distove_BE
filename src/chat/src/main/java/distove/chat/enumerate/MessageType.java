@@ -8,7 +8,7 @@ import java.util.Arrays;
 import java.util.List;
 
 import static distove.chat.enumerate.MessageType.MessageStatus.*;
-import static distove.chat.exception.ErrorCode.MESSAGE_TYPE_ERROR;
+import static distove.chat.exception.ErrorCode.INVALID_MESSAGE_REQUEST_ERROR;
 
 @Getter
 @AllArgsConstructor
@@ -23,11 +23,11 @@ public enum MessageType {
     private final List<MessageStatus> status;
 
     public enum MessageStatus {
-        CREATED, MODIFIED, DELETED, TYPING, REACTED;
+        CREATED, MODIFIED, DELETED, TYPING, REACTED
     }
 
     public static void validateTypeAndStatus(MessageType type, MessageStatus status) {
-        if (!type.getStatus().contains(status)) throw new DistoveException(MESSAGE_TYPE_ERROR);
+        if (!type.getStatus().contains(status)) throw new DistoveException(INVALID_MESSAGE_REQUEST_ERROR);
     }
 
     public static boolean isFileType(MessageType type) {

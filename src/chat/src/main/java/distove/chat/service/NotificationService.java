@@ -32,7 +32,7 @@ public class NotificationService {
      *
      * @when 서버 구독 이벤트 발생 시
      * @when 채널 이동 시
-     * @SUBSCRIBE /sub/notification/server/:serverId
+     * @subscribe /sub/notification/server/:serverId
      */
     public void notifyUnreadOfChannels(Long userId, Long serverId) {
         List<Long> channelIds = getAllChannelsInServer(userId, serverId);
@@ -45,7 +45,7 @@ public class NotificationService {
     /**
      * 새로운 메시지 발행 알림
      *
-     * @SUBSCRIBE /sub/notification/server/:serverId
+     * @subscribe /sub/notification/server/:serverId
      */
     public void notifyNewMessage(Long channelId) {
         Long serverId = connectionService.getConnection(channelId).getServerId();

@@ -6,7 +6,7 @@ import lombok.Getter;
 
 import java.util.Arrays;
 
-import static distove.chat.exception.ErrorCode.SCROLL_REQUEST_ERROR;
+import static distove.chat.exception.ErrorCode.INVALID_SCROLL_ERROR;
 
 @Getter
 @AllArgsConstructor
@@ -22,7 +22,7 @@ public enum ScrollDirection {
         return scroll != null ? Arrays.stream(ScrollDirection.values())
                 .filter(direction -> direction.scroll == scroll)
                 .findFirst()
-                .orElseThrow(() -> new DistoveException(SCROLL_REQUEST_ERROR))
+                .orElseThrow(() -> new DistoveException(INVALID_SCROLL_ERROR))
                 : DEFAULT;
     }
 

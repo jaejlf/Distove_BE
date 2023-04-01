@@ -16,7 +16,7 @@ import org.springframework.beans.factory.annotation.Value;
 import org.springframework.messaging.simp.SimpMessagingTemplate;
 import org.springframework.stereotype.Service;
 
-import static distove.chat.exception.ErrorCode.MESSAGE_NOT_FOUND;
+import static distove.chat.exception.ErrorCode.MESSAGE_NOT_FOUND_ERROR;
 
 @Service
 @Slf4j
@@ -33,7 +33,7 @@ public class ChatService {
     private String destination;
 
     public MessageResponse publishMessage(Long userId, Long channelId, MessageRequest request) {
-        MessageGenerator messageGenerator = messageFactory.getServiceByStatus(request.getStatus());
+        MessageGenerator messageGenerator = messageFactory.getGeneratorByStatus(request.getStatus());
         Message message = messageGenerator.createMessage(userId, channelId, request);
         return messageConverter.getMessageResponse(userId, message);
     }
@@ -51,7 +51,7 @@ public class ChatService {
 
     public void createThread(Long userId, Long channelId, MessageRequest request) {
         Message message = messageRepository.findByIdAndChannelId(request.getParentId(), channelId)
-                .orElseThrow(() -> new DistoveException(MESSAGE_NOT_FOUND));
+                .orElseThrow(() -> new DistoveException(MESSAGE_NOT_FOUND_ERROR));
         message.createThread(request.getThreadName(), userId);
         messageRepository.save(message);
 

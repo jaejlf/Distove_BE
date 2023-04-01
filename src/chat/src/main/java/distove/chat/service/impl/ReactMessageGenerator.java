@@ -12,7 +12,7 @@ import java.util.List;
 import java.util.Objects;
 
 import static distove.chat.entity.Message.*;
-import static distove.chat.exception.ErrorCode.MESSAGE_NOT_FOUND;
+import static distove.chat.exception.ErrorCode.MESSAGE_NOT_FOUND_ERROR;
 
 @Service
 @RequiredArgsConstructor
@@ -29,7 +29,7 @@ public class ReactMessageGenerator implements MessageGenerator {
         String emoji = request.getEmoji();
 
         Message message = messageRepository.findByIdAndChannelId(messageId, channelId)
-                .orElseThrow(() -> new DistoveException(MESSAGE_NOT_FOUND));
+                .orElseThrow(() -> new DistoveException(MESSAGE_NOT_FOUND_ERROR));
         List<Reaction> reactions = message.getReactions();
         updateReactions(userId, emoji, message, reactions);
         return message;

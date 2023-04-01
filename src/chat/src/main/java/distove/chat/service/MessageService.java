@@ -8,7 +8,6 @@ import distove.chat.entity.Connection;
 import distove.chat.entity.Message;
 import distove.chat.enumerate.ScrollDirection;
 import distove.chat.exception.DistoveException;
-import distove.chat.repository.ConnectionRepository;
 import distove.chat.repository.MessageRepository;
 import distove.chat.util.MessageConverter;
 import lombok.RequiredArgsConstructor;
@@ -17,12 +16,14 @@ import org.springframework.beans.factory.annotation.Value;
 import org.springframework.stereotype.Service;
 
 import java.time.LocalDateTime;
-import java.util.*;
+import java.util.ArrayList;
+import java.util.List;
+import java.util.Optional;
 
 import static distove.chat.dto.response.PagedMessageResponse.CursorInfoResponse;
 import static distove.chat.dto.response.PagedMessageResponse.UnreadInfoResponse;
-import static distove.chat.entity.Connection.*;
-import static distove.chat.exception.ErrorCode.MESSAGE_NOT_FOUND;
+import static distove.chat.entity.Connection.Member;
+import static distove.chat.exception.ErrorCode.MESSAGE_NOT_FOUND_ERROR;
 
 @Service
 @Slf4j
@@ -30,7 +31,6 @@ import static distove.chat.exception.ErrorCode.MESSAGE_NOT_FOUND;
 public class MessageService {
 
     private final MessageRepository messageRepository;
-    private final ConnectionRepository connectionRepository;
     private final ConnectionService connectionService;
     private final MessageConverter messageConverter;
     private final UserClient userClient;
@@ -45,7 +45,6 @@ public class MessageService {
         List<MessageResponse> messageResponses = messageConverter.getMessageResponses(userId, messages);
         UnreadInfoResponse unread = getUnreadInfo(channelId, member);
         CursorInfoResponse cursorInfo = getCursorInfo(channelId, messages);
-
         return PagedMessageResponse.ofDefault(messageResponses, unread, cursorInfo);
     }
 
@@ -63,7 +62,7 @@ public class MessageService {
 
     public void readAllMessages(Long userId, Long channelId) {
         Connection connection = connectionService.getConnection(channelId);
-        updateLastReadAt(userId, connection);
+        connectionService.updateLastReadAt(userId, connection);
     }
 
     public void unsubscribeChannel(Long userId, Long channelId) {
@@ -71,12 +70,16 @@ public class MessageService {
         Member member = connectionService.getMember(userId, channelId);
 
         // 안읽메가 없을 경우, '마지막으로 읽은 시간' 업데이트
-        if (getUnreadInfo(channelId, member) == null) updateLastReadAt(userId, connection);
+        if (getUnreadInfo(channelId, member) == null) connectionService.updateLastReadAt(userId, connection);
     }
 
     public Message getMessage(String messageId) {
         return messageRepository.findById(messageId)
-                .orElseThrow(() -> new DistoveException(MESSAGE_NOT_FOUND));
+                .orElseThrow(() -> new DistoveException(MESSAGE_NOT_FOUND_ERROR));
+    }
+
+    public void deleteByChannelId(Long channelId) {
+        messageRepository.deleteAllByChannelId(channelId);
     }
 
     private List<Message> getMessagesByCursor(Long channelId, Integer scroll, String cursorId) {
@@ -100,7 +103,6 @@ public class MessageService {
 
     private UnreadInfoResponse getUnreadInfo(Long channelId, Member member) {
         LocalDateTime lastReadAt = member.getLastReadAt();
-
         int unreadCount = messageRepository.countUnreadMessage(channelId, lastReadAt);
         if (unreadCount > 0) {
             return UnreadInfoResponse.of(
@@ -129,15 +131,6 @@ public class MessageService {
         return ThreadInfoResponse.of(
                 message.getThreadName(),
                 userClient.getUser(message.getThreadStarterId()));
-    }
-
-    private void updateLastReadAt(Long userId, Connection connection) {
-        List<Member> members = connection.getMembers();
-        members.stream()
-                .filter(x -> Objects.equals(x.getUserId(), userId))
-                .findFirst()
-                .ifPresent(x -> connection.updateMembers(Collections.singletonList(new Member(userId))));
-        connectionRepository.save(connection);
     }
 
 }

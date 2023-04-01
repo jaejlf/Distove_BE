@@ -14,7 +14,7 @@ import java.util.Objects;
 
 import static distove.chat.enumerate.MessageType.MessageStatus;
 import static distove.chat.enumerate.MessageType.isFileType;
-import static distove.chat.exception.ErrorCode.MESSAGE_NOT_FOUND;
+import static distove.chat.exception.ErrorCode.MESSAGE_NOT_FOUND_ERROR;
 import static distove.chat.exception.ErrorCode.NO_AUTH_ERROR;
 
 @Service
@@ -32,7 +32,7 @@ public class DeleteMessageGenerator implements MessageGenerator {
         String messageId = request.getMessageId();
 
         Message origin = messageRepository.findByIdAndChannelId(messageId, channelId)
-                .orElseThrow(() -> new DistoveException(MESSAGE_NOT_FOUND));
+                .orElseThrow(() -> new DistoveException(MESSAGE_NOT_FOUND_ERROR));
         checkAuthorization(userId, origin);
 
         // 메시지 및 연관 데이터 삭제

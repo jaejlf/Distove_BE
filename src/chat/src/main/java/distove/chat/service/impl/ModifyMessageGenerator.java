@@ -11,7 +11,7 @@ import org.springframework.stereotype.Service;
 import java.util.Objects;
 
 import static distove.chat.enumerate.MessageType.MessageStatus.MODIFIED;
-import static distove.chat.exception.ErrorCode.MESSAGE_NOT_FOUND;
+import static distove.chat.exception.ErrorCode.MESSAGE_NOT_FOUND_ERROR;
 import static distove.chat.exception.ErrorCode.NO_AUTH_ERROR;
 
 @Service
@@ -29,7 +29,7 @@ public class ModifyMessageGenerator implements MessageGenerator {
         String content = request.getContent();
 
         Message origin = messageRepository.findByIdAndChannelId(messageId, channelId)
-                .orElseThrow(() -> new DistoveException(MESSAGE_NOT_FOUND));
+                .orElseThrow(() -> new DistoveException(MESSAGE_NOT_FOUND_ERROR));
         checkAuthorization(userId, origin);
         origin.updateMessage(MODIFIED, content);
         return messageRepository.save(origin);

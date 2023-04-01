@@ -7,30 +7,29 @@ import lombok.RequiredArgsConstructor;
 import org.springframework.stereotype.Component;
 
 import static distove.chat.enumerate.MessageType.MessageStatus;
-import static distove.chat.enumerate.MessageType.WELCOME;
-import static distove.chat.exception.ErrorCode.MESSAGE_TYPE_ERROR;
+import static distove.chat.exception.ErrorCode.INVALID_MESSAGE_REQUEST_ERROR;
 
 @Component
 @RequiredArgsConstructor
 public class MessageFactory {
 
-    private final CreateMessageGenerator messageCreateService;
-    private final ModifyMessageGenerator messageModifyService;
-    private final DeleteMessageGenerator deletedStatusService;
-    private final ReactMessageGenerator messageReactService;
+    private final CreateMessageGenerator createMessageGenerator;
+    private final ModifyMessageGenerator modifyMessageGenerator;
+    private final DeleteMessageGenerator deleteMessageGenerator;
+    private final ReactMessageGenerator reactMessageGenerator;
 
-    public MessageGenerator getServiceByStatus(MessageStatus status) {
+    public MessageGenerator getGeneratorByStatus(MessageStatus status) {
         switch (status) {
             case CREATED:
-                return messageCreateService;
+                return createMessageGenerator;
             case MODIFIED:
-                return messageModifyService;
+                return modifyMessageGenerator;
             case DELETED:
-                return deletedStatusService;
+                return deleteMessageGenerator;
             case REACTED:
-                return messageReactService;
+                return reactMessageGenerator;
             default:
-                throw new DistoveException(MESSAGE_TYPE_ERROR);
+                throw new DistoveException(INVALID_MESSAGE_REQUEST_ERROR);
         }
     }
 

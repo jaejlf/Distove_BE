@@ -8,11 +8,13 @@ import lombok.extern.slf4j.Slf4j;
 import org.springframework.stereotype.Service;
 
 import java.util.ArrayList;
+import java.util.Collections;
 import java.util.List;
+import java.util.Objects;
 
 import static distove.chat.entity.Connection.*;
 import static distove.chat.exception.ErrorCode.CHANNEL_NOT_FOUND_ERROR;
-import static distove.chat.exception.ErrorCode.USER_NOT_FOUND_ERROR;
+import static distove.chat.exception.ErrorCode.MEMBER_NOT_FOUND_ERROR;
 
 @Service
 @Slf4j
@@ -41,7 +43,7 @@ public class ConnectionService {
         return members.stream()
                 .filter(x -> x.getUserId().equals(userId))
                 .findFirst()
-                .orElseThrow(() -> new DistoveException(USER_NOT_FOUND_ERROR));
+                .orElseThrow(() -> new DistoveException(MEMBER_NOT_FOUND_ERROR));
     }
 
     public void createConnection(Long serverId, Long channelId) {
@@ -52,6 +54,15 @@ public class ConnectionService {
 
     public void deleteByChannelId(Long channelId) {
         connectionRepository.deleteByChannelId(channelId);
+    }
+
+    public void updateLastReadAt(Long userId, Connection connection) {
+        List<Member> members = connection.getMembers();
+        members.stream()
+                .filter(x -> Objects.equals(x.getUserId(), userId))
+                .findFirst()
+                .ifPresent(x -> connection.updateMembers(Collections.singletonList(new Member(userId))));
+        connectionRepository.save(connection);
     }
 
     public Connection getConnection(Long channelId) {
