@@ -27,48 +27,47 @@ public class UserController {
 
     private final UserService userService;
 
+    /**
+     * 회원가입
+     */
     @PostMapping("/join")
     public ResponseEntity<Object> join(@Valid @ModelAttribute JoinRequest request) {
         UserResponse result = userService.join(request);
-        return ResultResponse.success(
-                HttpStatus.CREATED,
-                "회원가입",
-                result
-        );
+        return ResultResponse.success(HttpStatus.CREATED, "회원가입", result);
     }
 
+    /**
+     * 로그인
+     */
     @PostMapping("/login")
     public ResponseEntity<Object> login(@Valid @RequestBody LoginRequest request, HttpServletResponse response) {
-        LoginResponse loginResponse = userService.login(request);
-        Long userId = loginResponse.getUser().getId();
+        LoginResponse result = userService.login(request);
+        Long userId = result.getUser().getId();
         response.addHeader("Set-Cookie", userService.createCookie(userId));
-        return ResultResponse.success(
-                HttpStatus.CREATED,
-                "로그인",
-                loginResponse
-        );
+        return ResultResponse.success(HttpStatus.CREATED, "로그인", result);
     }
 
+    /**
+     * 로그아웃
+     */
     @PostMapping("/logout")
     public ResponseEntity<Object> logout(@RequestUser Long userId) {
         UserResponse result = userService.logout(userId);
-        return ResultResponse.success(
-                HttpStatus.OK,
-                "로그아웃",
-                result
-        );
+        return ResultResponse.success(HttpStatus.OK, "로그아웃", result);
     }
 
+    /**
+     * 토큰 재발급
+     *
+     * @throws 401 리프레쉬 토큰 만료
+     * @throws 403 잘못된 리프레쉬 토큰
+     */
     @PostMapping("/reissue")
     public ResponseEntity<Object> reissue(HttpServletRequest request, HttpServletResponse response) {
-        LoginResponse loginResponse = userService.reissue(request);
-        Long userId = loginResponse.getUser().getId();
+        LoginResponse result = userService.reissue(request);
+        Long userId = result.getUser().getId();
         response.addHeader("Set-Cookie", userService.createCookie(userId));
-        return ResultResponse.success(
-                HttpStatus.CREATED,
-                "토큰 재발급",
-                loginResponse
-        );
+        return ResultResponse.success(HttpStatus.CREATED, "토큰 재발급", result);
     }
 
 }

@@ -1,6 +1,8 @@
 package distove.auth.dto.request;
 
+import lombok.AllArgsConstructor;
 import lombok.Getter;
+import lombok.NoArgsConstructor;
 import lombok.Setter;
 import org.springframework.web.multipart.MultipartFile;
 
@@ -8,6 +10,8 @@ import javax.validation.constraints.NotBlank;
 
 @Getter
 @Setter
+@NoArgsConstructor
+@AllArgsConstructor
 public class JoinRequest {
 
     @NotBlank(message = "이메일은 필수 입력값입니다.")
@@ -19,6 +23,6 @@ public class JoinRequest {
     @NotBlank(message = "닉네임은 필수 입력값입니다.")
     private String nickname;
 
-    private MultipartFile profileImg;
+    private MultipartFile file;
 
 }

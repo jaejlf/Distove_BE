@@ -30,7 +30,7 @@ public class StorageService {
     @Value("${cloud.aws.ceph.url}")
     private String url;
 
-    public String upload(MultipartFile multipartFile) {
+    public String uploadToS3(MultipartFile multipartFile) {
         if (multipartFile.isEmpty()) return null;
 
         String originFileName = multipartFile.getOriginalFilename();

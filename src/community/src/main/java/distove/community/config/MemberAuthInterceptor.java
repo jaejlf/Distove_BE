@@ -2,7 +2,6 @@ package distove.community.config;
 
 import distove.community.entity.Member;
 import distove.community.exception.DistoveException;
-import distove.community.exception.ErrorCode;
 import distove.community.repository.MemberRepository;
 import distove.community.service.JwtProvider;
 import lombok.RequiredArgsConstructor;
@@ -16,9 +15,9 @@ import javax.servlet.http.HttpServletRequest;
 import javax.servlet.http.HttpServletResponse;
 import java.util.Map;
 
-import static distove.community.config.AuthorizedRole.*;
-import static distove.community.exception.ErrorCode.*;
+import static distove.community.config.AuthorizedRole.Auth;
 import static distove.community.exception.ErrorCode.MEMBER_NOT_FOUND;
+import static distove.community.exception.ErrorCode.NO_AUTH;
 
 @Slf4j
 @Component
@@ -33,7 +32,7 @@ public class MemberAuthInterceptor implements HandlerInterceptor {
         if (request.getMethod().equals("OPTIONS")) return true;
 
         String token = request.getHeader("token");
-        jwtProvider.validToken(token);
+        jwtProvider.validateToken(token, "AT");
 
         Long userId = jwtProvider.getUserId(token);
         request.setAttribute("userId", userId);

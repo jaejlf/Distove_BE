@@ -38,26 +38,21 @@ public class UserService {
     public UserResponse join(JoinRequest request) {
         validateEmail(request.getEmail());
 
-        String profileImgUrl = storageService.upload(request.getProfileImg());
-        User user = userRepository.save(
-                new User(
-                        request.getEmail(),
-                        bCryptPasswordEncoder.encode(request.getPassword()),
-                        request.getNickname(),
-                        profileImgUrl));
-
+        String profileImgUrl = storageService.uploadToS3(request.getFile());
+        User user = userRepository.save(new User(
+                request.getEmail(),
+                bCryptPasswordEncoder.encode(request.getPassword()),
+                request.getNickname(),
+                profileImgUrl));
         return UserResponse.of(user);
     }
 
     public LoginResponse login(LoginRequest request) {
         User user = userRepository.findByEmail(request.getEmail())
                 .orElseThrow(() -> new DistoveException(ACCOUNT_NOT_FOUND_ERROR));
-
         validatePassword(request.getPassword(), user.getPassword());
 
         String accessToken = jwtProvider.createAccessToken(user.getId());
-        createCookie(user.getId());
-
         return LoginResponse.of(accessToken, user);
     }
 
@@ -88,22 +83,22 @@ public class UserService {
 
     public LoginResponse reissue(HttpServletRequest request) {
         String token = getRefreshToken(request);
-        jwtProvider.validateRefreshToken(token);
+        jwtProvider.validateToken(token, "RT");
 
         User user = userRepository.findByRefreshToken(token)
-                .orElseThrow(() -> new DistoveException(ACCOUNT_NOT_FOUND_ERROR));
+                .orElseThrow(() -> new DistoveException(JWT_INVALID_ERROR));
 
         String accessToken = jwtProvider.createAccessToken(user.getId());
         return LoginResponse.of(accessToken, user);
     }
 
-    public UserResponse getUser(Long userId) {
+    public UserResponse getUserById(Long userId) {
         User user = userRepository.findById(userId)
                 .orElseThrow(() -> new DistoveException(ACCOUNT_NOT_FOUND_ERROR));
         return UserResponse.of(user);
     }
 
-    public List<UserResponse> getUsers(List<Long> userIds) {
+    public List<UserResponse> getUsersById(List<Long> userIds) {
         List<User> users = userRepository.findByIdIn(userIds);
         List<UserResponse> userResponses = new ArrayList<>();
         for (User user : users) {

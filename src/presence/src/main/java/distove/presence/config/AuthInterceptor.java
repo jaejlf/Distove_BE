@@ -19,7 +19,7 @@ public class AuthInterceptor implements HandlerInterceptor {
         if (request.getMethod().equals("OPTIONS")) return true;
 
         String token = request.getHeader("token");
-        jwtProvider.validToken(token);
+        jwtProvider.validateToken(token, "AT");
 
         Long userId = jwtProvider.getUserId(token);
         request.setAttribute("userId", userId);

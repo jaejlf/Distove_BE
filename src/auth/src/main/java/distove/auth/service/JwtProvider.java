@@ -63,27 +63,20 @@ public class JwtProvider {
                 .compact();
     }
 
-    public void validateToken(String token) {
+    public void validateToken(String token, String type) {
         try {
-            Jwts.parserBuilder()
+            Jws<Claims> jws = Jwts.parserBuilder()
                     .setSigningKey(key)
                     .build()
                     .parseClaimsJws(token);
+
+            String headerType = String.valueOf(jws.getHeader().get("type"));
+            if (!Objects.equals(headerType, type)) throw new DistoveException(JWT_INVALID_ERROR);
         } catch (ExpiredJwtException e) {
             throw new DistoveException(JWT_EXPIRED_ERROR);
         } catch (Exception e) {
             throw new DistoveException(JWT_INVALID_ERROR);
         }
-    }
-
-    public void validateRefreshToken(String token) {
-        Jws<Claims> jws = Jwts.parserBuilder()
-                .setSigningKey(key)
-                .build()
-                .parseClaimsJws(token);
-
-        String type = String.valueOf(jws.getHeader().get("type"));
-        if (!Objects.equals((type), "RT")) throw new DistoveException(JWT_INVALID_ERROR);
     }
 
     public Long getUserId(String token) throws DistoveException {

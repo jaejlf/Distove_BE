@@ -2,7 +2,6 @@ package distove.chat.config;
 
 import distove.chat.service.JwtProvider;
 import lombok.RequiredArgsConstructor;
-import lombok.extern.slf4j.Slf4j;
 import org.springframework.stereotype.Component;
 import org.springframework.web.servlet.HandlerInterceptor;
 
@@ -20,7 +19,7 @@ public class AuthInterceptor implements HandlerInterceptor {
         if (request.getMethod().equals("OPTIONS")) return true;
 
         String token = request.getHeader("token");
-        jwtProvider.validToken(token);
+        jwtProvider.validateToken(token, "AT");
 
         Long userId = jwtProvider.getUserId(token);
         request.setAttribute("userId", userId);
