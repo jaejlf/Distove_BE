@@ -36,11 +36,6 @@
 
 <br><br>
 
-## 📑 문서
-(blank)
-
-<br><br>
-
 ## 🧩 서비스 아키텍처
 ![image](https://user-images.githubusercontent.com/78673570/219940883-d2e620ec-2c91-4102-aa6d-a0ab7566f6e0.png)
 - Auth Service : 사용자 인증 서비스
@@ -51,10 +46,13 @@
 
 <br><br>
 
-## 💾 ERD Diagram
-(blank)
+## 📑 문서
+- (private) source code
+- (private) docs
+- (private) ERD Diagram
 
 <br><br>
 
 ## 🔍 화면 구성
 ![image](https://github.com/jaejlf/Distove_BE/assets/78673570/0caf7c5b-9850-4fbc-aa9c-545c520fbd5d)
+
